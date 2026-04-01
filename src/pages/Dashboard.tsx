@@ -73,6 +73,9 @@ const Dashboard = () => {
             <p className="mt-1 text-sm text-muted-foreground max-w-sm">
               Complete the onboarding wizard to start selling online in minutes.
             </p>
+            <Button className="mt-4" onClick={() => navigate('/onboarding')}>
+              Start Setup
+            </Button>
           </CardContent>
         </Card>
       ) : (
