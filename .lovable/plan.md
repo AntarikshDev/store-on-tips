@@ -1,130 +1,309 @@
 
 
-# Antariksh Commerce AI (ACA) — Seller Panel
+# ACA Platform — Full Development Roadmap
 
-## Overview
-AI-first, no-code e-commerce platform for Indian sellers. Mobile-first, clean Shopify-like UI with vibrant orange (#F97316) branding. Full-stack with Lovable Cloud (database, auth, edge functions, AI).
-
----
-
-## Phase 1: Foundation & Auth
-
-### Design System
-- Primary: Vibrant Orange (`#F97316`), clean white backgrounds, Inter/system font
-- Mobile-first responsive layout with bottom navigation on mobile
-- Minimal, Shopify-inspired aesthetic with generous whitespace
-
-### Authentication
-- Email + password login/signup (Lovable Cloud Auth)
-- Combined login/signup screen with clean card layout
-- Post-login redirect to onboarding (new users) or dashboard (returning)
-
-### Database Schema
-- `stores` — store name, category, subdomain, theme, settings
-- `products` — title, description, images, price, variants, inventory, AI-generated fields
-- `orders` — status, payment status, customer info, items
-- `user_roles` — admin/seller roles (security-compliant separate table)
+## Current State
+Auth, database schema (stores, products, orders, profiles, user_roles), dashboard layout with sidebar/mobile nav, and basic stats cards are complete. No functional pages beyond dashboard exist yet.
 
 ---
 
-## Phase 2: Onboarding Wizard (Critical Flow)
+## Phase 2: Onboarding Wizard (Week 1)
 
-A 7-step guided wizard with progress bar:
+**7-step guided wizard** at `/onboarding` — new users are redirected here automatically.
 
-1. **Store Name** — text input with live subdomain preview
-2. **Category Selection** — visual cards (Fashion, Food, Handmade, Electronics, etc.)
-3. **Upload First Product Image** — drag-and-drop with preview
-4. **AI Product Generation** — calls Lovable AI to generate title, description, tags, category, suggested price from the image
-5. **Store Preview** — live preview of how the store will look
-6. **Payment Setup** — Razorpay/UPI/COD toggle configuration (UI-level)
-7. **Go Live** — celebration screen with shareable store link
+1. **Store Name** — input + live slug preview (`yourstore.antariksh.shop`)
+2. **Category** — visual cards (Fashion, Food, Electronics, Handmade, Beauty, Grocery, Other)
+3. **Upload Product Image** — drag-drop to `product-images` storage bucket
+4. **AI Product Generation** — Lovable AI (Gemini 2.5 Flash) analyzes image → generates title, description, tags, category, price suggestion. Editable fields with "Regenerate" button.
+5. **Store Preview** — live mock of how the storefront looks
+6. **Payment Setup** — toggle COD / UPI / Razorpay (UI config saved to `stores.settings`)
+7. **Go Live** — celebration confetti, shareable link, copy button
 
-Each step has skip/edit options. Progress persists in database.
+Progress saved to `stores.onboarding_step`. Skip/back on every step.
 
----
-
-## Phase 3: Seller Dashboard
-
-### Main Dashboard
-- Today's sales, order count, conversion rate cards
-- Revenue mini-chart (last 7 days)
-- Recent orders list
-- **AI Insights Panel** — trending products, improvement suggestions
-
-### Sidebar Navigation
-- Dashboard, Products, Orders, Store Design, Analytics, Settings
-- Collapsible with icons, mobile-friendly
+**Files**: `src/pages/Onboarding.tsx`, `src/components/onboarding/Step1-7.tsx`
 
 ---
 
-## Phase 4: Product Management
+## Phase 3: Product Management (Week 1-2)
 
-### Product List
-- Grid/list view toggle, search, category filters
-- Quick actions (edit, delete, toggle visibility)
+### Product List (`/products`)
+- Grid/list toggle, search bar, category filter
+- Quick actions: edit, delete, toggle active/inactive
+- Bulk select + delete
 
-### AI-First Add Product Flow
-- Upload image → Lovable AI generates: title, short/long description, tags, category, SEO meta, suggested price
-- Manual edit + "Regenerate with AI" button
-- Multiple images, variant matrix (category-aware: Fashion → S/M/L/XL, Food → half/full/kg/gms)
-- Inventory tracking with low-stock alerts
+### Add/Edit Product (`/products/new`, `/products/:id`)
+- **AI-first flow**: upload image → AI generates all fields (reuses onboarding AI)
+- Manual override for every field
+- Multiple image upload (up to 6)
+- **Category-aware variant matrix**:
+  - Fashion → Size (S/M/L/XL/XXL) × Color
+  - Food → Weight (250g/500g/1kg) × Type
+  - Electronics → Storage/Color
+  - Custom variants
+- Inventory count per variant, low-stock threshold alerts
+- SEO fields (title, description) — AI-generated
+- Compare-at price for showing discounts
+
+**Edge function**: `generate-product` — accepts image URL, calls Gemini 2.5 Flash for analysis
 
 ---
 
-## Phase 5: Order Management
+## Phase 4: Order Management (Week 2)
 
-- Order list with status filters (pending, confirmed, shipped, delivered)
-- Order detail page with customer info, items, payment status
-- Status update actions
-- Invoice download (GST-ready format)
+### Order List (`/orders`)
+- Status tabs: All, Pending, Confirmed, Shipped, Delivered, Cancelled
+- Search by order number, customer name
+- Date range filter
+- Each row: order #, customer, items count, total, status badge, date
+
+### Order Detail (`/orders/:id`)
+- Customer info card (name, phone, email, address)
+- Items table with images, qty, price
+- Status timeline with update buttons (Confirm → Ship → Deliver)
+- Payment status badge
+- Notes field
+- **Invoice download** — GST-ready PDF generated via edge function
+
+**Edge function**: `generate-invoice` — creates PDF with store details, GST number, items, totals
 
 ---
 
-## Phase 6: Store Design & Themes
+## Phase 5: Shipping Integration — Delhivery (Week 2-3)
 
-### Theme Selection
-- 5 theme cards: Minimal Light, Bold Dark, Premium Fashion, Handmade Craft, Modern Grid
-- Preview + Apply buttons
-- 2 locked premium themes with "Upgrade to Pro" CTA
+Delhivery is India's largest logistics provider with the best API for startups.
+
+### Setup
+- Edge function `delhivery-proxy` to handle API calls
+- Store Delhivery API token as a secret
+- Seller enters pickup address in settings
+
+### Features
+- **Create Shipment** — from order detail page, one-click "Ship with Delhivery"
+- **Auto-fill AWB** (tracking number) from Delhivery response → saved to `orders.tracking_number`
+- **Shipping Label** — PDF download from Delhivery API
+- **Live Tracking** — embedded tracking widget using Delhivery tracking URL
+- **Serviceability Check** — verify if delivery pincode is serviceable before confirming
+- **Rate Calculator** — show shipping cost estimate based on weight + pincode
+
+### Database
+- Add `shipping_provider`, `shipping_label_url`, `weight_grams` columns to orders table
+
+---
+
+## Phase 6: Store Design & Themes — Monetization Engine (Week 3)
+
+### Free Themes (3)
+- **Minimal Light** — clean white, simple grid
+- **Bold Dark** — dark background, high contrast
+- **Classic Grid** — standard e-commerce layout
+
+### Premium Themes (₹500 each) — Revenue Stream
+- **Premium Fashion** — editorial layout, lookbook style
+- **Artisan Craft** — warm tones, handmade feel
+- **Modern Luxe** — premium feel, animations
+- **Fresh Food** — vibrant colors, category-focused
+- **Tech Store** — specs-focused, comparison cards
 
 ### Theme Customization
-- Primary color picker, font selection, banner upload, layout toggles
+- Primary color picker
+- Font selection (4 options)
+- Banner image upload
+- Layout toggles (grid vs list, show/hide sections)
+- Logo placement options
+
+### Purchase Flow
+- Theme preview modal (full storefront mock)
+- "Buy for ₹500" button → payment via platform's payment gateway
+- Purchased themes unlocked permanently for that store
+
+### Database
+- New `theme_purchases` table: `store_id`, `theme_id`, `amount`, `payment_id`, `purchased_at`
+- `stores.theme` stores active theme config
 
 ---
 
-## Phase 7: Additional Modules
+## Phase 7: Super Admin Panel (Week 3-4)
 
-### Shipping (UI simulation)
-- Shipping label generation UI, tracking status display
+Accessible only to users with `admin` role. Separate layout at `/admin/*`.
 
-### Payments Dashboard
-- Payment status list, settlement summary, COD/UPI/Razorpay toggles
+### Admin Dashboard (`/admin`)
+- Total stores, total orders, total revenue (platform-wide)
+- New signups today, active stores count
+- Revenue chart (daily/weekly/monthly)
 
-### Instagram Tools
-- Bio link page generator, shareable product links
-- AI-generated captions and hashtags
+### Store Management (`/admin/stores`)
+- List all stores with owner, status, product count, order count
+- Enable/disable stores
+- View any store's dashboard
 
-### Analytics
-- Revenue graph, conversion rate, traffic sources
-- AI insights: low/high performing products
+### Theme & Pricing Management (`/admin/themes`)
+- Add/edit/remove premium themes
+- Set prices dynamically (₹500 default, can change anytime)
+- Toggle free ↔ premium for any theme
+- View theme purchase revenue
 
-### AI Assistant
-- Sidebar chat panel for generating descriptions, Instagram posts, pricing suggestions
+### User Management (`/admin/users`)
+- List all users, roles, store info
+- Assign/revoke admin role
+- Disable accounts
 
-### Settings
-- Store info, GST details
-- Auto-generated policies (privacy, return, T&C)
-- Domain & SEO settings
+### Platform Settings (`/admin/settings`)
+- Platform commission rate
+- Default shipping rates
+- Feature flags (enable/disable modules)
+- Global announcement banner
+
+### Revenue & Finance (`/admin/finance`)
+- Theme purchase revenue
+- Platform commission from orders (future)
+- Payout tracking
+
+---
+
+## Phase 8: Custom Domain — One-Click Publish (Week 4)
+
+### Seller Experience
+1. Go to Settings → Domain
+2. Enter custom domain (e.g., `mystore.com`)
+3. Click "Connect Domain"
+4. System shows DNS records to add (A record → platform IP, TXT for verification)
+5. Seller logs into their domain registrar, adds records
+6. Platform auto-verifies DNS propagation (polling every 30s)
+7. Once verified → SSL provisioned → Store is LIVE
+
+### Technical Implementation
+- Edge function `verify-domain` — checks DNS records via DNS lookup API
+- `custom_domains` table: `store_id`, `domain`, `status` (pending/verifying/active/failed), `verified_at`
+- Status displayed in settings with clear instructions per registrar (GoDaddy, Namecheap, Google Domains, Hostinger)
+
+---
+
+## Phase 9: Payment Gateway — Multi-Tenant Razorpay (Week 4-5)
+
+### Architecture
+Platform acts as the merchant of record using Razorpay Route (split payments).
+
+### Seller Setup
+1. Settings → Payments
+2. Toggle payment methods: COD, UPI, Card, Net Banking
+3. Enter bank account details for settlements
+4. Platform creates a Razorpay "linked account" via API
+
+### Checkout Flow (buyer-side, future)
+1. Buyer selects products → cart → checkout
+2. Razorpay checkout opens (UPI/Card/Net Banking)
+3. Payment received by platform's Razorpay account
+4. Auto-split: seller gets (100% - platform commission), platform keeps commission
+5. Settlement to seller's bank account (T+2 via Razorpay)
+
+### Implementation
+- Edge function `razorpay-proxy` — create orders, verify payments, manage linked accounts
+- Store Razorpay key_id + key_secret as secrets
+- `payments` table: `order_id`, `razorpay_payment_id`, `amount`, `status`, `commission`, `seller_payout`
+- COD orders tracked separately with collection status
+
+### Admin Controls
+- Set platform commission % (default 2%)
+- View all transactions
+- Manual settlement triggers
+- Refund management
+
+---
+
+## Phase 10: Analytics & AI Insights (Week 5)
+
+### Seller Analytics (`/analytics`)
+- Revenue graph (7d / 30d / 90d)
+- Orders over time
+- Top selling products
+- Conversion rate (views → orders)
+- Traffic sources (if referrer tracked)
+- Average order value
+
+### AI Insights Panel
+- "Your best seller this week is X — consider adding variants"
+- "Orders drop on weekends — try a weekend sale"
+- "Product Y has no orders — improve photos or lower price"
+- Generated via Lovable AI analyzing order + product data
+
+---
+
+## Phase 11: Settings & Support (Week 5)
+
+### Store Settings (`/settings`)
+- Store info (name, description, contact)
+- GST details (GSTIN, business name, address)
+- Bank account details
+- Notification preferences (email/SMS for new orders)
+
+### Auto-Generated Policies
+- Privacy Policy, Return Policy, Terms & Conditions
+- AI-generated based on store category + settings
+- Editable by seller
 
 ### Support
-- FAQ page, help articles, contact support button
+- FAQ accordion
+- Help articles
+- "Contact Support" button (opens email/WhatsApp)
 
 ---
 
-## Technical Approach
-- **Lovable Cloud**: Database, Auth, Edge Functions, Storage (product images)
-- **Lovable AI**: Product generation from images, content creation, insights
-- **State**: React Query for server state, local state for UI
-- **Routing**: React Router with protected routes
-- **Components**: Shadcn UI + custom components, mobile-first Tailwind
+## Technical Architecture
+
+```text
+┌─────────────────────────────────────────────┐
+│                FRONTEND (React)             │
+│  Seller Panel  │  Admin Panel  │  Storefront│
+└───────┬────────┴──────┬───────┴──────┬──────┘
+        │               │              │
+┌───────▼───────────────▼──────────────▼──────┐
+│            LOVABLE CLOUD (Supabase)         │
+│  Auth │ Database │ Storage │ Edge Functions  │
+│       │          │         │                 │
+│       │  stores  │ product │ generate-product│
+│       │ products │ -images │ generate-invoice│
+│       │  orders  │ store-  │ delhivery-proxy │
+│       │ payments │ assets  │ razorpay-proxy  │
+│       │ themes   │         │ verify-domain   │
+│       │ domains  │         │                 │
+└───────┬─────────────────────────────┬───────┘
+        │                             │
+   ┌────▼────┐                  ┌─────▼─────┐
+   │Delhivery│                  │ Razorpay  │
+   │   API   │                  │   API     │
+   └─────────┘                  └───────────┘
+```
+
+### New Database Tables Needed
+- `theme_purchases` — theme buying records
+- `custom_domains` — domain verification tracking
+- `payments` — payment transactions with splits
+- Add columns to `orders` — shipping fields
+
+### Edge Functions
+- `generate-product` — AI product generation from image
+- `generate-invoice` — GST invoice PDF
+- `delhivery-proxy` — shipping API proxy
+- `razorpay-proxy` — payment API proxy
+- `verify-domain` — DNS verification
+
+---
+
+## Implementation Order (Recommended)
+
+| Priority | Phase | Revenue Impact |
+|----------|-------|---------------|
+| 1 | Onboarding Wizard | Activation |
+| 2 | Product Management | Core feature |
+| 3 | Order Management | Core feature |
+| 4 | Store Design + Themes | ₹500/theme revenue |
+| 5 | Payment Gateway (Razorpay) | Commission revenue |
+| 6 | Shipping (Delhivery) | Operational |
+| 7 | Custom Domains | Premium feature |
+| 8 | Super Admin Panel | Platform control |
+| 9 | Analytics + AI | Retention |
+| 10 | Settings + Support | Polish |
+
+Each phase will be implemented one at a time, fully functional before moving to the next.
 
