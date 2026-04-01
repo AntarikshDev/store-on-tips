@@ -18,8 +18,6 @@ const Auth = () => {
   const navigate = useNavigate();
 
   if (user) return <Navigate to="/" replace />;
-  const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
