@@ -26,6 +26,7 @@ const navItems = [
   { label: 'Orders', icon: ShoppingCart, path: '/orders' },
   { label: 'Store Design', icon: Palette, path: '/store-design' },
   { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
+  { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
   { label: 'Analytics', icon: BarChart3, path: '/analytics' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ];

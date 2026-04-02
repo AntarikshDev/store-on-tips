@@ -129,6 +129,16 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/settings/shipping"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ShippingSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminLayout><AdminOverview /></AdminLayout></AdminRoute>} />
             <Route path="/admin/stores" element={<AdminRoute><AdminLayout><AdminStores /></AdminLayout></AdminRoute>} />
