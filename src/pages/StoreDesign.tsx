@@ -188,12 +188,12 @@ const StoreDesign = () => {
               <Card>
                 <CardHeader><CardTitle className="text-base">Colors</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {(Object.keys(customColors) as Array<keyof typeof customColors>).map((key) => (
-                    <div key={key} className="space-y-1.5">
-                      <Label className="text-xs capitalize">{key}</Label>
+                  {Object.keys(customColors as Record<string, string>).map((colorKey) => (
+                    <div key={colorKey} className="space-y-1.5">
+                      <Label className="text-xs capitalize">{colorKey}</Label>
                       <div className="flex gap-2 items-center">
-                        <input type="color" value={customColors[key]} onChange={(e) => setCustomColors({ ...customColors, [key]: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
-                        <Input value={customColors[key]} onChange={(e) => setCustomColors({ ...customColors, [key]: e.target.value })} className="h-8 text-xs font-mono" />
+                        <input type="color" value={customColors[colorKey]} onChange={(e) => setCustomColors({ ...customColors, [colorKey]: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                        <Input value={customColors[colorKey]} onChange={(e) => setCustomColors({ ...customColors, [colorKey]: e.target.value })} className="h-8 text-xs font-mono" />
                       </div>
                     </div>
                   ))}
