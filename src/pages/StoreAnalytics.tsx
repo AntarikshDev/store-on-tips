@@ -19,7 +19,7 @@ interface EngagementReport {
 
 const StoreAnalytics = () => {
   const { store } = useStore();
-  const { products } = useProducts(store?.id);
+  const { products } = useProducts();
   const { data: posts = [] } = useBlogPosts(store?.id);
   const [report, setReport] = useState<EngagementReport | null>(null);
   const [loading, setLoading] = useState(false);
