@@ -66,6 +66,16 @@ const OrderDetail = () => {
 
   const handleStatusChange = (status: string) => {
     updateStatus.mutate({ id: order.id, status: status as OrderStatus });
+    // Send notification on confirmed or shipped
+    if (status === 'confirmed' || status === 'shipped') {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const type = status === 'confirmed' ? 'order_confirmed' : 'order_shipped';
+      fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, order_id: order.id, store_id: order.store_id }),
+      }).catch(() => {});
+    }
   };
 
   const handleShipped = async (waybill: string) => {
