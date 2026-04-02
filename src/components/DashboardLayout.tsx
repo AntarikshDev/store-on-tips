@@ -16,6 +16,8 @@ import {
   CreditCard,
   Truck,
   Globe,
+  Ticket,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
