@@ -74,7 +74,6 @@ const Storefront = () => {
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>
                   Shop Now
                 </a>
-                <ShareButton title={store.name} text={store.description || undefined} url={`${window.location.origin}/store/${slug}`} colors={colors} borderRadius={borderRadius} />
               </div>
             </div>
           </section>
