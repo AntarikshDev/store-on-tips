@@ -152,6 +152,26 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/coupons"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <CouponList />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/seo"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <SEOSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminLayout><AdminOverview /></AdminLayout></AdminRoute>} />
             <Route path="/admin/stores" element={<AdminRoute><AdminLayout><AdminStores /></AdminLayout></AdminRoute>} />
