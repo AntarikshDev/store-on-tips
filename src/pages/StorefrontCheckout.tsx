@@ -234,6 +234,19 @@ const StorefrontCheckout = () => {
     setPlacing(true);
     try {
       const order = await createOrder();
+      if (appliedCoupon) await incrementUsage(appliedCoupon.id);
+      // Send notification
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'order_confirmed', order_id: order.id, store_id: store.id }),
+      }).catch(() => {});
+      fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
+      }).catch(() => {});
       clearCart();
       setOrderPlaced(order.order_number);
     } catch (err) {
