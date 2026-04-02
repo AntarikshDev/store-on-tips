@@ -90,6 +90,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Footer */}
         <div className="border-t border-sidebar-border p-2 space-y-1">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors',
+                collapsed && 'justify-center px-2'
+              )}
+            >
+              <Shield className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>Admin Panel</span>}
+            </Link>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
