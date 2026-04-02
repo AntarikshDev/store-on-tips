@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,19 @@ import { toast } from 'sonner';
 
 interface Props {
   logoUrl: string | null | undefined;
-  onSave: (url: string | null) => void;
+  logoName?: string | null;
+  onSave: (url: string | null, name?: string | null) => void;
 }
+
+const getFileNameFromUrl = (url: string | null | undefined) => {
+  if (!url) return null;
+  try {
+    const pathname = new URL(url).pathname;
+    return decodeURIComponent(pathname.split('/').pop() || '');
+  } catch {
+    return null;
+  }
+};
 
 async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   const image = new Image();
@@ -36,12 +47,18 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   });
 }
 
-const LogoUploader = ({ logoUrl, onSave }: Props) => {
+const LogoUploader = ({ logoUrl, logoName, onSave }: Props) => {
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [uploading, setUploading] = useState(false);
+  const persistedFileName = useMemo(() => logoName || getFileNameFromUrl(logoUrl), [logoName, logoUrl]);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(persistedFileName);
+
+  useEffect(() => {
+    setSelectedFileName(persistedFileName);
+  }, [persistedFileName]);
 
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,6 +67,7 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
       toast.error('Image must be under 5 MB');
       return;
     }
+    setSelectedFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => setRawImage(reader.result as string);
     reader.readAsDataURL(file);
@@ -72,7 +90,7 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
       const { data: { publicUrl } } = supabase.storage
         .from('product-images')
         .getPublicUrl(path);
-      onSave(publicUrl);
+      onSave(publicUrl, selectedFileName || 'logo.png');
       setRawImage(null);
       toast.success('Logo uploaded!');
     } catch {
@@ -80,6 +98,11 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCloseCropper = () => {
+    setRawImage(null);
+    setSelectedFileName(persistedFileName);
   };
 
   return (
@@ -91,7 +114,10 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
             <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
             <button
               type="button"
-              onClick={() => onSave(null)}
+              onClick={() => {
+                setSelectedFileName(null);
+                onSave(null, null);
+              }}
               className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Trash2 className="h-4 w-4 text-white" />
@@ -110,10 +136,11 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
             <input type="file" accept="image/*" className="hidden" onChange={onFileSelect} />
           </label>
           <p className="text-[10px] text-muted-foreground mt-1">Recommended: 512×512px, PNG or JPG</p>
+          {selectedFileName && <p className="text-[10px] font-medium text-foreground/80 mt-1 truncate max-w-[180px]">Selected: {selectedFileName}</p>}
         </div>
       </div>
 
-      <Dialog open={!!rawImage} onOpenChange={(o) => !o && setRawImage(null)}>
+      <Dialog open={!!rawImage} onOpenChange={(o) => !o && handleCloseCropper()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Crop Logo</DialogTitle>
@@ -144,7 +171,7 @@ const LogoUploader = ({ logoUrl, onSave }: Props) => {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRawImage(null)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCloseCropper}>Cancel</Button>
             <Button onClick={handleSave} disabled={uploading}>
               {uploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save Logo'}
             </Button>

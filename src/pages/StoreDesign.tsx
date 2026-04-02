@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { supabase } from '@/integrations/supabase/client';
 import { THEME_TEMPLATES, FONT_OPTIONS, type ThemeTemplate } from '@/lib/themes';
@@ -28,11 +28,25 @@ const StoreDesign = () => {
   const currentTemplate = THEME_TEMPLATES.find((t) => t.id === currentThemeId) || THEME_TEMPLATES[0];
 
   const [selectedThemeId, setSelectedThemeId] = useState(currentThemeId);
-  const [customColors, setCustomColors] = useState(currentTemplate.colors);
-  const [customFonts, setCustomFonts] = useState(currentTemplate.fonts);
+  const [customColors, setCustomColors] = useState((store?.theme as any)?.colors || currentTemplate.colors);
+  const [customFonts, setCustomFonts] = useState((store?.theme as any)?.fonts || currentTemplate.fonts);
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>(storeSettings.homepage_sections || []);
-  const [headerConfig, setHeaderConfig] = useState<HeaderConfig>(storeSettings.header || DEFAULT_HEADER);
-  const [footerConfig, setFooterConfig] = useState<FooterConfig>(storeSettings.footer || DEFAULT_FOOTER);
+  const [headerConfig, setHeaderConfig] = useState<HeaderConfig>({ ...DEFAULT_HEADER, ...(storeSettings.header || {}) });
+  const [footerConfig, setFooterConfig] = useState<FooterConfig>({ ...DEFAULT_FOOTER, ...(storeSettings.footer || {}) });
+
+  useEffect(() => {
+    const nextSettings = (store?.settings || {}) as any;
+    const nextTheme = (store?.theme || {}) as any;
+    const nextThemeId = nextTheme.name || 'minimal-light';
+    const nextTemplate = THEME_TEMPLATES.find((t) => t.id === nextThemeId) || THEME_TEMPLATES[0];
+
+    setSelectedThemeId(nextThemeId);
+    setCustomColors(nextTheme.colors || nextTemplate.colors);
+    setCustomFonts(nextTheme.fonts || nextTemplate.fonts);
+    setHomepageSections(nextSettings.homepage_sections || []);
+    setHeaderConfig({ ...DEFAULT_HEADER, ...(nextSettings.header || {}) });
+    setFooterConfig({ ...DEFAULT_FOOTER, ...(nextSettings.footer || {}) });
+  }, [store]);
 
   const selectedTemplate = THEME_TEMPLATES.find((t) => t.id === selectedThemeId) || THEME_TEMPLATES[0];
 
@@ -174,12 +188,12 @@ const StoreDesign = () => {
               <Card>
                 <CardHeader><CardTitle className="text-base">Colors</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {(Object.keys(customColors) as Array<keyof typeof customColors>).map((key) => (
-                    <div key={key} className="space-y-1.5">
-                      <Label className="text-xs capitalize">{key}</Label>
+                  {Object.keys(customColors as Record<string, string>).map((colorKey) => (
+                    <div key={colorKey} className="space-y-1.5">
+                      <Label className="text-xs capitalize">{colorKey}</Label>
                       <div className="flex gap-2 items-center">
-                        <input type="color" value={customColors[key]} onChange={(e) => setCustomColors({ ...customColors, [key]: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
-                        <Input value={customColors[key]} onChange={(e) => setCustomColors({ ...customColors, [key]: e.target.value })} className="h-8 text-xs font-mono" />
+                        <input type="color" value={customColors[colorKey]} onChange={(e) => setCustomColors({ ...customColors, [colorKey]: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                        <Input value={customColors[colorKey]} onChange={(e) => setCustomColors({ ...customColors, [colorKey]: e.target.value })} className="h-8 text-xs font-mono" />
                       </div>
                     </div>
                   ))}
@@ -231,7 +245,7 @@ const StoreDesign = () => {
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Eye className="h-4 w-4" /> Live Preview
             </div>
-            <StorePreview theme={previewTheme} storeName={store?.name || 'My Store'} />
+            <StorePreview theme={previewTheme} storeName={store?.name || 'My Store'} logoUrl={headerConfig.logo_url || store?.logo_url || null} />
           </div>
         </div>
       </div>

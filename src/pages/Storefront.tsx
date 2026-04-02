@@ -45,6 +45,7 @@ const Storefront = () => {
   const settings = (store.settings || {}) as any;
   const seo = settings.seo || {};
   const homepageSections = settings.homepage_sections || [];
+  const bannerCarouselSections = homepageSections.filter((section: any) => section.type === 'banner_carousel');
   const footerConfig: FooterConfig = { ...DEFAULT_FOOTER, ...(settings.footer || {}) };
 
   const renderSection = (section: any, index: number) => {
@@ -80,6 +81,33 @@ const Storefront = () => {
         );
       case 'newsletter':
         return <NewsletterSection key={index} storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />;
+      case 'banner_carousel':
+        if (section.id !== bannerCarouselSections[0]?.id) return null;
+        return (
+          <section key={section.id || index} className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2">
+              {bannerCarouselSections.map((banner: any, bannerIndex: number) => (
+                <article
+                  key={banner.id || bannerIndex}
+                  className="relative min-w-[85%] md:min-w-[48%] lg:min-w-[32%] overflow-hidden snap-center shrink-0"
+                  style={{ backgroundColor: colors.secondary, borderRadius: `${borderRadius}px` }}
+                >
+                  {banner.image ? (
+                    <img src={banner.image} alt={banner.title || `Banner ${bannerIndex + 1}`} className="h-44 md:h-56 w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-44 md:h-56 w-full" />
+                  )}
+                  <div className="absolute inset-0 flex items-end bg-black/25">
+                    <div className="p-4 md:p-5 text-white">
+                      {banner.title && <h2 className="text-lg md:text-xl font-bold" style={{ fontFamily: fonts.heading }}>{banner.title}</h2>}
+                      {banner.subtitle && <p className="mt-1 text-sm text-white/80">{banner.subtitle}</p>}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        );
       case 'text_block':
         return (
           <section key={index} className="max-w-4xl mx-auto px-4 py-10 text-center">
