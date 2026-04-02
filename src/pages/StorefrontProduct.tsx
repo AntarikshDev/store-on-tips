@@ -166,12 +166,11 @@ const StorefrontProduct = () => {
             )}
 
             {/* Share */}
-            <ShareButton
-              title={product.title}
-              text={product.short_description || undefined}
-              url={`${window.location.origin}/store/${slug}/product/${productId}`}
-              colors={colors}
-              borderRadius={borderRadius}
+            <ProductShareButtons
+              productTitle={product.title}
+              productUrl={`/store/${slug}/product/${productId}`}
+              productImage={product.images?.[0]}
+              primaryColor={colors.primary}
             />
 
             {/* Quantity - hidden on mobile (use sticky bar) */}
