@@ -5,7 +5,8 @@ import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
-import ShareButton from '@/components/storefront/ShareButton';
+import ProductShareButtons from '@/components/storefront/ProductShareButtons';
+
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 import { Loader2, Star } from 'lucide-react';
@@ -74,7 +75,6 @@ const Storefront = () => {
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>
                   Shop Now
                 </a>
-                <ShareButton title={store.name} text={store.description || undefined} url={`${window.location.origin}/store/${slug}`} colors={colors} borderRadius={borderRadius} />
               </div>
             </div>
           </section>
@@ -129,6 +129,7 @@ const Storefront = () => {
                   <div className="p-2.5">
                     <h3 className="text-xs font-semibold truncate">{product.title}</h3>
                     <span className="text-xs font-bold" style={{ color: colors.primary }}>₹{Number(product.price).toLocaleString('en-IN')}</span>
+                    <ProductShareButtons productTitle={product.title} productUrl={`/store/${slug}/product/${product.id}`} productImage={product.images?.[0]} primaryColor={colors.primary} />
                   </div>
                 </Link>
               ))}
@@ -185,6 +186,7 @@ const Storefront = () => {
                         <span className="text-xs md:text-sm font-bold" style={{ color: colors.primary }}>₹{Number(product.price).toLocaleString('en-IN')}</span>
                         {product.compare_at_price && product.compare_at_price > product.price && <span className="text-[10px] md:text-xs line-through opacity-40">₹{Number(product.compare_at_price).toLocaleString('en-IN')}</span>}
                       </div>
+                      <ProductShareButtons productTitle={product.title} productUrl={`/store/${slug}/product/${product.id}`} productImage={product.images?.[0]} primaryColor={colors.primary} />
                     </div>
                   </Link>
                 ))}
@@ -202,7 +204,6 @@ const Storefront = () => {
               <p className="text-sm mb-6 max-w-md mx-auto text-center px-4" style={{ color: store.banner_url ? 'rgba(255,255,255,0.85)' : undefined, opacity: store.banner_url ? 1 : 0.6 }}>Explore our curated collection of products</p>
               <div className="flex items-center justify-center gap-3">
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>Shop Now</a>
-                <ShareButton title={store.name} text={store.description || undefined} url={`${window.location.origin}/store/${slug}`} colors={colors} borderRadius={borderRadius} />
               </div>
             </div>
           </section>
@@ -237,6 +238,7 @@ const Storefront = () => {
                         <span className="text-xs md:text-sm font-bold" style={{ color: colors.primary }}>₹{Number(product.price).toLocaleString('en-IN')}</span>
                         {product.compare_at_price && product.compare_at_price > product.price && <span className="text-[10px] md:text-xs line-through opacity-40">₹{Number(product.compare_at_price).toLocaleString('en-IN')}</span>}
                       </div>
+                      <ProductShareButtons productTitle={product.title} productUrl={`/store/${slug}/product/${product.id}`} productImage={product.images?.[0]} primaryColor={colors.primary} />
                     </div>
                   </Link>
                 ))}

@@ -4,7 +4,7 @@ import { useStorefront, useStorefrontProduct } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import SEOHead from '@/components/storefront/SEOHead';
 import ReviewSection from '@/components/storefront/ReviewSection';
-import ShareButton from '@/components/storefront/ShareButton';
+import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import ProductImageSwiper from '@/components/storefront/ProductImageSwiper';
 import MobileAddToCart from '@/components/storefront/MobileAddToCart';
 import { useCart } from '@/hooks/useCart';
@@ -166,12 +166,11 @@ const StorefrontProduct = () => {
             )}
 
             {/* Share */}
-            <ShareButton
-              title={product.title}
-              text={product.short_description || undefined}
-              url={`${window.location.origin}/store/${slug}/product/${productId}`}
-              colors={colors}
-              borderRadius={borderRadius}
+            <ProductShareButtons
+              productTitle={product.title}
+              productUrl={`/store/${slug}/product/${productId}`}
+              productImage={product.images?.[0]}
+              primaryColor={colors.primary}
             />
 
             {/* Quantity - hidden on mobile (use sticky bar) */}
