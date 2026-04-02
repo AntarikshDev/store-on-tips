@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrder, useOrders, ORDER_STATUSES, PAYMENT_STATUSES, type OrderStatus } from '@/hooks/useOrders';
+import { useStore } from '@/hooks/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, User, MapPin, Phone, Mail, Package, Truck } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Mail, Package, Truck, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import ShipOrderDialog from '@/components/orders/ShipOrderDialog';
 import type { Json } from '@/integrations/supabase/types';
 
 interface OrderItem {
@@ -30,8 +35,12 @@ const STATUS_ORDER: OrderStatus[] = ['pending', 'confirmed', 'processing', 'ship
 const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: order, isLoading } = useOrder(id);
+  const { data: order, isLoading, refetch } = useOrder(id);
   const { updateStatus } = useOrders();
+  const { store } = useStore();
+  const [shipDialogOpen, setShipDialogOpen] = useState(false);
+  const [trackingData, setTrackingData] = useState<any>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
 
   if (isLoading) {
     return (
@@ -59,6 +68,48 @@ const OrderDetail = () => {
     updateStatus.mutate({ id: order.id, status: status as OrderStatus });
   };
 
+  const handleShipped = async (waybill: string) => {
+    // Save tracking number and update status to shipped
+    await supabase
+      .from('orders')
+      .update({ tracking_number: waybill, status: 'shipped' })
+      .eq('id', order.id);
+    refetch();
+    toast.success('Order marked as shipped');
+  };
+
+  const handleTrack = async () => {
+    if (!order.tracking_number) return;
+    const settings = store?.settings as any;
+    const shippingConfig = settings?.shipping;
+    if (!shippingConfig?.api_token) {
+      toast.error('Configure shipping settings first');
+      return;
+    }
+    setTrackingLoading(true);
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/delhivery-proxy`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'track',
+            api_token: shippingConfig.api_token,
+            test_mode: shippingConfig.test_mode ?? true,
+            waybill: order.tracking_number,
+          }),
+        }
+      );
+      const data = await res.json();
+      setTrackingData(data);
+    } catch {
+      toast.error('Failed to fetch tracking info');
+    }
+    setTrackingLoading(false);
+  };
+
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       {/* Header */}
@@ -75,6 +126,11 @@ const OrderDetail = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!order.tracking_number && store && (
+            <Button variant="outline" size="sm" onClick={() => setShipDialogOpen(true)}>
+              <Truck className="h-4 w-4 mr-1" /> Ship Order
+            </Button>
+          )}
           <Select value={order.status || 'pending'} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -201,10 +257,51 @@ const OrderDetail = () => {
                   <Truck className="h-4 w-4" /> Shipping
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  Tracking: <span className="font-medium">{order.tracking_number}</span>
-                </p>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm">
+                    AWB: <span className="font-medium font-mono">{order.tracking_number}</span>
+                  </p>
+                  <Button variant="outline" size="sm" onClick={handleTrack} disabled={trackingLoading}>
+                    {trackingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                    Track
+                  </Button>
+                </div>
+                {trackingData && (
+                  <div className="space-y-2 border-t pt-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge variant="outline">{trackingData.status}</Badge>
+                    </div>
+                    {trackingData.location && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Location</span>
+                        <span>{trackingData.location}</span>
+                      </div>
+                    )}
+                    {trackingData.expected_delivery && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Expected Delivery</span>
+                        <span>{trackingData.expected_delivery}</span>
+                      </div>
+                    )}
+                    {trackingData.scans?.length > 0 && (
+                      <div className="pt-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Recent Scans</p>
+                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                          {trackingData.scans.slice(0, 5).map((scan: any, i: number) => (
+                            <div key={i} className="text-xs p-2 rounded bg-muted">
+                              <span className="font-medium">{scan?.ScanDetail?.Scan || 'Scan'}</span>
+                              {scan?.ScanDetail?.ScannedLocation && (
+                                <span className="text-muted-foreground ml-1">— {scan.ScanDetail.ScannedLocation}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -287,6 +384,16 @@ const OrderDetail = () => {
           )}
         </div>
       </div>
+
+      {store && (
+        <ShipOrderDialog
+          open={shipDialogOpen}
+          onOpenChange={setShipDialogOpen}
+          order={order}
+          store={store}
+          onShipped={handleShipped}
+        />
+      )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
+import PincodeChecker from '@/components/storefront/PincodeChecker';
 
 declare global {
   interface Window {
@@ -357,6 +358,25 @@ const StorefrontCheckout = () => {
                 style={inputStyle}
               />
             </div>
+
+            {/* Pincode Delivery Check */}
+            {(() => {
+              const settings = store?.settings as any;
+              const shipping = settings?.shipping;
+              if (shipping?.api_token && shipping?.pickup?.pincode) {
+                return (
+                  <PincodeChecker
+                    storeId={store.id}
+                    apiToken={shipping.api_token}
+                    testMode={shipping.test_mode ?? true}
+                    originPincode={shipping.pickup.pincode}
+                    colors={colors}
+                    borderRadius={borderRadius}
+                  />
+                );
+              }
+              return null;
+            })()}
 
             <h2 className="text-sm font-semibold mb-3 pt-3" style={{ fontFamily: fonts.heading }}>
               Payment Method
