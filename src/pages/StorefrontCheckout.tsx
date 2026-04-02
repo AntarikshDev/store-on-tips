@@ -74,6 +74,27 @@ const StorefrontCheckout = () => {
 
   const handleField = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
+  const discount = appliedCoupon?.discount || 0;
+  const finalTotal = Math.max(0, totalPrice - discount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    const result = await validateCoupon(store.id, couponCode, totalPrice);
+    if (result.valid && result.coupon) {
+      setAppliedCoupon({ id: result.coupon.id, code: result.coupon.code, discount: result.discount! });
+      toast.success(`Coupon applied! You save ₹${result.discount!.toLocaleString('en-IN')}`);
+    } else {
+      toast.error(result.error || 'Invalid coupon');
+    }
+    setCouponLoading(false);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+  };
+
   const createOrder = async () => {
     const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const orderItems = items.map((i) => ({
