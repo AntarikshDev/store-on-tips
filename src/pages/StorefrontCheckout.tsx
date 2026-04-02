@@ -3,10 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCart } from '@/hooks/useCart';
+import { useValidateCoupon } from '@/hooks/useCoupons';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PincodeChecker from '@/components/storefront/PincodeChecker';
+import SEOHead from '@/components/storefront/SEOHead';
 
 declare global {
   interface Window {
