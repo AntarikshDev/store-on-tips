@@ -109,6 +109,11 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Public Storefront Routes */}
+            <Route path="/store/:slug" element={<Storefront />} />
+            <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />
+            <Route path="/store/:slug/cart" element={<StorefrontCart />} />
+            <Route path="/store/:slug/checkout" element={<StorefrontCheckout />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
