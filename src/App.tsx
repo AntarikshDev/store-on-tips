@@ -9,6 +9,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import ProductList from "@/pages/ProductList";
 import ProductForm from "@/pages/ProductForm";
+import OrderList from "@/pages/OrderList";
+import OrderDetail from "@/pages/OrderDetail";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
@@ -68,6 +70,26 @@ const App = () => (
                 <ProtectedRoute>
                   <DashboardLayout>
                     <ProductForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <OrderList />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <OrderDetail />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
