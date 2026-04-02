@@ -14,6 +14,7 @@ export interface HeaderConfig {
   nav_weight?: string;
   nav_gap?: number;
   logo_url?: string | null;
+  logo_name?: string | null;
 }
 
 const DEFAULT_HEADER: HeaderConfig = {
@@ -65,7 +66,7 @@ const HeaderEditor = ({ config, onChange }: Props) => {
       <Card>
         <CardHeader><CardTitle className="text-base">Logo & Branding</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <LogoUploader logoUrl={c.logo_url} onSave={(url) => onChange({ ...c, logo_url: url })} />
+          <LogoUploader logoUrl={c.logo_url} logoName={c.logo_name} onSave={(url, name) => onChange({ ...c, logo_url: url, logo_name: name ?? null })} />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Logo Position</Label>

@@ -5,9 +5,10 @@ import { ShoppingBag, Search, User, Menu } from 'lucide-react';
 interface StorePreviewProps {
   theme: ThemeTemplate;
   storeName: string;
+  logoUrl?: string | null;
 }
 
-const StorePreview = ({ theme, storeName }: StorePreviewProps) => {
+const StorePreview = ({ theme, storeName, logoUrl }: StorePreviewProps) => {
   const { colors, fonts, borderRadius, preview } = theme;
 
   // Dynamically load Google Fonts
@@ -47,9 +48,12 @@ const StorePreview = ({ theme, storeName }: StorePreviewProps) => {
         className="flex items-center justify-between px-4 py-3 border-b"
         style={{ borderColor: colors.secondary, backgroundColor: colors.card }}
       >
-        <span className="font-bold text-sm" style={{ fontFamily: fonts.heading }}>
-          {storeName || 'My Store'}
-        </span>
+        <div className="flex items-center gap-2">
+          {logoUrl && <img src={logoUrl} alt={storeName || 'Store logo'} className="h-8 w-8 rounded-full object-cover" />}
+          <span className="font-bold text-sm" style={{ fontFamily: fonts.heading }}>
+            {storeName || 'My Store'}
+          </span>
+        </div>
         <div className="flex items-center gap-3">
           <Search className="h-3.5 w-3.5 opacity-50" />
           <ShoppingBag className="h-3.5 w-3.5 opacity-50" />
