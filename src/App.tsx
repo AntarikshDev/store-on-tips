@@ -117,6 +117,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminRoute><AdminLayout><AdminOverview /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/stores" element={<AdminRoute><AdminLayout><AdminStores /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminLayout><AdminUsers /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/themes" element={<AdminRoute><AdminLayout><AdminThemes /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/revenue" element={<AdminRoute><AdminLayout><AdminRevenue /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
             {/* Public Storefront Routes */}
             <Route path="/store/:slug" element={<Storefront />} />
             <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import {
   LayoutDashboard,
   Package,
@@ -11,6 +12,7 @@ import {
   Store,
   ChevronLeft,
   Menu,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
