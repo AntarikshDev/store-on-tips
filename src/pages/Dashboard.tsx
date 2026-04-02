@@ -16,6 +16,7 @@ const Dashboard = () => {
   const { store, loading } = useStore();
   const { products, loading: productsLoading } = useProducts();
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   const { data: orderStats } = useQuery({
     queryKey: ['order-stats', store?.id],
