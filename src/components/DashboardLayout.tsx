@@ -23,6 +23,7 @@ const navItems = [
   { label: 'Products', icon: Package, path: '/products' },
   { label: 'Orders', icon: ShoppingCart, path: '/orders' },
   { label: 'Store Design', icon: Palette, path: '/store-design' },
+  { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
   { label: 'Analytics', icon: BarChart3, path: '/analytics' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ];
