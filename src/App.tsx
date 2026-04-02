@@ -14,6 +14,10 @@ import OrderDetail from "@/pages/OrderDetail";
 import StoreDesign from "@/pages/StoreDesign";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
+import Storefront from "@/pages/Storefront";
+import StorefrontProduct from "@/pages/StorefrontProduct";
+import StorefrontCart from "@/pages/StorefrontCart";
+import StorefrontCheckout from "@/pages/StorefrontCheckout";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
