@@ -15,6 +15,8 @@ import StoreDesign from "@/pages/StoreDesign";
 import PaymentSettings from "@/pages/PaymentSettings";
 import ShippingSettings from "@/pages/ShippingSettings";
 import DomainSettings from "@/pages/DomainSettings";
+import CouponList from "@/pages/CouponList";
+import SEOSettings from "@/pages/SEOSettings";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import Storefront from "@/pages/Storefront";
