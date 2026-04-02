@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FONT_OPTIONS } from '@/lib/themes';
+import LogoUploader from './LogoUploader';
 
 export interface HeaderConfig {
   logo_position: 'left' | 'center';
@@ -12,6 +13,7 @@ export interface HeaderConfig {
   nav_font?: string;
   nav_weight?: string;
   nav_gap?: number;
+  logo_url?: string | null;
 }
 
 const DEFAULT_HEADER: HeaderConfig = {
