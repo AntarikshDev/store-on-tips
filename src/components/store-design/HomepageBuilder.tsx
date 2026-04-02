@@ -91,13 +91,19 @@ const SortableSection = ({
                 </div>
               </div>
               {(section.type === 'hero' || section.type === 'text_block' || section.type === 'banner_carousel') && (
-                <div>
-                  <Label className="text-xs">Image URL</Label>
-                  <Input
-                    value={section.image}
-                    onChange={(e) => onUpdate({ ...section, image: e.target.value })}
-                    className="h-8 text-sm"
-                    placeholder="https://... or upload"
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Image {section.type === 'hero' ? '(Recommended: 1920×600px)' : '(Recommended: 1200×400px)'}</Label>
+                  <div className="flex gap-2 items-start">
+                    <Input
+                      value={section.image}
+                      onChange={(e) => onUpdate({ ...section, image: e.target.value })}
+                      className="h-8 text-sm flex-1"
+                      placeholder="Paste URL or upload below"
+                    />
+                  </div>
+                  <HeroImageUpload
+                    currentImage={section.image}
+                    onUploaded={(url) => onUpdate({ ...section, image: url })}
                   />
                 </div>
               )}
