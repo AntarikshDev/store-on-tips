@@ -46,8 +46,11 @@ const StorefrontCheckout = () => {
 
   // Check if store has Razorpay configured
   useEffect(() => {
-    if (store?.settings?.razorpay?.key_id) {
+    const settings = store?.settings as any;
+    if (settings?.razorpay?.key_id) {
       setRazorpayAvailable(true);
+    }
+  }, [store]);
     }
   }, [store]);
 
