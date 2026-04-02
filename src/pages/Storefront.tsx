@@ -201,7 +201,6 @@ const Storefront = () => {
               <p className="text-sm mb-6 max-w-md mx-auto text-center px-4" style={{ color: store.banner_url ? 'rgba(255,255,255,0.85)' : undefined, opacity: store.banner_url ? 1 : 0.6 }}>Explore our curated collection of products</p>
               <div className="flex items-center justify-center gap-3">
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>Shop Now</a>
-                <ShareButton title={store.name} text={store.description || undefined} url={`${window.location.origin}/store/${slug}`} colors={colors} borderRadius={borderRadius} />
               </div>
             </div>
           </section>
