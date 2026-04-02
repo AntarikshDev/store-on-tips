@@ -37,8 +37,16 @@ const SEOHead = ({ title, description, ogImage, url, type = 'website', product }
     }
     setMeta('og:title', title, true);
     setMeta('og:type', type === 'product' ? 'product' : 'website', true);
-    if (ogImage) setMeta('og:image', ogImage, true);
-    if (url) setMeta('og:url', url, true);
+    if (ogImage) {
+      const absoluteOgImage = ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`;
+      setMeta('og:image', absoluteOgImage, true);
+      setMeta('og:image:width', '1200', true);
+      setMeta('og:image:height', '630', true);
+    }
+    if (url) {
+      const absoluteUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      setMeta('og:url', absoluteUrl, true);
+    }
 
     // Twitter card
     setMeta('twitter:card', ogImage ? 'summary_large_image' : 'summary');
