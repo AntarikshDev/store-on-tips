@@ -34,6 +34,12 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import CustomerAuth from "@/pages/storefront/CustomerAuth";
 import CustomerAccount from "@/pages/storefront/CustomerAccount";
 import CustomerRoute from "@/components/storefront/CustomerRoute";
+import BlogPosts from "@/pages/BlogPosts";
+import BlogPostForm from "@/pages/BlogPostForm";
+import Subscribers from "@/pages/Subscribers";
+import StoreAnalytics from "@/pages/StoreAnalytics";
+import StorefrontBlog from "@/pages/storefront/StorefrontBlog";
+import StorefrontBlogPost from "@/pages/storefront/StorefrontBlogPost";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

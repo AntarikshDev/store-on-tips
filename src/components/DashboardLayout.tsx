@@ -18,6 +18,9 @@ import {
   Globe,
   Ticket,
   Search,
+  FileText,
+  Mail,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,7 +31,10 @@ const navItems = [
   { label: 'Products', icon: Package, path: '/products' },
   { label: 'Orders', icon: ShoppingCart, path: '/orders' },
   { label: 'Coupons', icon: Ticket, path: '/coupons' },
+  { label: 'Blog Posts', icon: FileText, path: '/blog-posts' },
+  { label: 'Subscribers', icon: Mail, path: '/subscribers' },
   { label: 'Store Design', icon: Palette, path: '/store-design' },
+  { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
   { label: 'SEO', icon: Search, path: '/settings/seo' },
   { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
   { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
