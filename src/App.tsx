@@ -9,6 +9,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import ProductList from "@/pages/ProductList";
 import ProductForm from "@/pages/ProductForm";
+import OrderList from "@/pages/OrderList";
+import OrderDetail from "@/pages/OrderDetail";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
