@@ -56,6 +56,12 @@ const StoreDesign = () => {
 
   const handleSave = async () => {
     if (!store) return;
+    // Block saving premium themes that aren't purchased
+    const purchased = ((store?.settings as any)?.purchased_themes || []) as string[];
+    if (selectedTemplate.isPremium && !purchased.includes(selectedTemplate.id)) {
+      toast.info(`"${selectedTemplate.name}" is a premium theme (₹${selectedTemplate.price}). Payment integration coming soon!`);
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from('stores')
