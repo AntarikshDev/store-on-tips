@@ -15,6 +15,7 @@ import {
   Shield,
   CreditCard,
   Truck,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,7 @@ const navItems = [
   { label: 'Store Design', icon: Palette, path: '/store-design' },
   { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
   { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
-  { label: 'Analytics', icon: BarChart3, path: '/analytics' },
+  { label: 'Domain', icon: Globe, path: '/settings/domain' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ];
 
