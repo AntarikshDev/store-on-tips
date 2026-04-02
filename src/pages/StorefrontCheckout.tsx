@@ -359,6 +359,25 @@ const StorefrontCheckout = () => {
               />
             </div>
 
+            {/* Pincode Delivery Check */}
+            {(() => {
+              const settings = store?.settings as any;
+              const shipping = settings?.shipping;
+              if (shipping?.api_token && shipping?.pickup?.pincode) {
+                return (
+                  <PincodeChecker
+                    storeId={store.id}
+                    apiToken={shipping.api_token}
+                    testMode={shipping.test_mode ?? true}
+                    originPincode={shipping.pickup.pincode}
+                    colors={colors}
+                    borderRadius={borderRadius}
+                  />
+                );
+              }
+              return null;
+            })()}
+
             <h2 className="text-sm font-semibold mb-3 pt-3" style={{ fontFamily: fonts.heading }}>
               Payment Method
             </h2>
