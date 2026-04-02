@@ -1,40 +1,41 @@
-# Phase 6: Shipping Integration — Delhivery
+# Phase 7: Custom Domain Management for Sellers
 
 ## What We Build
 
-### 1. Seller Shipping Settings (`/settings/shipping`)
-- Seller enters Delhivery API Token + Pickup Address (name, phone, address, city, state, pincode)
-- Saved to `stores.settings.shipping` JSONB
-- Test/Live mode toggle (staging vs production API)
-- Connection test button
+### 1. Domain Settings Page (`/settings/domain`)
+- Seller enters their custom domain (e.g., `mystore.com`)
+- Shows step-by-step DNS configuration instructions:
+  - A record pointing to platform IP
+  - TXT record for ownership verification
+- Real-time DNS verification status
+- "Verify Domain" button triggers DNS check
+- Status indicators: Not configured → Pending → Verified → Active
 
-### 2. Edge Function: `delhivery-proxy`
-Multi-action edge function handling:
-- **check-serviceability** — verify if buyer's pincode is deliverable from seller's origin
-- **estimate-rate** — calculate shipping cost (weight, origin pincode, destination pincode)
-- **create-shipment** — generate AWB number when seller ships an order
-- **track** — get real-time tracking by AWB/waybill number
+### 2. Edge Function: `verify-domain`
+- Accepts domain name
+- Checks TXT record for ownership verification token
+- Checks A record points to correct IP
+- Returns verification status
 
-### 3. Checkout Enhancement
-- Pincode checker component — buyer enters pincode, sees "Deliverable ✓" or "Not available"
-- Estimated delivery cost shown before order placement
+### 3. Store Domain Storage
+- Domain saved to `stores.settings.domain` JSONB:
+  - `domain`: string
+  - `verified`: boolean
+  - `verification_token`: string
+  - `connected_at`: timestamp
 
-### 4. Order Detail Enhancement
-- "Ship Order" dialog — seller enters package weight, dimensions → creates Delhivery shipment
-- AWB number auto-saved to order's tracking_number
-- Live tracking status widget on order detail page
+### 4. Storefront Domain Routing
+- Storefront checks for custom domain in store settings
+- Display domain prominently on dashboard with copy-to-clipboard
+- "View Store" link uses custom domain when verified
 
 ## New Files
-- `src/pages/ShippingSettings.tsx` — seller config page
-- `supabase/functions/delhivery-proxy/index.ts` — multi-action edge function
-- `src/components/orders/ShipOrderDialog.tsx` — shipment creation dialog
-- `src/components/storefront/PincodeChecker.tsx` — serviceability widget
+- `src/pages/DomainSettings.tsx` — domain config + verification UI
+- `supabase/functions/verify-domain/index.ts` — DNS verification edge function
 
 ## Modified Files
-- `src/App.tsx` — /settings/shipping route
-- `src/components/DashboardLayout.tsx` — Shipping nav link
-- `src/pages/OrderDetail.tsx` — ship button + tracking display
-- `src/pages/StorefrontCheckout.tsx` — pincode check integration
+- `src/App.tsx` — add /settings/domain route
+- `src/components/DashboardLayout.tsx` — add Domain nav item
 
-## No DB Changes Needed
-Orders table already has tracking_number. Stores.settings JSONB stores Delhivery credentials.
+## Note
+Full custom domain routing (SSL provisioning, reverse proxy) requires infrastructure beyond the app layer. This phase builds the seller-facing config and DNS verification. Actual domain-to-store routing would need a proxy layer (e.g., Cloudflare Workers, custom Nginx) in a production deployment.
