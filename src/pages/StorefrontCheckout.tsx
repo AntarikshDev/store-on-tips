@@ -488,12 +488,64 @@ const StorefrontCheckout = () => {
                   </div>
                 ))}
               </div>
-              <div
-                className="flex justify-between text-base font-bold pt-3 border-t"
-                style={{ borderColor: colors.text + '15' }}
-              >
-                <span>Total</span>
-                <span style={{ color: colors.primary }}>₹{totalPrice.toLocaleString('en-IN')}</span>
+
+              {/* Coupon Code */}
+              <div className="pt-2">
+                {appliedCoupon ? (
+                  <div
+                    className="flex items-center justify-between p-2 text-sm"
+                    style={{ backgroundColor: colors.primary + '15', borderRadius: `${borderRadius / 2}px` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-3.5 w-3.5" style={{ color: colors.primary }} />
+                      <span className="font-mono font-medium">{appliedCoupon.code}</span>
+                      <span style={{ color: colors.primary }}>-₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <button onClick={removeCoupon} className="opacity-60 hover:opacity-100">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      placeholder="Coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="flex-1 px-3 py-2 text-sm border font-mono"
+                      style={inputStyle}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3 py-2 text-xs font-semibold disabled:opacity-40"
+                      style={{
+                        backgroundColor: colors.primary,
+                        color: '#fff',
+                        borderRadius: `${borderRadius / 2}px`,
+                      }}
+                    >
+                      {couponLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1 pt-2 border-t" style={{ borderColor: colors.text + '15' }}>
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm" style={{ color: colors.primary }}>
+                    <span>Discount</span>
+                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-bold pt-2">
+                  <span>Total</span>
+                  <span style={{ color: colors.primary }}>₹{finalTotal.toLocaleString('en-IN')}</span>
+                </div>
               </div>
 
               <button
