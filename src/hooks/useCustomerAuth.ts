@@ -30,8 +30,8 @@ export const useCustomerAuth = (storeSlug: string) => {
       email,
       password,
       options: {
-        data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/store/${storeSlug}`,
+        data: { full_name: fullName, is_customer: true },
+        emailRedirectTo: `${window.location.origin}/store/${storeSlug}/account`,
       },
     });
     return { error };
