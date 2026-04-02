@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { type ThemeTemplate } from '@/lib/themes';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
 
@@ -8,6 +9,22 @@ interface StorePreviewProps {
 
 const StorePreview = ({ theme, storeName }: StorePreviewProps) => {
   const { colors, fonts, borderRadius, preview } = theme;
+
+  // Dynamically load Google Fonts
+  useEffect(() => {
+    const fontsToLoad = [fonts.heading, fonts.body].filter(Boolean);
+    const uniqueFonts = [...new Set(fontsToLoad)];
+    uniqueFonts.forEach((font) => {
+      const id = `gfont-${font.replace(/\s+/g, '-')}`;
+      if (!document.getElementById(id)) {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;600;700&display=swap`;
+        document.head.appendChild(link);
+      }
+    });
+  }, [fonts.heading, fonts.body]);
 
   const fakeProducts = [
     { name: 'Classic White T-Shirt', price: '₹599', image: '' },

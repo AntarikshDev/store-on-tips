@@ -48,14 +48,7 @@ const StoreDesign = () => {
   }, [categoryFilter]);
 
   const handleSelectTheme = (theme: ThemeTemplate) => {
-    if (theme.isPremium) {
-      // Check if user already purchased (stored in settings)
-      const purchased = ((store?.settings as any)?.purchased_themes || []) as string[];
-      if (!purchased.includes(theme.id)) {
-        toast.info(`"${theme.name}" is a premium theme (₹${theme.price}). Payment integration coming soon!`);
-        return;
-      }
-    }
+    // Allow preview of all themes including premium
     setSelectedThemeId(theme.id);
     setCustomColors(theme.colors);
     setCustomFonts(theme.fonts);
@@ -63,6 +56,12 @@ const StoreDesign = () => {
 
   const handleSave = async () => {
     if (!store) return;
+    // Block saving premium themes that aren't purchased
+    const purchased = ((store?.settings as any)?.purchased_themes || []) as string[];
+    if (selectedTemplate.isPremium && !purchased.includes(selectedTemplate.id)) {
+      toast.info(`"${selectedTemplate.name}" is a premium theme (₹${selectedTemplate.price}). Payment integration coming soon!`);
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from('stores')
