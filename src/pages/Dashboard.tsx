@@ -1,7 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useStore } from '@/hooks/useStore';
+import { useProducts } from '@/hooks/useProducts';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { IndianRupee, ShoppingCart, TrendingUp, Package } from 'lucide-react';
@@ -9,9 +12,29 @@ import { IndianRupee, ShoppingCart, TrendingUp, Package } from 'lucide-react';
 const Dashboard = () => {
   const { user } = useAuth();
   const { store, loading } = useStore();
+  const { products, loading: productsLoading } = useProducts();
   const navigate = useNavigate();
 
-  // Redirect to onboarding if no store or onboarding incomplete
+  const { data: orderStats } = useQuery({
+    queryKey: ['order-stats', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return { count: 0, revenue: 0 };
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('orders')
+        .select('total')
+        .eq('store_id', store.id)
+        .gte('created_at', today.toISOString());
+      if (error) throw error;
+      return {
+        count: data.length,
+        revenue: data.reduce((sum, o) => sum + (o.total || 0), 0),
+      };
+    },
+    enabled: !!store?.id,
+  });
+
   useEffect(() => {
     if (!loading && (!store || (store.onboarding_step !== null && store.onboarding_step < 7))) {
       navigate('/onboarding', { replace: true });
@@ -27,10 +50,10 @@ const Dashboard = () => {
   }
 
   const stats = [
-    { label: "Today's Sales", value: '₹0', icon: IndianRupee, change: '+0%' },
-    { label: 'Orders', value: '0', icon: ShoppingCart, change: '+0%' },
-    { label: 'Conversion', value: '0%', icon: TrendingUp, change: '+0%' },
-    { label: 'Products', value: '0', icon: Package, change: '' },
+    { label: "Today's Sales", value: `₹${orderStats?.revenue ?? 0}`, icon: IndianRupee, change: '' },
+    { label: 'Orders', value: String(orderStats?.count ?? 0), icon: ShoppingCart, change: '' },
+    { label: 'Conversion', value: '0%', icon: TrendingUp, change: '' },
+    { label: 'Products', value: String(products.length), icon: Package, change: '' },
   ];
 
   return (
@@ -42,7 +65,6 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.label}>
@@ -54,27 +76,23 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.change && (
-                <p className="text-xs text-muted-foreground">{stat.change} from yesterday</p>
-              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Quick actions / empty state */}
-      {!store ? (
+      {products.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
               <Package className="h-6 w-6 text-accent-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Set up your store</h3>
+            <h3 className="text-lg font-semibold">Add your first product</h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-              Complete the onboarding wizard to start selling online in minutes.
+              Upload a product image and let AI generate all the details automatically.
             </p>
-            <Button className="mt-4" onClick={() => navigate('/onboarding')}>
-              Start Setup
+            <Button className="mt-4" onClick={() => navigate('/products/new')}>
+              Add Product
             </Button>
           </CardContent>
         </Card>
