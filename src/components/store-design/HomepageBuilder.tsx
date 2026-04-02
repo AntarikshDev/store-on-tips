@@ -65,6 +65,8 @@ export interface HomepageSection {
   title: string;
   subtitle: string;
   image: string;
+  images?: string[];
+  isSlider?: boolean;
   layout: string;
   height?: 'small' | 'medium' | 'large' | 'full';
   topMargin?: number;
