@@ -16,6 +16,8 @@ import {
   CreditCard,
   Truck,
   Globe,
+  Ticket,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -25,11 +27,12 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { label: 'Products', icon: Package, path: '/products' },
   { label: 'Orders', icon: ShoppingCart, path: '/orders' },
+  { label: 'Coupons', icon: Ticket, path: '/coupons' },
   { label: 'Store Design', icon: Palette, path: '/store-design' },
+  { label: 'SEO', icon: Search, path: '/settings/seo' },
   { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
   { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
   { label: 'Domain', icon: Globe, path: '/settings/domain' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
 ];
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {

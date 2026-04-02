@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useStorefront, useStorefrontProduct } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
+import SEOHead from '@/components/storefront/SEOHead';
 import { useCart } from '@/hooks/useCart';
 import { Loader2, Minus, Plus, ChevronLeft, ShoppingBag, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,6 +51,20 @@ const StorefrontProduct = () => {
 
   return (
     <StorefrontLayout store={store}>
+      <SEOHead
+        title={product.seo_title || `${product.title} | ${store.name}`}
+        description={product.seo_description || product.short_description || product.description?.slice(0, 160) || undefined}
+        ogImage={images[0] || undefined}
+        url={`${window.location.origin}/store/${slug}/product/${productId}`}
+        type="product"
+        product={{
+          price: Number(product.price),
+          currency: 'INR',
+          sku: product.sku || undefined,
+          images: images.length ? images : undefined,
+          brand: store.name,
+        }}
+      />
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <Link

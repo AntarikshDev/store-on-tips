@@ -3,10 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCart } from '@/hooks/useCart';
+import { useValidateCoupon } from '@/hooks/useCoupons';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PincodeChecker from '@/components/storefront/PincodeChecker';
+import SEOHead from '@/components/storefront/SEOHead';
 
 declare global {
   interface Window {
@@ -33,6 +35,10 @@ const StorefrontCheckout = () => {
   const [placing, setPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState<string | null>(null);
   const [razorpayAvailable, setRazorpayAvailable] = useState(false);
+  const { validateCoupon, incrementUsage } = useValidateCoupon();
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; code: string; discount: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -68,6 +74,27 @@ const StorefrontCheckout = () => {
 
   const handleField = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
+  const discount = appliedCoupon?.discount || 0;
+  const finalTotal = Math.max(0, totalPrice - discount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    const result = await validateCoupon(store.id, couponCode, totalPrice);
+    if (result.valid && result.coupon) {
+      setAppliedCoupon({ id: result.coupon.id, code: result.coupon.code, discount: result.discount! });
+      toast.success(`Coupon applied! You save ₹${result.discount!.toLocaleString('en-IN')}`);
+    } else {
+      toast.error(result.error || 'Invalid coupon');
+    }
+    setCouponLoading(false);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+  };
+
   const createOrder = async () => {
     const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const orderItems = items.map((i) => ({
@@ -86,7 +113,8 @@ const StorefrontCheckout = () => {
       subtotal: totalPrice,
       tax: 0,
       shipping: 0,
-      total: totalPrice,
+      total: finalTotal,
+      notes: appliedCoupon ? `Coupon: ${appliedCoupon.code} (-₹${discount})` : null,
       customer_name: form.name,
       customer_email: form.email || null,
       customer_phone: form.phone,
@@ -206,6 +234,19 @@ const StorefrontCheckout = () => {
     setPlacing(true);
     try {
       const order = await createOrder();
+      if (appliedCoupon) await incrementUsage(appliedCoupon.id);
+      // Send notification
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'order_confirmed', order_id: order.id, store_id: store.id }),
+      }).catch(() => {});
+      fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
+      }).catch(() => {});
       clearCart();
       setOrderPlaced(order.order_number);
     } catch (err) {
@@ -447,12 +488,64 @@ const StorefrontCheckout = () => {
                   </div>
                 ))}
               </div>
-              <div
-                className="flex justify-between text-base font-bold pt-3 border-t"
-                style={{ borderColor: colors.text + '15' }}
-              >
-                <span>Total</span>
-                <span style={{ color: colors.primary }}>₹{totalPrice.toLocaleString('en-IN')}</span>
+
+              {/* Coupon Code */}
+              <div className="pt-2">
+                {appliedCoupon ? (
+                  <div
+                    className="flex items-center justify-between p-2 text-sm"
+                    style={{ backgroundColor: colors.primary + '15', borderRadius: `${borderRadius / 2}px` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-3.5 w-3.5" style={{ color: colors.primary }} />
+                      <span className="font-mono font-medium">{appliedCoupon.code}</span>
+                      <span style={{ color: colors.primary }}>-₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <button onClick={removeCoupon} className="opacity-60 hover:opacity-100">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      placeholder="Coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="flex-1 px-3 py-2 text-sm border font-mono"
+                      style={inputStyle}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3 py-2 text-xs font-semibold disabled:opacity-40"
+                      style={{
+                        backgroundColor: colors.primary,
+                        color: '#fff',
+                        borderRadius: `${borderRadius / 2}px`,
+                      }}
+                    >
+                      {couponLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1 pt-2 border-t" style={{ borderColor: colors.text + '15' }}>
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm" style={{ color: colors.primary }}>
+                    <span>Discount</span>
+                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-bold pt-2">
+                  <span>Total</span>
+                  <span style={{ color: colors.primary }}>₹{finalTotal.toLocaleString('en-IN')}</span>
+                </div>
               </div>
 
               <button

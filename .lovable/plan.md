@@ -1,41 +1,37 @@
-# Phase 7: Custom Domain Management for Sellers
+# Phase 8: Coupons, Notifications & SEO
 
-## What We Build
+## 8A: Coupons & Discounts
 
-### 1. Domain Settings Page (`/settings/domain`)
-- Seller enters their custom domain (e.g., `mystore.com`)
-- Shows step-by-step DNS configuration instructions:
-  - A record pointing to platform IP
-  - TXT record for ownership verification
-- Real-time DNS verification status
-- "Verify Domain" button triggers DNS check
-- Status indicators: Not configured → Pending → Verified → Active
+### Database
+- New `coupons` table: id, store_id, code, type (percentage/flat), value, min_order_amount, max_uses, used_count, starts_at, expires_at, is_active
 
-### 2. Edge Function: `verify-domain`
-- Accepts domain name
-- Checks TXT record for ownership verification token
-- Checks A record points to correct IP
-- Returns verification status
+### UI
+- Coupon List Page (`/coupons`): CRUD with active toggle, usage stats
+- Coupon Form: code generator, type/value, date pickers, limits
+- Storefront Checkout: apply coupon code, real-time discount on subtotal
 
-### 3. Store Domain Storage
-- Domain saved to `stores.settings.domain` JSONB:
-  - `domain`: string
-  - `verified`: boolean
-  - `verification_token`: string
-  - `connected_at`: timestamp
+### Files
+- New: `src/pages/CouponList.tsx`, `src/pages/CouponForm.tsx`, `src/hooks/useCoupons.ts`
+- Modified: `StorefrontCheckout.tsx`, `App.tsx`, `DashboardLayout.tsx`
 
-### 4. Storefront Domain Routing
-- Storefront checks for custom domain in store settings
-- Display domain prominently on dashboard with copy-to-clipboard
-- "View Store" link uses custom domain when verified
+## 8B: Customer Notifications
 
-## New Files
-- `src/pages/DomainSettings.tsx` — domain config + verification UI
-- `supabase/functions/verify-domain/index.ts` — DNS verification edge function
+### Edge Function
+- `send-order-notification`: emails on order confirmed, shipped, new order alert to seller
+- Uses Lovable AI for HTML rendering
 
-## Modified Files
-- `src/App.tsx` — add /settings/domain route
-- `src/components/DashboardLayout.tsx` — add Domain nav item
+### Files
+- New: `supabase/functions/send-order-notification/index.ts`
+- Modified: `OrderDetail.tsx`
 
-## Note
-Full custom domain routing (SSL provisioning, reverse proxy) requires infrastructure beyond the app layer. This phase builds the seller-facing config and DNS verification. Actual domain-to-store routing would need a proxy layer (e.g., Cloudflare Workers, custom Nginx) in a production deployment.
+## 8C: SEO & Marketing Tools
+
+### Features
+- SEO settings page: meta title, description, OG image for store
+- SEOHead component: dynamic title/meta/OG tags on storefront pages
+- JSON-LD Product structured data
+- Social sharing preview
+
+### Files
+- New: `src/components/storefront/SEOHead.tsx`, `src/pages/SEOSettings.tsx`
+- Modified: `Storefront.tsx`, `StorefrontProduct.tsx`, `App.tsx`, `DashboardLayout.tsx`

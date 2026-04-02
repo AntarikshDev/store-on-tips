@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
+import SEOHead from '@/components/storefront/SEOHead';
 import { Loader2 } from 'lucide-react';
 
 const Storefront = () => {
@@ -30,8 +31,16 @@ const Storefront = () => {
 
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
 
+  const seo = (store.settings as any)?.seo || {};
+
   return (
     <StorefrontLayout store={store}>
+      <SEOHead
+        title={seo.meta_title || store.name}
+        description={seo.meta_description || store.description || `Shop at ${store.name}`}
+        ogImage={seo.og_image || store.banner_url || undefined}
+        url={`${window.location.origin}/store/${slug}`}
+      />
       {/* Hero */}
       <section
         className="text-center py-16 px-4"
