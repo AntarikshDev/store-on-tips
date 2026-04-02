@@ -74,6 +74,26 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <OrderList />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <OrderDetail />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
