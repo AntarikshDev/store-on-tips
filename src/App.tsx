@@ -181,6 +181,12 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Blog, Subscribers, Analytics */}
+            <Route path="/blog-posts" element={<ProtectedRoute><DashboardLayout><BlogPosts /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/blog-posts/new" element={<ProtectedRoute><DashboardLayout><BlogPostForm /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/blog-posts/:id" element={<ProtectedRoute><DashboardLayout><BlogPostForm /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/subscribers" element={<ProtectedRoute><DashboardLayout><Subscribers /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><StoreAnalytics /></DashboardLayout></ProtectedRoute>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminLayout><AdminOverview /></AdminLayout></AdminRoute>} />
             <Route path="/admin/stores" element={<AdminRoute><AdminLayout><AdminStores /></AdminLayout></AdminRoute>} />
@@ -193,6 +199,8 @@ const App = () => (
             <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />
             <Route path="/store/:slug/cart" element={<StorefrontCart />} />
             <Route path="/store/:slug/checkout" element={<StorefrontCheckout />} />
+            <Route path="/store/:slug/blog" element={<StorefrontBlog />} />
+            <Route path="/store/:slug/blog/:postSlug" element={<StorefrontBlogPost />} />
             <Route path="/store/:slug/account/auth" element={<CustomerAuth />} />
             <Route path="/store/:slug/account" element={<CustomerRoute><CustomerAccount /></CustomerRoute>} />
             <Route path="*" element={<NotFound />} />
