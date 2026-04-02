@@ -95,6 +95,16 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/store-design"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <StoreDesign />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
