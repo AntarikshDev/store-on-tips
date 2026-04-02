@@ -303,9 +303,26 @@ const ProductForm = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
+                    {parentCategories.length === 0 ? (
+                      <SelectItem value="__none" disabled>No categories — create them first</SelectItem>
+                    ) : (
+                      parentCategories.map((parent) => {
+                        const subs = getSubcategories(parent.id);
+                        if (subs.length === 0) {
+                          return <SelectItem key={parent.id} value={parent.name}>{parent.name}</SelectItem>;
+                        }
+                        return (
+                          <SelectGroup key={parent.id}>
+                            <SelectLabel className="text-xs font-semibold text-muted-foreground">{parent.name}</SelectLabel>
+                            {subs.map((sub) => (
+                              <SelectItem key={sub.id} value={`${parent.name} > ${sub.name}`}>
+                                {sub.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        );
+                      })
+                    )}
                   </SelectContent>
                 </Select>
               </div>
