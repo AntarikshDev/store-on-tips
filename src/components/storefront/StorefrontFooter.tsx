@@ -24,17 +24,23 @@ const SocialIcon = ({ platform }: { platform: string }) => {
 const StorefrontFooter = ({ store, config, colors }: Props) => {
   const socials = Object.entries(config.social_links || {}).filter(([, url]) => url);
 
+  const footerBg = config.background_color || colors.card;
+  const footerText = config.text_color || undefined;
+  const hasBgImage = !!config.background_image;
+  const bgOpacity = (config.background_opacity ?? 30) / 100;
+
   return (
-    <footer className="border-t hidden md:block" style={{ borderColor: colors.secondary + '40', backgroundColor: colors.card }}>
-      <div className="max-w-6xl mx-auto px-4 py-10">
+    <footer className="border-t hidden md:block relative overflow-hidden" style={{ borderColor: colors.secondary + '40', backgroundColor: footerBg, color: footerText }}>
+      {hasBgImage && (
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${config.background_image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: bgOpacity }} />
+      )}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
           <div>
             <h3 className="font-bold text-lg mb-2">{store.name}</h3>
             {config.custom_text && <p className="text-sm opacity-60">{config.custom_text}</p>}
           </div>
 
-          {/* Custom links */}
           {config.custom_links?.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-3 opacity-70">Quick Links</h4>
@@ -48,7 +54,6 @@ const StorefrontFooter = ({ store, config, colors }: Props) => {
             </div>
           )}
 
-          {/* Social */}
           {socials.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm mb-3 opacity-70">Follow Us</h4>
@@ -64,7 +69,7 @@ const StorefrontFooter = ({ store, config, colors }: Props) => {
         </div>
 
         {config.show_powered_by !== false && (
-          <div className="mt-8 pt-6 border-t text-center text-xs opacity-40" style={{ borderColor: colors.secondary + '20' }}>
+          <div className="mt-8 pt-6 border-t text-center text-xs opacity-40" style={{ borderColor: (footerText || colors.secondary) + '20' }}>
             © {new Date().getFullYear()} {store.name}. Powered by Antariksh Commerce
           </div>
         )}
