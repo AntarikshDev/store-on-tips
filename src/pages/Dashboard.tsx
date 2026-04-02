@@ -7,7 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { IndianRupee, ShoppingCart, TrendingUp, Package } from 'lucide-react';
+import { IndianRupee, ShoppingCart, TrendingUp, Package, ExternalLink, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { user } = useAuth();
