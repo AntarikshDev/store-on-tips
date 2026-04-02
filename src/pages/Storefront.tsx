@@ -5,7 +5,7 @@ import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
-import ShareButton from '@/components/storefront/ShareButton';
+
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 import { Loader2, Star } from 'lucide-react';
