@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          body: string | null
+          cover_image: string | null
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          store_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          store_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          store_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           code: string
@@ -98,6 +148,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          store_id: string
+          subscribed_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          store_id: string
+          subscribed_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          store_id?: string
+          subscribed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
