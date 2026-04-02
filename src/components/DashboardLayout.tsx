@@ -13,8 +13,8 @@ import {
   ChevronLeft,
   Menu,
   Shield,
+  CreditCard,
 } from 'lucide-react';
-import { CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
