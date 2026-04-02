@@ -1,4 +1,7 @@
-import { corsHeaders } from '@supabase/supabase-js/cors';
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -31,6 +34,11 @@ Format your response as JSON: { "body": "...", "seo_description": "..." }`;
         response_format: { type: 'json_object' },
       }),
     });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`AI API error: ${res.status} ${errText}`);
+    }
 
     const data = await res.json();
     const content = JSON.parse(data.choices[0].message.content);
