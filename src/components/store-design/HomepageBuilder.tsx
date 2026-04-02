@@ -153,7 +153,7 @@ const SortableSection = ({
                         <SelectItem value="small">Small (250px)</SelectItem>
                         <SelectItem value="medium">Medium (400px)</SelectItem>
                         <SelectItem value="large">Large (550px)</SelectItem>
-                        <SelectItem value="full">Full Screen</SelectItem>
+                        <SelectItem value="full">Full Image (no crop)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
