@@ -11,6 +11,7 @@ import ProductList from "@/pages/ProductList";
 import ProductForm from "@/pages/ProductForm";
 import OrderList from "@/pages/OrderList";
 import OrderDetail from "@/pages/OrderDetail";
+import StoreDesign from "@/pages/StoreDesign";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
