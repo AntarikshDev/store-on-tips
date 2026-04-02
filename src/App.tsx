@@ -31,6 +31,9 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminThemes from "@/pages/admin/AdminThemes";
 import AdminRevenue from "@/pages/admin/AdminRevenue";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import CustomerAuth from "@/pages/storefront/CustomerAuth";
+import CustomerAccount from "@/pages/storefront/CustomerAccount";
+import CustomerRoute from "@/components/storefront/CustomerRoute";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -184,6 +187,8 @@ const App = () => (
             <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />
             <Route path="/store/:slug/cart" element={<StorefrontCart />} />
             <Route path="/store/:slug/checkout" element={<StorefrontCheckout />} />
+            <Route path="/store/:slug/account/auth" element={<CustomerAuth />} />
+            <Route path="/store/:slug/account" element={<CustomerRoute><CustomerAccount /></CustomerRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -4,6 +4,7 @@ import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCart } from '@/hooks/useCart';
 import { useValidateCoupon } from '@/hooks/useCoupons';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,6 +33,7 @@ const StorefrontCheckout = () => {
   const navigate = useNavigate();
   const { store, loading } = useStorefront(slug || '');
   const { items, totalPrice, clearCart } = useCart(slug || '');
+  const { user } = useCustomerAuth(slug || '');
   const [placing, setPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState<string | null>(null);
   const [razorpayAvailable, setRazorpayAvailable] = useState(false);
@@ -127,7 +129,8 @@ const StorefrontCheckout = () => {
       payment_method: form.paymentMethod,
       payment_status: form.paymentMethod === 'cod' ? 'cod' : 'pending',
       status: 'pending',
-    }).select('id, order_number').single();
+      customer_user_id: user?.id || null,
+    } as any).select('id, order_number').single();
 
     if (error) throw error;
     return data;
