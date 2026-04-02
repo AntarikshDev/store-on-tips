@@ -46,6 +46,60 @@ const FooterEditor = ({ config, onChange }: Props) => {
 
   return (
     <div className="space-y-4">
+      {/* Appearance */}
+      <Card>
+        <CardHeader><CardTitle className="text-base">Footer Appearance</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Background Color</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={c.background_color || '#1f2937'} onChange={(e) => onChange({ ...c, background_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <Input value={c.background_color} onChange={(e) => onChange({ ...c, background_color: e.target.value })} className="h-8 text-xs font-mono" placeholder="#1f2937" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Text Color</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={c.text_color || '#ffffff'} onChange={(e) => onChange({ ...c, text_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <Input value={c.text_color} onChange={(e) => onChange({ ...c, text_color: e.target.value })} className="h-8 text-xs font-mono" placeholder="#ffffff" />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Background Image</Label>
+            <div className="flex gap-2 items-center">
+              {c.background_image ? (
+                <div className="relative h-16 w-28 rounded border overflow-hidden">
+                  <img src={c.background_image} alt="" className="w-full h-full object-cover" />
+                  <button onClick={() => onChange({ ...c, background_image: '' })} className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">✕</button>
+                </div>
+              ) : null}
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-primary hover:underline">
+                <Upload className="h-3.5 w-3.5" />
+                {c.background_image ? 'Change' : 'Upload Image'}
+                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const path = `footer-bg/${Date.now()}-${file.name}`;
+                  const { error } = await supabase.storage.from('product-images').upload(path, file);
+                  if (error) { toast.error('Upload failed'); return; }
+                  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+                  onChange({ ...c, background_image: urlData.publicUrl });
+                  toast.success('Background image uploaded');
+                }} />
+              </label>
+            </div>
+            {c.background_image && (
+              <div className="space-y-1">
+                <Label className="text-xs">Image Opacity: {c.background_opacity}%</Label>
+                <Slider value={[c.background_opacity]} onValueChange={([v]) => onChange({ ...c, background_opacity: v })} min={5} max={100} step={5} className="w-full" />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle className="text-base">Footer Text</CardTitle></CardHeader>
         <CardContent className="space-y-4">
