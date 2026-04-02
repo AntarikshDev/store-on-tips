@@ -22,6 +22,10 @@ export interface FooterConfig {
 const DEFAULT_FOOTER: FooterConfig = {
   custom_text: '',
   show_powered_by: true,
+  background_color: '',
+  text_color: '',
+  background_image: '',
+  background_opacity: 30,
   social_links: { instagram: '', facebook: '', twitter: '', youtube: '' },
   custom_links: [],
 };
