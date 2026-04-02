@@ -1,136 +1,135 @@
 
 
-# Phase 9: Customer Experience — Accounts, Reviews, Sharing & Mobile-First UX
+# Phase 10: Advanced Store Builder — Pages, Blogs, Hero, Footer, AI Content & Engagement Reports
 
-This is a large feature set that transforms the storefront from a basic shopping page into a Myntra-like mobile-first experience with customer accounts, reviews, social sharing, and order tracking.
+This phase transforms the basic "pick a theme" Store Design into a full **page builder** giving sellers complete creative control — similar to Myntra's rich storefront with mega-nav, hero banners, blogs, newsletters, and customizable footer/logo placement.
 
-## Overview
+## What We Will Build
 
-We will build across 4 sub-phases in a single implementation pass:
+### 10A: Homepage Builder (Drag-and-Drop Sections)
+- Replace the current static hero + product grid with a **section-based homepage builder**
+- Sellers choose from section types: Hero Banner, Featured Products, Category Grid, Testimonials, Newsletter Signup, Custom Text/Image Block, Banner Carousel
+- Each section is configurable (title, subtitle, image, layout variant)
+- Sections are reorderable via drag-and-drop (using `@dnd-kit/core`)
+- Hero section supports: **upload custom image** or **AI-generate a hero image** using Lovable AI image generation
+- Store settings JSONB stores the section layout as an array of section configs
 
-### 9A: Customer Authentication (per-store)
-- Customer sign-up/sign-in page at `/store/:slug/account/auth` with email+password, Google OAuth, and phone OTP
-- Customers are separate from sellers — they use the same `auth.users` but get a `customer` role
-- New `customers` table linking `user_id` to saved addresses and preferences
-- Customer profile page at `/store/:slug/account` showing saved addresses, order history
-- Auto-fill checkout from saved address
+### 10B: Blog System
+- New `blog_posts` table: id, store_id, title, slug, body (rich text/markdown), cover_image, is_published, created_at
+- Blog list page on storefront: `/store/:slug/blog`
+- Blog detail page: `/store/:slug/blog/:postSlug`
+- Seller dashboard page to create/edit/delete blog posts (`/blog-posts`)
+- **AI blog generation**: Seller provides a topic, AI writes the full blog post using Lovable AI edge function
+- Cover image upload or AI generation
 
-### 9B: Reviews & Ratings
-- New `reviews` table: id, store_id, product_id, customer_id (user_id), rating (1-5), title, body, images, is_verified_purchase, created_at
-- Star rating display on product cards and product detail page (average + count)
-- Review submission form on product page (only for logged-in customers)
-- Verified purchase badge (cross-reference with orders table)
-- Seller can view reviews in dashboard
+### 10C: Newsletter Signup
+- New `newsletter_subscribers` table: id, store_id, email, subscribed_at
+- Newsletter signup section available as a homepage section block
+- Seller can view subscriber list in dashboard (`/subscribers`)
+- Simple email collection with duplicate prevention
 
-### 9C: Social Sharing
-- Share button on product pages with Web Share API (native mobile share sheet)
-- Fallback: copy link, WhatsApp, Twitter, Facebook share buttons
-- Share button on store home page
+### 10D: Logo & Footer Customization
+- Store Design page gets new tabs: **Header** and **Footer**
+- **Header config**: Logo position (left/center), logo size, show/hide store name beside logo, navigation links (Home, Shop, Blog, About)
+- **Footer config**: Custom footer text, social media links (Instagram, Facebook, Twitter, YouTube), payment badge display, custom links (Privacy, Terms, About Us), "Powered by" toggle
+- All saved in store settings JSONB
 
-### 9D: Mobile-First PWA Experience (Myntra-like)
-- Bottom navigation bar on mobile: Home, Categories, Cart, Account (sticky, iOS-safe)
-- Pull-to-refresh feel with smooth transitions
-- Product image swipe gallery (touch-friendly)
-- Floating "Add to Cart" bar on product page (mobile)
-- PWA manifest + service worker via `vite-plugin-pwa` so customers can "install" the store
-- Mobile-optimized search with instant filter
-- Smooth page transitions and micro-animations
+### 10E: Store Engagement Report (AI-Powered)
+- New dashboard page: `/analytics` (Engagement Report)
+- Pulls data: product count, order count, review average, blog post count, SEO completeness, page structure
+- Calls Lovable AI to analyze the store and generate:
+  - Engagement score (0-100)
+  - Strengths list
+  - Improvement suggestions (e.g., "Add a hero image", "Write 3 blog posts", "Add product descriptions to 4 products missing them")
+  - Product-level recommendations
+- Visual score card with progress indicators
 
-## Database Changes (Migration)
+### 10F: Storefront Mega-Navigation (Myntra-style)
+- Desktop: Hover-triggered category mega-menu showing product categories in columns (like the Myntra screenshot)
+- Mobile: Category drawer accessible from bottom nav
+- Navigation items configurable from Store Design header settings
+
+## Database Changes
 
 ```sql
--- Customer role
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'customer';
-
--- Customers table for saved addresses
-CREATE TABLE public.customers (
+-- Blog posts
+CREATE TABLE public.blog_posts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
   store_id uuid NOT NULL,
-  saved_addresses jsonb DEFAULT '[]',
+  title text NOT NULL,
+  slug text NOT NULL,
+  body text DEFAULT '',
+  cover_image text,
+  is_published boolean DEFAULT false,
+  seo_title text,
+  seo_description text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, store_id)
+  UNIQUE(store_id, slug)
 );
-ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 
--- Reviews table
-CREATE TABLE public.reviews (
+-- RLS: owners manage, public reads published
+CREATE POLICY "Store owners manage blog posts" ON public.blog_posts FOR ALL
+  USING (EXISTS (SELECT 1 FROM stores WHERE stores.id = blog_posts.store_id AND stores.user_id = auth.uid()));
+CREATE POLICY "Public can read published posts" ON public.blog_posts FOR SELECT
+  USING (is_published = true AND EXISTS (SELECT 1 FROM stores WHERE stores.id = blog_posts.store_id AND stores.is_published = true));
+
+-- Newsletter subscribers
+CREATE TABLE public.newsletter_subscribers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL,
-  product_id uuid NOT NULL,
-  user_id uuid NOT NULL,
-  rating smallint NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  title text,
-  body text,
-  images text[] DEFAULT '{}',
-  is_verified_purchase boolean DEFAULT false,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(product_id, user_id)
+  email text NOT NULL,
+  subscribed_at timestamptz DEFAULT now(),
+  UNIQUE(store_id, email)
 );
-ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
--- RLS policies for customers
-CREATE POLICY "Customers can manage own data" ON public.customers FOR ALL
-  USING (auth.uid() = user_id);
-CREATE POLICY "Store owners can view customers" ON public.customers FOR SELECT
-  USING (EXISTS (SELECT 1 FROM stores WHERE stores.id = customers.store_id AND stores.user_id = auth.uid()));
-
--- RLS policies for reviews
-CREATE POLICY "Anyone can read reviews" ON public.reviews FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can create reviews" ON public.reviews FOR INSERT
-  TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own reviews" ON public.reviews FOR UPDATE
-  USING (auth.uid() = user_id);
-CREATE POLICY "Store owners can view reviews" ON public.reviews FOR SELECT
-  USING (EXISTS (SELECT 1 FROM stores WHERE stores.id = reviews.store_id AND stores.user_id = auth.uid()));
-
--- Link orders to customer user_id (optional)
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_user_id uuid;
-
--- Enable realtime for reviews
-ALTER PUBLICATION supabase_realtime ADD TABLE public.reviews;
+CREATE POLICY "Anyone can subscribe" ON public.newsletter_subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Store owners can view subscribers" ON public.newsletter_subscribers FOR SELECT
+  USING (EXISTS (SELECT 1 FROM stores WHERE stores.id = newsletter_subscribers.store_id AND stores.user_id = auth.uid()));
 ```
 
 ## New Files
 
 | File | Purpose |
 |------|---------|
-| `src/pages/storefront/CustomerAuth.tsx` | Sign up/in page with email, Google, phone OTP |
-| `src/pages/storefront/CustomerAccount.tsx` | Profile, saved addresses, order history |
-| `src/pages/storefront/CustomerOrders.tsx` | Order list + detail for customers |
-| `src/components/storefront/CustomerRoute.tsx` | Auth guard for customer pages |
-| `src/components/storefront/BottomNav.tsx` | Mobile bottom navigation (Home, Search, Cart, Account) |
-| `src/components/storefront/ReviewSection.tsx` | Star ratings, review list, submit form |
-| `src/components/storefront/ShareButton.tsx` | Web Share API + fallback social buttons |
-| `src/components/storefront/ProductImageSwiper.tsx` | Touch-friendly image carousel |
-| `src/components/storefront/MobileAddToCart.tsx` | Sticky bottom "Add to Cart" bar |
-| `src/components/storefront/SearchOverlay.tsx` | Full-screen mobile search with instant results |
-| `src/hooks/useCustomerAuth.ts` | Customer auth state per store |
-| `src/hooks/useReviews.ts` | CRUD hooks for reviews |
-| `src/hooks/useCustomerOrders.ts` | Fetch customer's orders by user_id |
+| `src/pages/StoreDesign.tsx` | Complete rewrite: tabs for Themes, Homepage Builder, Header, Footer, Customize |
+| `src/components/store-design/HomepageBuilder.tsx` | Drag-and-drop section editor with add/remove/reorder |
+| `src/components/store-design/HeroSectionEditor.tsx` | Hero image upload + AI generation config |
+| `src/components/store-design/HeaderEditor.tsx` | Logo position, nav links, store name toggle |
+| `src/components/store-design/FooterEditor.tsx` | Social links, custom text, payment badges, powered-by toggle |
+| `src/pages/BlogPosts.tsx` | Seller dashboard: blog post list + CRUD |
+| `src/pages/BlogPostForm.tsx` | Create/edit blog with AI generation button |
+| `src/pages/Subscribers.tsx` | Newsletter subscriber list |
+| `src/pages/StoreAnalytics.tsx` | AI-powered engagement report |
+| `src/pages/storefront/StorefrontBlog.tsx` | Public blog list page |
+| `src/pages/storefront/StorefrontBlogPost.tsx` | Public blog detail page |
+| `src/components/storefront/MegaNav.tsx` | Myntra-style category mega-menu |
+| `src/components/storefront/NewsletterSection.tsx` | Email signup section for storefront |
+| `src/components/storefront/StorefrontFooter.tsx` | Customizable footer with social links |
+| `src/hooks/useBlogPosts.ts` | CRUD hooks for blog posts |
+| `src/hooks/useNewsletterSubscribers.ts` | Subscribe + list hooks |
+| `supabase/functions/generate-blog/index.ts` | AI blog content generation |
+| `supabase/functions/store-engagement/index.ts` | AI engagement analysis |
+| `supabase/functions/generate-hero-image/index.ts` | AI hero image generation |
 
 ## Modified Files
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add customer account routes under `/store/:slug/account/*` |
-| `src/components/storefront/StorefrontLayout.tsx` | Add BottomNav, account icon in header, mobile-first responsive updates |
-| `src/pages/StorefrontProduct.tsx` | Add ReviewSection, ShareButton, ProductImageSwiper, MobileAddToCart |
-| `src/pages/Storefront.tsx` | Add search, category filters, mobile grid, share button |
-| `src/pages/StorefrontCheckout.tsx` | Auto-fill from saved address, link order to customer_user_id |
-| `src/pages/StorefrontCart.tsx` | Mobile-optimized layout |
-| `vite.config.ts` | Add `vite-plugin-pwa` for installable storefront |
-| `index.html` | Add PWA meta tags, viewport, theme-color, apple-touch-icon |
-| `package.json` | Add `vite-plugin-pwa` dependency |
+| `src/App.tsx` | Add routes: `/blog-posts`, `/blog-posts/:id`, `/subscribers`, `/analytics`, `/store/:slug/blog`, `/store/:slug/blog/:postSlug` |
+| `src/components/DashboardLayout.tsx` | Add nav items: Blog Posts, Subscribers, Analytics |
+| `src/components/storefront/StorefrontLayout.tsx` | Replace simple header/footer with MegaNav + StorefrontFooter, render homepage sections dynamically |
+| `src/pages/Storefront.tsx` | Render section-based homepage from store settings instead of hardcoded hero+grid |
 
 ## Technical Details
 
-- **Google Sign-In**: Uses Lovable Cloud managed OAuth via `lovable.auth.signInWithOAuth("google")`
-- **Phone OTP**: Uses Supabase `auth.signInWithOtp({ phone })` — requires phone auth enabled
-- **PWA**: Service worker caches storefront assets; `navigateFallbackDenylist: [/^\/~oauth/]` for OAuth compatibility
-- **Bottom Nav**: Fixed bottom bar with safe-area-inset padding for iOS; hidden on desktop
-- **Reviews**: Average rating computed client-side from query; verified purchase checks `orders` table for matching `customer_user_id` + `product_id`
-- **Share**: `navigator.share()` with fallback to clipboard + social URL buttons
-- **Image Swiper**: CSS scroll-snap carousel with dot indicators, touch-friendly
+- **Homepage sections** stored as `store.settings.homepage_sections: Array<{ type, title, subtitle, image, layout, order }>` in the stores table JSONB
+- **AI Hero Image**: Edge function calls Lovable AI image generation (`google/gemini-2.5-flash-image`) with store category context
+- **AI Blog Generation**: Edge function sends topic + store context to `google/gemini-3-flash-preview` and returns title + body
+- **AI Engagement Report**: Edge function receives store stats and product data, returns structured analysis via tool calling
+- **Drag-and-drop**: Uses `@dnd-kit/core` + `@dnd-kit/sortable` for section reordering
+- **Mega-nav**: CSS grid-based dropdown on hover (desktop), Sheet-based drawer on mobile, populated from product categories
+- **Footer**: Rendered from `store.settings.footer` config object with social links, custom text, and toggle options
 
