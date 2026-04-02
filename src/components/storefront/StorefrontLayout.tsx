@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Search, User } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { THEME_TEMPLATES, type ThemeTemplate } from '@/lib/themes';
