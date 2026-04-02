@@ -129,7 +129,8 @@ const StorefrontCheckout = () => {
       payment_method: form.paymentMethod,
       payment_status: form.paymentMethod === 'cod' ? 'cod' : 'pending',
       status: 'pending',
-    }).select('id, order_number').single();
+      customer_user_id: user?.id || null,
+    } as any).select('id, order_number').single();
 
     if (error) throw error;
     return data;
