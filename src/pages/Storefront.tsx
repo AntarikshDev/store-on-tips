@@ -159,11 +159,11 @@ const Storefront = () => {
       ) : (
         <>
           {/* Default hero */}
-          <section className="text-center py-12 md:py-16 px-4 relative overflow-hidden" style={{ backgroundColor: colors.secondary }}>
-            {store.banner_url && <img src={store.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />}
-            <div className="relative z-10">
-              <h1 className="text-2xl md:text-4xl font-bold mb-3" style={{ fontFamily: fonts.heading }}>{store.description || `Welcome to ${store.name}`}</h1>
-              <p className="text-sm opacity-60 mb-6 max-w-md mx-auto">Explore our curated collection of products</p>
+          <section className="relative overflow-hidden" style={{ backgroundColor: colors.secondary }}>
+            {store.banner_url && <img src={store.banner_url} alt="Store banner" className="w-full h-[300px] md:h-[450px] object-cover" />}
+            <div className={store.banner_url ? "absolute inset-0 flex flex-col items-center justify-center bg-black/30" : "py-12 md:py-16 flex flex-col items-center justify-center"}>
+              <h1 className="text-2xl md:text-4xl font-bold mb-3 text-center px-4" style={{ fontFamily: fonts.heading, color: store.banner_url ? '#fff' : colors.text }}>{store.description || `Welcome to ${store.name}`}</h1>
+              <p className="text-sm mb-6 max-w-md mx-auto text-center px-4" style={{ color: store.banner_url ? 'rgba(255,255,255,0.85)' : undefined, opacity: store.banner_url ? 1 : 0.6 }}>Explore our curated collection of products</p>
               <div className="flex items-center justify-center gap-3">
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>Shop Now</a>
                 <ShareButton title={store.name} text={store.description || undefined} url={`${window.location.origin}/store/${slug}`} colors={colors} borderRadius={borderRadius} />
