@@ -17,7 +17,10 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  if (user) return <Navigate to="/" replace />;
+  // If user is logged in but came from a store page, don't redirect to seller dashboard
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
