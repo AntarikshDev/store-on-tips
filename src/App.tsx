@@ -18,6 +18,14 @@ import Storefront from "@/pages/Storefront";
 import StorefrontProduct from "@/pages/StorefrontProduct";
 import StorefrontCart from "@/pages/StorefrontCart";
 import StorefrontCheckout from "@/pages/StorefrontCheckout";
+import AdminRoute from "@/components/AdminRoute";
+import AdminLayout from "@/components/AdminLayout";
+import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminStores from "@/pages/admin/AdminStores";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminThemes from "@/pages/admin/AdminThemes";
+import AdminRevenue from "@/pages/admin/AdminRevenue";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -109,6 +117,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminRoute><AdminLayout><AdminOverview /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/stores" element={<AdminRoute><AdminLayout><AdminStores /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminLayout><AdminUsers /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/themes" element={<AdminRoute><AdminLayout><AdminThemes /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/revenue" element={<AdminRoute><AdminLayout><AdminRevenue /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
             {/* Public Storefront Routes */}
             <Route path="/store/:slug" element={<Storefront />} />
             <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />
