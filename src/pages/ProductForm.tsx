@@ -22,6 +22,7 @@ const ProductForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { store } = useStore();
+  const { parentCategories, getSubcategories, loading: loadingCategories } = useCategories();
   const { createProduct, updateProduct } = useProducts();
   const { data: existingProduct, isLoading: loadingProduct } = useProduct(id);
 
