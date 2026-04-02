@@ -15,12 +15,26 @@ const SEOSettings = () => {
   const seo = settings.seo || {};
 
   const [form, setForm] = useState({
-    meta_title: seo.meta_title || store?.name || '',
-    meta_description: seo.meta_description || store?.description || '',
-    og_image: seo.og_image || store?.banner_url || '',
-    google_analytics_id: seo.google_analytics_id || '',
+    meta_title: '',
+    meta_description: '',
+    og_image: '',
+    google_analytics_id: '',
   });
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  // Sync form with store data when store loads or updates
+  useEffect(() => {
+    if (!store) return;
+    const s = ((store.settings || {}) as any).seo || {};
+    setForm({
+      meta_title: s.meta_title || store.name || '',
+      meta_description: s.meta_description || store.description || '',
+      og_image: s.og_image || store.banner_url || '',
+      google_analytics_id: s.google_analytics_id || '',
+    });
+    setInitialized(true);
+  }, [store?.id, store?.settings]);
 
   const handleSave = async () => {
     if (!store) return;
