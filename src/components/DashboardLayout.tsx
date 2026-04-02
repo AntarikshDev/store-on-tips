@@ -21,6 +21,7 @@ import {
   FileText,
   Mail,
   TrendingUp,
+  FolderTree,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
