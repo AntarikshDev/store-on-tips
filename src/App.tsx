@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
+import ProductList from "@/pages/ProductList";
+import ProductForm from "@/pages/ProductForm";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
@@ -36,6 +38,36 @@ const App = () => (
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Dashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ProductList />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products/new"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ProductForm />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ProductForm />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
