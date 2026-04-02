@@ -18,6 +18,14 @@ import Storefront from "@/pages/Storefront";
 import StorefrontProduct from "@/pages/StorefrontProduct";
 import StorefrontCart from "@/pages/StorefrontCart";
 import StorefrontCheckout from "@/pages/StorefrontCheckout";
+import AdminRoute from "@/components/AdminRoute";
+import AdminLayout from "@/components/AdminLayout";
+import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminStores from "@/pages/admin/AdminStores";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminThemes from "@/pages/admin/AdminThemes";
+import AdminRevenue from "@/pages/admin/AdminRevenue";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
