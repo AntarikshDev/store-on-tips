@@ -185,8 +185,8 @@ const Storefront = () => {
           </section>
         );
       case 'text_block':
-        return (
-          <section key={index} className="max-w-4xl mx-auto px-4 py-10 text-center">
+        return wrapAnimated(
+          <section className="max-w-4xl mx-auto px-4 py-10 text-center">
             {section.image && <img src={section.image} alt="" className="w-full max-h-64 object-cover rounded-lg mb-4" />}
             {section.title && <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ fontFamily: fonts.heading }}>{section.title}</h2>}
             {section.subtitle && <p className="text-sm opacity-60 max-w-lg mx-auto">{section.subtitle}</p>}
