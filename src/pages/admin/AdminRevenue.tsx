@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useThemePacks, useAllThemePurchases } from '@/hooks/useThemePacks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { IndianRupee, TrendingUp } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { IndianRupee, TrendingUp, Package } from 'lucide-react';
 
 const AdminRevenue = () => {
   const { data, isLoading } = useQuery({
