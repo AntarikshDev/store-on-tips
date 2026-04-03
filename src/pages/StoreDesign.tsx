@@ -141,6 +141,10 @@ const StoreDesign = () => {
               <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
             </TabsList>
 
+            <TabsContent value="packs" className="space-y-4">
+              <ThemeMarketplace />
+            </TabsContent>
+
             <TabsContent value="themes" className="space-y-4">
               <div className="flex gap-2 flex-wrap">
                 {['all', 'free', 'premium', 'minimal', 'bold', 'elegant', 'playful'].map((f) => (
