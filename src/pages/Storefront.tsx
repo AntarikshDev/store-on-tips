@@ -213,8 +213,8 @@ const Storefront = () => {
           </section>
         );
       case 'category_grid':
-        return categories.length > 0 ? (
-          <section key={index} className="max-w-6xl mx-auto px-4 py-8">
+        return categories.length > 0 ? wrapAnimated(
+          <section className="max-w-6xl mx-auto px-4 py-8">
             <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fonts.heading }}>{section.title || 'Shop by Category'}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {categories.map((cat) => (
