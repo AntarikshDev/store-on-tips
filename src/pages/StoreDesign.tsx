@@ -133,6 +133,7 @@ const StoreDesign = () => {
         <div className="lg:col-span-3 space-y-6">
           <Tabs defaultValue="themes">
             <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="packs"><Package className="mr-1 h-3.5 w-3.5" /> Theme Packs</TabsTrigger>
               <TabsTrigger value="themes"><Palette className="mr-1 h-3.5 w-3.5" /> Themes</TabsTrigger>
               <TabsTrigger value="customize"><Sparkles className="mr-1 h-3.5 w-3.5" /> Customize</TabsTrigger>
               <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
