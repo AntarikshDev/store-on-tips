@@ -160,5 +160,6 @@ const ThemeEconomics = () => {
       </CardContent>
     </Card>
   );
+};
 
 export default AdminRevenue;
