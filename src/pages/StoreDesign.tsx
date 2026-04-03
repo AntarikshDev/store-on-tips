@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom } from 'lucide-react';
+import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const StoreDesign = () => {
