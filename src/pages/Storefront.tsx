@@ -116,8 +116,8 @@ const Storefront = () => {
         const heroMargin = section.topMargin ? `${section.topMargin}px` : '0px';
 
         if (isSlider) {
-          return (
-            <section key={index} className="relative overflow-hidden" style={{ marginTop: heroMargin }}>
+          return wrapAnimated(
+            <section className="relative overflow-hidden" style={{ marginTop: heroMargin }}>
               <HeroSlider
                 images={heroImages}
                 title={section.title || store.description || `Welcome to ${store.name}`}
