@@ -89,8 +89,78 @@ const AdminRevenue = () => {
               </div>
             </CardContent>
           </Card>
+
+          <ThemeEconomics />
         </>
       )}
+    </div>
+  );
+};
+
+const ThemeEconomics = () => {
+  const { data: packs = [] } = useThemePacks(false);
+  const totalAiCost = packs.reduce((s, p) => s + Number(p.ai_generation_cost), 0);
+  const totalRevenue = packs.reduce((s, p) => s + (p.price * p.sales_count), 0);
+  const totalSales = packs.reduce((s, p) => s + p.sales_count, 0);
+
+  if (packs.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2"><Package className="h-4 w-4" /> Theme Economics</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">Themes</p>
+            <p className="text-lg font-bold">{packs.length}</p>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">AI Spend</p>
+            <p className="text-lg font-bold">₹{totalAiCost.toFixed(2)}</p>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">Theme Revenue</p>
+            <p className="text-lg font-bold">₹{totalRevenue.toLocaleString('en-IN')}</p>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">ROI</p>
+            <p className="text-lg font-bold">{totalAiCost > 0 ? `${Math.round(((totalRevenue - totalAiCost) / totalAiCost) * 100)}%` : 'N/A'}</p>
+          </div>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Theme</TableHead>
+              <TableHead className="text-right">AI Cost</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">Sales</TableHead>
+              <TableHead className="text-right">Revenue</TableHead>
+              <TableHead className="text-right">Profit</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {packs.map(p => {
+              const rev = p.price * p.sales_count;
+              const cost = Number(p.ai_generation_cost);
+              return (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium text-sm">{p.name} <Badge variant="outline" className="ml-1 text-[10px] capitalize">{p.category}</Badge></TableCell>
+                  <TableCell className="text-right">₹{cost.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{p.price}</TableCell>
+                  <TableCell className="text-right">{p.sales_count}</TableCell>
+                  <TableCell className="text-right">₹{rev.toLocaleString('en-IN')}</TableCell>
+                  <TableCell className="text-right font-medium" style={{ color: rev - cost >= 0 ? '#16a34a' : '#dc2626' }}>₹{(rev - cost).toFixed(2)}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
     </div>
   );
 };
