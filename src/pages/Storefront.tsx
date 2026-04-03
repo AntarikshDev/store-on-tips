@@ -133,8 +133,8 @@ const Storefront = () => {
           );
         }
 
-        return (
-          <section key={index} className="relative overflow-hidden" style={{ backgroundColor: colors.secondary, marginTop: heroMargin }}>
+        return wrapAnimated(
+          <section className="relative overflow-hidden" style={{ backgroundColor: colors.secondary, marginTop: heroMargin }}>
             {heroImages[0] && (
               useFixedHeight ? (
                 <img src={heroImages[0]} alt={section.title || 'Hero banner'} className={`w-full object-cover ${heightMap[sizeMode]}`} />
