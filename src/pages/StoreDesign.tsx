@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { THEME_TEMPLATES, FONT_OPTIONS, type ThemeTemplate } from '@/lib/themes';
 import StorePreview from '@/components/store-design/StorePreview';
 import HomepageBuilder, { type HomepageSection } from '@/components/store-design/HomepageBuilder';
+import ThemeMarketplace from '@/components/store-design/ThemeMarketplace';
 import HeaderEditor, { DEFAULT_HEADER, type HeaderConfig } from '@/components/store-design/HeaderEditor';
 import FooterEditor, { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
