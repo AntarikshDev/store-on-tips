@@ -97,6 +97,14 @@ const Storefront = () => {
   const footerConfig: FooterConfig = { ...DEFAULT_FOOTER, ...(settings.footer || {}) };
 
   const renderSection = (section: any, index: number) => {
+    const anim = section.animation || 'none';
+    const mTop = section.marginTop ?? 0;
+    const mBottom = section.marginBottom ?? 0;
+    const wrapAnimated = (content: React.ReactNode) => (
+      <AnimatedSection key={index} animation={anim} marginTop={mTop} marginBottom={mBottom}>
+        {content}
+      </AnimatedSection>
+    );
     switch (section.type) {
       case 'hero':
         const heroImage = section.image || store.banner_url;
