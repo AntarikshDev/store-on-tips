@@ -159,8 +159,8 @@ const Storefront = () => {
         return wrapAnimated(<NewsletterSection storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />);
       case 'banner_carousel':
         if (section.id !== bannerCarouselSections[0]?.id) return null;
-        return (
-          <section key={section.id || index} className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        return wrapAnimated(
+          <section className="max-w-6xl mx-auto px-4 py-6 md:py-8">
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2">
               {bannerCarouselSections.map((banner: any, bannerIndex: number) => (
                 <article
