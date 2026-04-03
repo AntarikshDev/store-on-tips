@@ -6,6 +6,7 @@ import StorefrontLayout, { resolveTheme } from '@/components/storefront/Storefro
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
+import AnimatedSection from '@/components/storefront/AnimatedSection';
 
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
@@ -96,6 +97,14 @@ const Storefront = () => {
   const footerConfig: FooterConfig = { ...DEFAULT_FOOTER, ...(settings.footer || {}) };
 
   const renderSection = (section: any, index: number) => {
+    const anim = section.animation || 'none';
+    const mTop = section.marginTop ?? 0;
+    const mBottom = section.marginBottom ?? 0;
+    const wrapAnimated = (content: React.ReactNode) => (
+      <AnimatedSection key={index} animation={anim} marginTop={mTop} marginBottom={mBottom}>
+        {content}
+      </AnimatedSection>
+    );
     switch (section.type) {
       case 'hero':
         const heroImage = section.image || store.banner_url;
@@ -107,8 +116,8 @@ const Storefront = () => {
         const heroMargin = section.topMargin ? `${section.topMargin}px` : '0px';
 
         if (isSlider) {
-          return (
-            <section key={index} className="relative overflow-hidden" style={{ marginTop: heroMargin }}>
+          return wrapAnimated(
+            <section className="relative overflow-hidden" style={{ marginTop: heroMargin }}>
               <HeroSlider
                 images={heroImages}
                 title={section.title || store.description || `Welcome to ${store.name}`}
@@ -124,8 +133,8 @@ const Storefront = () => {
           );
         }
 
-        return (
-          <section key={index} className="relative overflow-hidden" style={{ backgroundColor: colors.secondary, marginTop: heroMargin }}>
+        return wrapAnimated(
+          <section className="relative overflow-hidden" style={{ backgroundColor: colors.secondary, marginTop: heroMargin }}>
             {heroImages[0] && (
               useFixedHeight ? (
                 <img src={heroImages[0]} alt={section.title || 'Hero banner'} className={`w-full object-cover ${heightMap[sizeMode]}`} />
@@ -147,11 +156,11 @@ const Storefront = () => {
           </section>
         );
       case 'newsletter':
-        return <NewsletterSection key={index} storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />;
+        return wrapAnimated(<NewsletterSection storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />);
       case 'banner_carousel':
         if (section.id !== bannerCarouselSections[0]?.id) return null;
-        return (
-          <section key={section.id || index} className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        return wrapAnimated(
+          <section className="max-w-6xl mx-auto px-4 py-6 md:py-8">
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2">
               {bannerCarouselSections.map((banner: any, bannerIndex: number) => (
                 <article
@@ -176,16 +185,16 @@ const Storefront = () => {
           </section>
         );
       case 'text_block':
-        return (
-          <section key={index} className="max-w-4xl mx-auto px-4 py-10 text-center">
+        return wrapAnimated(
+          <section className="max-w-4xl mx-auto px-4 py-10 text-center">
             {section.image && <img src={section.image} alt="" className="w-full max-h-64 object-cover rounded-lg mb-4" />}
             {section.title && <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ fontFamily: fonts.heading }}>{section.title}</h2>}
             {section.subtitle && <p className="text-sm opacity-60 max-w-lg mx-auto">{section.subtitle}</p>}
           </section>
         );
       case 'featured_products':
-        return (
-          <section key={index} className="max-w-6xl mx-auto px-4 py-8">
+        return wrapAnimated(
+          <section className="max-w-6xl mx-auto px-4 py-8">
             <h2 className="text-lg md:text-xl font-bold mb-4" style={{ fontFamily: fonts.heading }}>{section.title || 'Featured Products'}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {products.slice(0, 8).map((product) => (
@@ -204,8 +213,8 @@ const Storefront = () => {
           </section>
         );
       case 'category_grid':
-        return categories.length > 0 ? (
-          <section key={index} className="max-w-6xl mx-auto px-4 py-8">
+        return categories.length > 0 ? wrapAnimated(
+          <section className="max-w-6xl mx-auto px-4 py-8">
             <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fonts.heading }}>{section.title || 'Shop by Category'}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {categories.map((cat) => (

@@ -512,6 +512,93 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_packs: {
+        Row: {
+          ai_generation_cost: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_published: boolean
+          name: string
+          pages: Json
+          price: number
+          sales_count: number
+          theme_config: Json
+          thumbnail: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_generation_cost?: number
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          pages?: Json
+          price?: number
+          sales_count?: number
+          theme_config?: Json
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_generation_cost?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          pages?: Json
+          price?: number
+          sales_count?: number
+          theme_config?: Json
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      theme_purchases: {
+        Row: {
+          id: string
+          purchased_at: string
+          store_id: string
+          theme_pack_id: string
+        }
+        Insert: {
+          id?: string
+          purchased_at?: string
+          store_id: string
+          theme_pack_id: string
+        }
+        Update: {
+          id?: string
+          purchased_at?: string
+          store_id?: string
+          theme_pack_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_purchases_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_purchases_theme_pack_id_fkey"
+            columns: ["theme_pack_id"]
+            isOneToOne: false
+            referencedRelation: "theme_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string

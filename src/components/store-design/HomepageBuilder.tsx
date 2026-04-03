@@ -71,6 +71,11 @@ export interface HomepageSection {
   layout: string;
   height?: 'small' | 'medium' | 'large' | 'full';
   topMargin?: number;
+  animation?: 'none' | 'fade-in' | 'slide-up' | 'slide-in-left' | 'scale-in' | 'parallax';
+  marginTop?: number;
+  marginBottom?: number;
+  paddingX?: number;
+  paddingY?: number;
 }
 
 const SECTION_TYPES = [
@@ -235,6 +240,44 @@ const SortableSection = ({
                   </div>
                 </div>
               )}
+              {/* Animation & Spacing controls */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t">
+                <div>
+                  <Label className="text-xs">Animation</Label>
+                  <Select value={section.animation || 'none'} onValueChange={(v) => onUpdate({ ...section, animation: v as HomepageSection['animation'] })}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="fade-in">Fade In</SelectItem>
+                      <SelectItem value="slide-up">Slide Up</SelectItem>
+                      <SelectItem value="slide-in-left">Slide In Left</SelectItem>
+                      <SelectItem value="scale-in">Scale In</SelectItem>
+                      <SelectItem value="parallax">Parallax</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Layout</Label>
+                  <Select value={section.layout || 'default'} onValueChange={(v) => onUpdate({ ...section, layout: v })}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="full-width">Full Width</SelectItem>
+                      <SelectItem value="grid-2">Grid 2</SelectItem>
+                      <SelectItem value="grid-3">Grid 3</SelectItem>
+                      <SelectItem value="grid-4">Grid 4</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Margin Top (px)</Label>
+                  <Input type="number" min={0} max={200} value={section.marginTop ?? 0} onChange={(e) => onUpdate({ ...section, marginTop: Number(e.target.value) })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs">Margin Bottom (px)</Label>
+                  <Input type="number" min={0} max={200} value={section.marginBottom ?? 0} onChange={(e) => onUpdate({ ...section, marginBottom: Number(e.target.value) })} className="h-8 text-sm" />
+                </div>
+              </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onRemove} className="text-destructive hover:text-destructive shrink-0">
               <Trash2 className="h-4 w-4" />

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { THEME_TEMPLATES, FONT_OPTIONS, type ThemeTemplate } from '@/lib/themes';
 import StorePreview from '@/components/store-design/StorePreview';
 import HomepageBuilder, { type HomepageSection } from '@/components/store-design/HomepageBuilder';
+import ThemeMarketplace from '@/components/store-design/ThemeMarketplace';
 import HeaderEditor, { DEFAULT_HEADER, type HeaderConfig } from '@/components/store-design/HeaderEditor';
 import FooterEditor, { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom } from 'lucide-react';
+import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const StoreDesign = () => {
@@ -130,14 +131,19 @@ const StoreDesign = () => {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-6">
-          <Tabs defaultValue="themes">
+          <Tabs defaultValue="packs">
             <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="packs"><Package className="mr-1 h-3.5 w-3.5" /> Theme Packs</TabsTrigger>
               <TabsTrigger value="themes"><Palette className="mr-1 h-3.5 w-3.5" /> Themes</TabsTrigger>
               <TabsTrigger value="customize"><Sparkles className="mr-1 h-3.5 w-3.5" /> Customize</TabsTrigger>
               <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
               <TabsTrigger value="header"><PanelTop className="mr-1 h-3.5 w-3.5" /> Header</TabsTrigger>
               <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="packs" className="space-y-4">
+              <ThemeMarketplace />
+            </TabsContent>
 
             <TabsContent value="themes" className="space-y-4">
               <div className="flex gap-2 flex-wrap">
