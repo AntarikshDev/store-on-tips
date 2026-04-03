@@ -156,7 +156,7 @@ const Storefront = () => {
           </section>
         );
       case 'newsletter':
-        return <NewsletterSection key={index} storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />;
+        return wrapAnimated(<NewsletterSection storeId={store.id} title={section.title} subtitle={section.subtitle} colors={colors} borderRadius={borderRadius} />);
       case 'banner_carousel':
         if (section.id !== bannerCarouselSections[0]?.id) return null;
         return (
