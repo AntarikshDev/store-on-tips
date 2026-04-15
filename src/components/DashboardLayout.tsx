@@ -166,6 +166,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1" />
+          <Link to="/profile">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <UserCircle className="h-5 w-5" />
+            </Button>
+          </Link>
         </header>
 
         {/* Page content */}
