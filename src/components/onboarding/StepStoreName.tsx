@@ -17,14 +17,16 @@ const StepStoreName = ({ data, setData }: Props) => {
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
 
   const checkSlug = useCallback(async (slug: string) => {
-    if (!slug || slug.length < 2) { setSlugStatus('idle'); return; }
+    if (!slug || slug.length < 2) { setSlugStatus('idle'); setData(d => ({ ...d, slugAvailable: false })); return; }
     setSlugStatus('checking');
     const { data: existing } = await supabase
       .from('stores')
       .select('id')
       .eq('slug', slug)
       .maybeSingle();
-    setSlugStatus(existing ? 'taken' : 'available');
+    const available = !existing;
+    setSlugStatus(available ? 'available' : 'taken');
+    setData(d => ({ ...d, slugAvailable: available }));
   }, []);
 
   useEffect(() => {
