@@ -418,13 +418,11 @@ const StorefrontCheckout = () => {
             {(() => {
               const settings = store?.settings as any;
               const shipping = settings?.shipping;
-              if (shipping?.api_token && shipping?.pickup?.pincode) {
+              // Show only if seller has configured shipping (token is server-side)
+              if ((shipping?.configured || shipping?.api_token) && shipping?.pickup?.pincode) {
                 return (
                   <PincodeChecker
                     storeId={store.id}
-                    apiToken={shipping.api_token}
-                    testMode={shipping.test_mode ?? true}
-                    originPincode={shipping.pickup.pincode}
                     colors={colors}
                     borderRadius={borderRadius}
                   />
