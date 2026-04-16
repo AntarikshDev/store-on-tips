@@ -45,6 +45,7 @@ import StoreAnalytics from "@/pages/StoreAnalytics";
 import Categories from "@/pages/Categories";
 import StorefrontBlog from "@/pages/storefront/StorefrontBlog";
 import StorefrontBlogPost from "@/pages/storefront/StorefrontBlogPost";
+import ThemePreview from "@/pages/ThemePreview";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
