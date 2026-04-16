@@ -66,6 +66,7 @@ export interface OnboardingData {
     upi: boolean;
     razorpay: boolean;
   };
+  emailTemplatesGenerated: boolean;
 }
 
 const defaultData: OnboardingData = {
@@ -80,6 +81,7 @@ const defaultData: OnboardingData = {
   aiProduct: null,
   storeInfo: { phone: '', city: '', gst: '' },
   paymentSettings: { cod: true, upi: false, razorpay: false },
+  emailTemplatesGenerated: false,
 };
 
 const Onboarding = () => {
@@ -199,13 +201,14 @@ const Onboarding = () => {
       case 6: return true; // AI generate skippable
       case 7: return true; // store info skippable
       case 8: return true; // payment has defaults
-      case 9: return true; // preview is view only
-      case 10: return true;
+      case 9: return true; // email branding skippable
+      case 10: return true; // preview is view only
+      case 11: return true;
       default: return true;
     }
   };
 
-  const isSkippable = (step: number) => [3, 5, 6, 7].includes(step);
+  const isSkippable = (step: number) => [3, 5, 6, 7, 9].includes(step);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -217,11 +220,11 @@ const Onboarding = () => {
       case 6: return <StepAIGenerate data={data} setData={setData} storeId={store?.id} />;
       case 7: return <StepStoreInfo data={data} setData={setData} />;
       case 8: return <StepPaymentSetup data={data} setData={setData} />;
-      case 9: return <StepStorePreview data={data} storeSlug={store?.slug} />;
-      case 10: return <StepGoLive data={data} store={store} onFinish={async () => {
+      case 9: return <StepEmailBranding data={data} setData={setData} storeId={store?.id} />;
+      case 10: return <StepStorePreview data={data} storeSlug={store?.slug} />;
+      case 11: return <StepGoLive data={data} store={store} onFinish={async () => {
         await saveStep(TOTAL_STEPS);
         if (store) {
-          // Create the AI-generated product if available
           if (data.aiProduct && data.aiProduct.title) {
             try {
               await supabase.from('products').insert({
