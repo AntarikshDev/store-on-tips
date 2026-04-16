@@ -7,8 +7,11 @@ import ReviewSection from '@/components/storefront/ReviewSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import ProductImageSwiper from '@/components/storefront/ProductImageSwiper';
 import MobileAddToCart from '@/components/storefront/MobileAddToCart';
+import WishlistButton from '@/components/storefront/WishlistButton';
 import { useCart } from '@/hooks/useCart';
 import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { Loader2, Minus, Plus, ChevronLeft, ShoppingBag, Check, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
