@@ -384,6 +384,9 @@ const Storefront = () => {
                       {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
                         <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
                       )}
+                      <div className="absolute top-2 right-2">
+                        <WishlistButton isWishlisted={wishlistProductIds.has(product.id)} onToggle={() => toggleWishlist(product.id)} isLoggedIn={!!user} primaryColor={colors.primary} />
+                      </div>
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
@@ -439,6 +442,9 @@ const Storefront = () => {
                       {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
                         <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
                       )}
+                      <div className="absolute top-2 right-2">
+                        <WishlistButton isWishlisted={wishlistProductIds.has(product.id)} onToggle={() => toggleWishlist(product.id)} isLoggedIn={!!user} primaryColor={colors.primary} />
+                      </div>
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
