@@ -24,7 +24,8 @@ const ProductForm = () => {
   const navigate = useNavigate();
   const { store } = useStore();
   const { parentCategories, getSubcategories, loading: loadingCategories } = useCategories();
-  const { createProduct, updateProduct } = useProducts();
+  const { products, createProduct, updateProduct } = useProducts();
+  const { plan, limits } = useSubscription();
   const { data: existingProduct, isLoading: loadingProduct } = useProduct(id);
 
   const [title, setTitle] = useState('');
@@ -100,6 +101,11 @@ const ProductForm = () => {
   };
 
   const handleSave = async (asDraft: boolean) => {
+    if (!isEdit && typeof limits.products === 'number' && products.length >= limits.products) {
+      toast.error(`Free plan allows only ${limits.products} products. Upgrade to Premium for unlimited.`);
+      navigate('/billing');
+      return;
+    }
     if (!title.trim()) {
       toast.error('Product title is required');
       return;
