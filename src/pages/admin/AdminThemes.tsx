@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useThemePacks, useGenerateThemePack, useUpdateThemePack, useDeleteThemePack, useAllThemePurchases, type ThemePack } from '@/hooks/useThemePacks';
+import { useThemePacks, useGenerateThemePack, useUpdateThemePack, useDeleteThemePack, useAllThemePurchases, useRemixTheme, type ThemePack } from '@/hooks/useThemePacks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
