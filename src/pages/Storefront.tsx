@@ -3,11 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { X, ArrowUp } from 'lucide-react';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import AnimatedSection from '@/components/storefront/AnimatedSection';
+import WishlistButton from '@/components/storefront/WishlistButton';
 
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
@@ -76,6 +79,7 @@ const ProductRatingBadge = ({ productId }: { productId: string }) => {
 const Storefront = () => {
   const { slug } = useParams<{ slug: string }>();
   const { store, products, loading, error } = useStorefront(slug || '');
+  const { user } = useCustomerAuth(slug || '');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
