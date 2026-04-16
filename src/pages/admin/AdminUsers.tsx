@@ -299,6 +299,9 @@ const AdminUsers = () => {
                             <UserPlus className="h-4 w-4 mr-2" /> Add Customer Role
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => { setResetUser(user); setNewPassword(''); }}>
+                          <KeyRound className="h-4 w-4 mr-2" /> Reset Password
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onClick={() => setDeleteUser(user)}
