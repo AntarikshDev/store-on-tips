@@ -421,8 +421,14 @@ const AdminThemes = () => {
                       />
                       <span className="text-xs text-muted-foreground">Published</span>
                       <div className="flex-1" />
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPack(pack)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPack(pack)} title="Wireframe preview">
                         <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                        const previewUrl = `${window.location.origin}/store/preview-theme?theme=${pack.id}`;
+                        window.open(previewUrl, '_blank');
+                      }} title="Open full preview in new tab">
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingPack(pack)}>
                         <Palette className="h-3.5 w-3.5" />
