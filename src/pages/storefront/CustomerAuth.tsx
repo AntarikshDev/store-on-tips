@@ -217,16 +217,38 @@ const CustomerAuth = () => {
                   style={inputStyle}
                   required
                 />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 text-sm border"
-                  style={inputStyle}
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-11 text-sm border"
+                    style={inputStyle}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity"
+                    style={{ color: colors.text }}
+                  >
+                    <span className="relative block h-4 w-4">
+                      <Eye
+                        className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                          showPassword ? 'opacity-0 scale-75 rotate-12' : 'opacity-100 scale-100 rotate-0'
+                        }`}
+                      />
+                      <EyeOff
+                        className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                          showPassword ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75 -rotate-12'
+                        }`}
+                      />
+                    </span>
+                  </button>
+                </div>
                 <button
                   type="submit"
                   disabled={submitting}
