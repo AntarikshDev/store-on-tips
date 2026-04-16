@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ImagePlus, X, Loader2, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { compressImage } from '@/lib/imageCompression';
 
 interface ImageUploaderProps {
   images: string[];
@@ -14,12 +15,17 @@ interface ImageUploaderProps {
 const ImageUploader = ({ images, onChange, maxImages = 6 }: ImageUploaderProps) => {
   const [uploading, setUploading] = useState(false);
 
-  const uploadImage = useCallback(async (file: File) => {
-    const ext = file.name.split('.').pop();
-    const path = `${crypto.randomUUID()}.${ext}`;
+  const uploadImage = useCallback(async (original: File) => {
+    if (original.size > 30 * 1024 * 1024) {
+      throw new Error('Image must be under 30 MB');
+    }
+    const file = await compressImage(original, { maxWidth: 1600, maxHeight: 1600, maxSizeMB: 1.2 });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const path = `${user.id}/${crypto.randomUUID()}.jpg`;
     const { error } = await supabase.storage
       .from('product-images')
-      .upload(path, file, { contentType: file.type });
+      .upload(path, file, { contentType: file.type, upsert: false });
     if (error) throw error;
     const { data: { publicUrl } } = supabase.storage
       .from('product-images')
@@ -39,12 +45,14 @@ const ImageUploader = ({ images, onChange, maxImages = 6 }: ImageUploaderProps) 
     try {
       const urls = await Promise.all(toUpload.map(uploadImage));
       onChange([...images, ...urls]);
-    } catch {
-      toast.error('Failed to upload image');
+    } catch (err: any) {
+      console.error('Image upload failed:', err);
+      toast.error(err?.message || 'Failed to upload image');
     } finally {
       setUploading(false);
     }
   };
+
 
   const removeImage = (index: number) => {
     onChange(images.filter((_, i) => i !== index));
