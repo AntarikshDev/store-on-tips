@@ -61,10 +61,10 @@ const Dashboard = () => {
       { label: 'Category selected', done: !!store.category, link: '/store-design' },
       { label: 'Logo uploaded', done: !!store.logo_url, link: '/store-design' },
       { label: 'First product added', done: products.length > 0, link: '/products/new' },
-      { label: 'Set up shipping', done: !!settings.shipping_enabled, link: '/shipping' },
-      { label: 'Connect custom domain', done: !!settings.custom_domain, link: '/domain' },
-      { label: 'Configure SEO', done: !!settings.seo_title, link: '/seo' },
-      { label: 'Write a blog post', done: false, link: '/blog/new' },
+      { label: 'Set up shipping', done: !!settings.shipping_enabled, link: '/settings/shipping' },
+      { label: 'Connect custom domain', done: !!settings.custom_domain, link: '/settings/domain' },
+      { label: 'Configure SEO', done: !!settings.seo_title, link: '/settings/seo' },
+      { label: 'Write a blog post', done: false, link: '/blog-posts/new' },
     ];
   }, [store, products]);
 

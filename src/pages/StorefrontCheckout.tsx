@@ -159,7 +159,7 @@ const StorefrontCheckout = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             store_id: store.id,
-            amount: totalPrice,
+            amount: finalTotal,
             order_number: order.order_number,
             customer_name: form.name,
             customer_email: form.email,
@@ -180,7 +180,7 @@ const StorefrontCheckout = () => {
       // 4. Open Razorpay checkout modal
       const options = {
         key: razorpay_key_id,
-        amount: Math.round(totalPrice * 100),
+        amount: Math.round(finalTotal * 100),
         currency: 'INR',
         name: store.name,
         description: `Order ${order.order_number}`,
