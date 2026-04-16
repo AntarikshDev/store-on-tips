@@ -45,6 +45,7 @@ import StoreAnalytics from "@/pages/StoreAnalytics";
 import Categories from "@/pages/Categories";
 import StorefrontBlog from "@/pages/storefront/StorefrontBlog";
 import StorefrontBlogPost from "@/pages/storefront/StorefrontBlogPost";
+import ThemePreview from "@/pages/ThemePreview";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -205,6 +206,7 @@ const App = () => (
             <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminLayout><AdminProfile /></AdminLayout></AdminRoute>} />
             {/* Public Storefront Routes */}
+            <Route path="/store/preview-theme" element={<ThemePreview />} />
             <Route path="/store/:slug" element={<Storefront />} />
             <Route path="/store/:slug/product/:productId" element={<StorefrontProduct />} />
             <Route path="/store/:slug/cart" element={<StorefrontCart />} />
