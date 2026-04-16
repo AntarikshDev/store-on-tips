@@ -1,60 +1,199 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, MoreVertical, Trash2, ShieldPlus, ShieldMinus, Eye, UserPlus, Users } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface AdminUser {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  email?: string;
+  last_sign_in_at?: string;
+  email_confirmed_at?: string;
+  roles: string[];
+  storeName: string | null;
+  storeSlug: string | null;
+}
 
 const AdminUsers = () => {
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+  const [viewUser, setViewUser] = useState<AdminUser | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-users-full'],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+      // Fetch profiles, roles, stores, and auth users in parallel
+      const [profilesRes, rolesRes, storesRes, authRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_roles').select('*'),
+        supabase.from('stores').select('user_id, name, slug'),
+        supabase.functions.invoke('admin-manage-user', { body: { action: 'list_users' } }),
+      ]);
 
-      // Get roles
-      const { data: roles } = await supabase.from('user_roles').select('*');
+      if (profilesRes.error) throw profilesRes.error;
+
       const roleMap = new Map<string, string[]>();
-      (roles || []).forEach((r) => {
+      (rolesRes.data || []).forEach((r) => {
         const existing = roleMap.get(r.user_id) || [];
         existing.push(r.role);
         roleMap.set(r.user_id, existing);
       });
 
-      // Get stores
-      const { data: stores } = await supabase.from('stores').select('user_id, name');
-      const storeMap = new Map<string, string>();
-      (stores || []).forEach((s) => storeMap.set(s.user_id, s.name));
+      const storeMap = new Map<string, { name: string; slug: string }>();
+      (storesRes.data || []).forEach((s) => storeMap.set(s.user_id, { name: s.name, slug: s.slug }));
 
-      return (profiles || []).map((p) => ({
-        ...p,
-        roles: roleMap.get(p.user_id) || ['seller'],
-        storeName: storeMap.get(p.user_id) || null,
-      }));
+      const authMap = new Map<string, any>();
+      if (authRes.data?.users) {
+        authRes.data.users.forEach((u: any) => authMap.set(u.id, u));
+      }
+
+      return (profilesRes.data || []).map((p) => {
+        const auth = authMap.get(p.user_id);
+        const store = storeMap.get(p.user_id);
+        return {
+          ...p,
+          email: auth?.email || null,
+          last_sign_in_at: auth?.last_sign_in_at || null,
+          email_confirmed_at: auth?.email_confirmed_at || null,
+          roles: roleMap.get(p.user_id) || ['seller'],
+          storeName: store?.name || null,
+          storeSlug: store?.slug || null,
+        };
+      });
     },
   });
 
-  const filtered = (users || []).filter((u) =>
-    (u.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (u.phone || '').includes(search)
-  );
+  const manageMutation = useMutation({
+    mutationFn: async (body: { action: string; userId: string; role?: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users-full'] });
+    },
+  });
+
+  const handleAddRole = async (user: AdminUser, role: string) => {
+    try {
+      await manageMutation.mutateAsync({ action: 'add_role', userId: user.user_id, role });
+      toast.success(`Added ${role} role to ${user.full_name || 'user'}`);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to add role');
+    }
+  };
+
+  const handleRemoveRole = async (user: AdminUser, role: string) => {
+    try {
+      await manageMutation.mutateAsync({ action: 'remove_role', userId: user.user_id, role });
+      toast.success(`Removed ${role} role from ${user.full_name || 'user'}`);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to remove role');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUser) return;
+    try {
+      await manageMutation.mutateAsync({ action: 'delete_user', userId: deleteUser.user_id });
+      toast.success(`Deleted user ${deleteUser.full_name || deleteUser.email}`);
+      setDeleteUser(null);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to delete user');
+    }
+  };
+
+  const filtered = useMemo(() => {
+    let list = users || [];
+    if (roleFilter !== 'all') {
+      list = list.filter((u) => u.roles.includes(roleFilter));
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      list = list.filter(
+        (u) =>
+          (u.full_name || '').toLowerCase().includes(s) ||
+          (u.email || '').toLowerCase().includes(s) ||
+          (u.phone || '').includes(s) ||
+          (u.storeName || '').toLowerCase().includes(s)
+      );
+    }
+    return list;
+  }, [users, search, roleFilter]);
+
+  const stats = useMemo(() => {
+    const all = users || [];
+    return {
+      total: all.length,
+      admins: all.filter((u) => u.roles.includes('admin')).length,
+      sellers: all.filter((u) => u.roles.includes('seller')).length,
+      withStore: all.filter((u) => u.storeName).length,
+    };
+  }, [users]);
+
+  const formatDate = (d: string | null | undefined) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
-        <p className="text-sm text-muted-foreground">View all registered users and their roles</p>
+        <p className="text-sm text-muted-foreground">View, manage roles, and administer platform users</p>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Users', value: stats.total, icon: Users },
+          { label: 'Admins', value: stats.admins, icon: ShieldPlus },
+          { label: 'Sellers', value: stats.sellers, icon: UserPlus },
+          { label: 'With Store', value: stats.withStore, icon: Eye },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+              <s.icon className="h-3.5 w-3.5" />
+              {s.label}
+            </div>
+            <p className="text-2xl font-bold">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search by name, email, phone, store..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="seller">Seller</SelectItem>
+            <SelectItem value="customer">Customer</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -62,40 +201,188 @@ const AdminUsers = () => {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <div className="grid gap-3">
-          {filtered.map((user) => (
-            <Card key={user.id}>
-              <CardContent className="flex items-center gap-4 py-4">
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground">
-                    {(user.full_name || '?')[0].toUpperCase()}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</h3>
-                  <p className="text-xs text-muted-foreground">{user.phone || 'No phone'} · {user.storeName || 'No store'}</p>
-                </div>
-                <div className="flex gap-1.5">
-                  {user.roles.map((role: string) => (
-                    <Badge
-                      key={role}
-                      variant={role === 'admin' ? 'destructive' : 'secondary'}
-                      className="text-[10px]"
-                    >
-                      {role}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
-            <p className="text-center py-12 text-sm text-muted-foreground">No users found</p>
-          )}
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden lg:table-cell">Store</TableHead>
+                <TableHead>Roles</TableHead>
+                <TableHead className="hidden md:table-cell">Joined</TableHead>
+                <TableHead className="hidden lg:table-cell">Last Login</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                          {(user.full_name || '?')[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground md:hidden">{user.email || 'No email'}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{user.email || '—'}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm">
+                    {user.storeName ? (
+                      <span className="text-foreground">{user.storeName}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles.map((role: string) => (
+                        <Badge
+                          key={role}
+                          variant={role === 'admin' ? 'destructive' : role === 'customer' ? 'outline' : 'secondary'}
+                          className="text-[10px]"
+                        >
+                          {role}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{formatDate(user.created_at)}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatDate(user.last_sign_in_at)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setViewUser(user)}>
+                          <Eye className="h-4 w-4 mr-2" /> View Details
+                        </DropdownMenuItem>
+                        {!user.roles.includes('admin') && (
+                          <DropdownMenuItem onClick={() => handleAddRole(user, 'admin')}>
+                            <ShieldPlus className="h-4 w-4 mr-2" /> Make Admin
+                          </DropdownMenuItem>
+                        )}
+                        {user.roles.includes('admin') && (
+                          <DropdownMenuItem onClick={() => handleRemoveRole(user, 'admin')}>
+                            <ShieldMinus className="h-4 w-4 mr-2" /> Remove Admin
+                          </DropdownMenuItem>
+                        )}
+                        {!user.roles.includes('customer') && (
+                          <DropdownMenuItem onClick={() => handleAddRole(user, 'customer')}>
+                            <UserPlus className="h-4 w-4 mr-2" /> Add Customer Role
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteUser(user)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-sm text-muted-foreground">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       )}
+
+      <p className="text-xs text-muted-foreground">Showing {filtered.length} of {stats.total} users</p>
+
+      {/* View Details Dialog */}
+      <Dialog open={!!viewUser} onOpenChange={() => setViewUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {viewUser && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {viewUser.avatar_url ? (
+                  <img src={viewUser.avatar_url} alt="" className="h-16 w-16 rounded-full object-cover" />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">
+                    {(viewUser.full_name || '?')[0].toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold text-lg">{viewUser.full_name || 'Unknown'}</h3>
+                  <p className="text-sm text-muted-foreground">{viewUser.email || 'No email'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs">Phone</p>
+                  <p>{viewUser.phone || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Store</p>
+                  <p>{viewUser.storeName || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Store Slug</p>
+                  <p>{viewUser.storeSlug || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Joined</p>
+                  <p>{formatDate(viewUser.created_at)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Last Sign In</p>
+                  <p>{formatDate(viewUser.last_sign_in_at)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Email Verified</p>
+                  <p>{viewUser.email_confirmed_at ? formatDate(viewUser.email_confirmed_at) : 'Not verified'}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs mb-1">Roles</p>
+                <div className="flex gap-1.5">
+                  {viewUser.roles.map((role: string) => (
+                    <Badge key={role} variant={role === 'admin' ? 'destructive' : 'secondary'}>{role}</Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <strong>{deleteUser?.full_name || deleteUser?.email}</strong> and all associated data. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteUser(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={manageMutation.isPending}>
+              {manageMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
