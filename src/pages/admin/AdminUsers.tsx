@@ -81,7 +81,7 @@ const AdminUsers = () => {
   });
 
   const manageMutation = useMutation({
-    mutationFn: async (body: { action: string; userId: string; role?: string }) => {
+    mutationFn: async (body: { action: string; userId: string; role?: string; newPassword?: string }) => {
       const { data, error } = await supabase.functions.invoke('admin-manage-user', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -91,6 +91,22 @@ const AdminUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users-full'] });
     },
   });
+
+  const handleResetPassword = async () => {
+    if (!resetUser) return;
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    try {
+      await manageMutation.mutateAsync({ action: 'reset_password', userId: resetUser.user_id, newPassword });
+      toast.success(`Password reset for ${resetUser.full_name || resetUser.email}`);
+      setResetUser(null);
+      setNewPassword('');
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to reset password');
+    }
+  };
 
   const handleAddRole = async (user: AdminUser, role: string) => {
     try {
