@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { lovable } from '@/integrations/lovable/index';
-import { Loader2, Mail, Phone, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2, Mail, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CustomerAuth = () => {
@@ -15,10 +16,24 @@ const CustomerAuth = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [otpToken, setOtpToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [sellerSessionWarned, setSellerSessionWarned] = useState(false);
+
+  // Detect existing SELLER session (no is_customer flag) and warn so the
+  // seller's dashboard session isn't silently overwritten by a customer login.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const u = session?.user;
+      if (u && !u.user_metadata?.is_customer && !sellerSessionWarned) {
+        toast.warning('You are signed in as a store owner. Signing in as a customer will replace that session in this browser.', { duration: 6000 });
+        setSellerSessionWarned(true);
+      }
+    });
+  }, [sellerSessionWarned]);
 
   if (storeLoading) {
     return (
