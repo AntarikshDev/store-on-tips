@@ -225,6 +225,19 @@ const CustomerAccount = () => {
         {/* ─── PROFILE TAB ─── */}
         {tab === 'profile' && (
           <div className="space-y-4">
+            {/* Wishlist Quick Link */}
+            <Link
+              to={`/store/${slug}/account/wishlist`}
+              className="flex items-center gap-3 p-4 border transition-colors hover:shadow-sm"
+              style={{ borderColor: colors.secondary, borderRadius: br }}
+            >
+              <Heart className="h-5 w-5" style={{ color: '#ef4444', fill: '#ef4444' }} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">My Wishlist</p>
+                <p className="text-xs opacity-50">View your saved products</p>
+              </div>
+              <ChevronRight className="h-4 w-4 opacity-40" />
+            </Link>
             <div className="p-5 border space-y-4" style={{ borderColor: colors.secondary, borderRadius: br }}>
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: fonts.heading }}>
