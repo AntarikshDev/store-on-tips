@@ -176,13 +176,22 @@ const StorefrontProduct = () => {
               <p className="text-sm opacity-70">{product.short_description}</p>
             )}
 
-            {/* Share */}
-            <ProductShareButtons
-              productTitle={product.title}
-              productUrl={`/store/${slug}/product/${productId}`}
-              productImage={product.images?.[0]}
-              primaryColor={colors.primary}
-            />
+            {/* Share & Wishlist */}
+            <div className="flex items-center gap-3">
+              <WishlistButton
+                isWishlisted={wishlistProductIds.has(product.id)}
+                onToggle={() => toggleWishlist(product.id)}
+                isLoggedIn={!!user}
+                primaryColor={colors.primary}
+                size="md"
+              />
+              <ProductShareButtons
+                productTitle={product.title}
+                productUrl={`/store/${slug}/product/${productId}`}
+                productImage={product.images?.[0]}
+                primaryColor={colors.primary}
+              />
+            </div>
 
             {/* Quantity - hidden on mobile (use sticky bar) */}
             <div className="hidden md:flex items-center gap-3">
