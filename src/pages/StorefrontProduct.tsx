@@ -44,15 +44,21 @@ const StorefrontProduct = () => {
   const images = product.images || [];
   const { average, count } = getAverageRating(reviews);
 
+  const isOutOfStock = product ? (product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) : false;
+
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
     addItem({
-      productId: product.id,
-      title: product.title,
-      price: Number(product.price),
+      productId: product!.id,
+      title: product!.title,
+      price: Number(product!.price),
       image: images[0] || null,
     }, quantity);
     setAdded(true);
-    toast.success(`${product.title} added to cart`);
+    toast.success(`${product!.title} added to cart`);
     setTimeout(() => setAdded(false), 2000);
   };
 
@@ -191,16 +197,30 @@ const StorefrontProduct = () => {
             </div>
 
             {/* Add to cart - desktop only */}
-            <button
-              onClick={handleAddToCart}
-              className="hidden md:flex w-full py-3 text-sm font-semibold items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
-              style={{
-                backgroundColor: added ? '#16a34a' : colors.primary,
-                color: '#fff',
-                borderRadius: `${borderRadius}px`,
-              }}
-            >
-              {added ? <><Check className="h-4 w-4" /> Added!</> : <><ShoppingBag className="h-4 w-4" /> Add to Cart</>}
+            {isOutOfStock ? (
+              <div
+                className="hidden md:flex w-full py-3 text-sm font-semibold items-center justify-center gap-2 opacity-60"
+                style={{
+                  backgroundColor: colors.secondary,
+                  color: colors.text,
+                  borderRadius: `${borderRadius}px`,
+                }}
+              >
+                Out of Stock
+              </div>
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                className="hidden md:flex w-full py-3 text-sm font-semibold items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+                style={{
+                  backgroundColor: added ? '#16a34a' : colors.primary,
+                  color: '#fff',
+                  borderRadius: `${borderRadius}px`,
+                }}
+              >
+                {added ? <><Check className="h-4 w-4" /> Added!</> : <><ShoppingBag className="h-4 w-4" /> Add to Cart</>}
+              </button>
+            )}
             </button>
 
             {/* Description */}
