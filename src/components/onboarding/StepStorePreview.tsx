@@ -14,7 +14,8 @@ const StepStorePreview = ({ data, storeSlug }: Props) => {
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
   const slug = storeSlug || data.slug;
-  const storeUrl = `/store/${slug}`;
+  // Use preview=owner query param so the storefront allows viewing unpublished stores
+  const storeUrl = `/store/${slug}?preview=owner`;
 
   return (
     <div className={`space-y-6 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -37,7 +38,7 @@ const StepStorePreview = ({ data, storeSlug }: Props) => {
             <div className="h-3 w-3 rounded-full bg-green-400/80" />
           </div>
           <div className="flex-1 bg-background rounded-lg px-4 py-1.5 text-xs text-muted-foreground font-mono truncate shadow-inner">
-            https://pictocart.in/store/{slug}
+            pictocart.in/store/{slug}
           </div>
           <Button
             variant="ghost"

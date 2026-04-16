@@ -1,10 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useStorefront = (slug: string) => {
+export const useStorefront = (slug: string, ownerPreview = false) => {
   const storeQuery = useQuery({
-    queryKey: ['storefront', slug],
+    queryKey: ['storefront', slug, ownerPreview],
     queryFn: async () => {
+      if (ownerPreview) {
+        // Owner preview mode: fetch store by slug without is_published check
+        // RLS will ensure only the owner can see their own unpublished store
+        const { data, error } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error('Store not found');
+        return data;
+      }
+
       const { data, error } = await supabase
         .from('stores')
         .select('*')
