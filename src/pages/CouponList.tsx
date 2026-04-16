@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Trash2, Copy, Ticket, Percent, IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import PremiumGate from '@/components/PremiumGate';
 
 const generateCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
