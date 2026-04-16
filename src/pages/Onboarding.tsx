@@ -195,7 +195,7 @@ const Onboarding = () => {
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return data.storeName.trim().length >= 2;
+      case 1: return data.storeName.trim().length >= 2 && data.slugAvailable;
       case 2: return data.category !== '';
       case 3: return true; // logo is skippable
       case 4: return data.selectedThemeId !== '';
