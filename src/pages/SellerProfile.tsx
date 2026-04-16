@@ -38,6 +38,10 @@ const SellerProfile = () => {
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  // Store name edit
+  const [storeName, setStoreName] = useState('');
+  const [storeNameLoading, setStoreNameLoading] = useState(false);
+
   // Password change
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
