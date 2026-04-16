@@ -93,6 +93,7 @@ const Storefront = () => {
 
   const theme = resolveTheme(store.theme);
   const { colors, fonts, borderRadius } = theme;
+  const { wishlistProductIds, toggle: toggleWishlist } = useWishlist(store.id, user?.id);
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = selectedCategory ? products.filter((p) => p.category === selectedCategory) : products;
   const settings = (store.settings || {}) as any;
