@@ -7,8 +7,11 @@ import ReviewSection from '@/components/storefront/ReviewSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import ProductImageSwiper from '@/components/storefront/ProductImageSwiper';
 import MobileAddToCart from '@/components/storefront/MobileAddToCart';
+import WishlistButton from '@/components/storefront/WishlistButton';
 import { useCart } from '@/hooks/useCart';
 import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { Loader2, Minus, Plus, ChevronLeft, ShoppingBag, Check, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,6 +21,8 @@ const StorefrontProduct = () => {
   const { data: product, isLoading: productLoading } = useStorefrontProduct(store?.id, productId || '');
   const { addItem } = useCart(slug || '');
   const { data: reviews = [] } = useProductReviews(productId || '');
+  const { user } = useCustomerAuth(slug || '');
+  const { wishlistProductIds, toggle: toggleWishlist } = useWishlist(store?.id, user?.id);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
@@ -171,13 +176,22 @@ const StorefrontProduct = () => {
               <p className="text-sm opacity-70">{product.short_description}</p>
             )}
 
-            {/* Share */}
-            <ProductShareButtons
-              productTitle={product.title}
-              productUrl={`/store/${slug}/product/${productId}`}
-              productImage={product.images?.[0]}
-              primaryColor={colors.primary}
-            />
+            {/* Share & Wishlist */}
+            <div className="flex items-center gap-3">
+              <WishlistButton
+                isWishlisted={wishlistProductIds.has(product.id)}
+                onToggle={() => toggleWishlist(product.id)}
+                isLoggedIn={!!user}
+                primaryColor={colors.primary}
+                size="md"
+              />
+              <ProductShareButtons
+                productTitle={product.title}
+                productUrl={`/store/${slug}/product/${productId}`}
+                productImage={product.images?.[0]}
+                primaryColor={colors.primary}
+              />
+            </div>
 
             {/* Quantity - hidden on mobile (use sticky bar) */}
             <div className="hidden md:flex items-center gap-3">

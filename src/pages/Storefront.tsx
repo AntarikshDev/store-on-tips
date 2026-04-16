@@ -3,11 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { X, ArrowUp } from 'lucide-react';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import AnimatedSection from '@/components/storefront/AnimatedSection';
+import WishlistButton from '@/components/storefront/WishlistButton';
 
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
@@ -76,6 +79,7 @@ const ProductRatingBadge = ({ productId }: { productId: string }) => {
 const Storefront = () => {
   const { slug } = useParams<{ slug: string }>();
   const { store, products, loading, error } = useStorefront(slug || '');
+  const { user } = useCustomerAuth(slug || '');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -89,6 +93,7 @@ const Storefront = () => {
 
   const theme = resolveTheme(store.theme);
   const { colors, fonts, borderRadius } = theme;
+  const { wishlistProductIds, toggle: toggleWishlist } = useWishlist(store.id, user?.id);
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = selectedCategory ? products.filter((p) => p.category === selectedCategory) : products;
   const settings = (store.settings || {}) as any;
@@ -379,6 +384,9 @@ const Storefront = () => {
                       {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
                         <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
                       )}
+                      <div className="absolute top-2 right-2">
+                        <WishlistButton isWishlisted={wishlistProductIds.has(product.id)} onToggle={() => toggleWishlist(product.id)} isLoggedIn={!!user} primaryColor={colors.primary} />
+                      </div>
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
@@ -434,6 +442,9 @@ const Storefront = () => {
                       {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
                         <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
                       )}
+                      <div className="absolute top-2 right-2">
+                        <WishlistButton isWishlisted={wishlistProductIds.has(product.id)} onToggle={() => toggleWishlist(product.id)} isLoggedIn={!!user} primaryColor={colors.primary} />
+                      </div>
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
