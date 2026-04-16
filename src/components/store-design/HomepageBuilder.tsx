@@ -70,15 +70,17 @@ const HeroImageUpload = ({ currentImage, onUploaded, sectionType, currentTitle, 
   const handleUpload = useCallback(async (file: File) => {
     setUploading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
       const ext = file.name.split('.').pop();
-      const path = `hero/${crypto.randomUUID()}.${ext}`;
+      const path = `${user.id}/hero/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from('product-images').upload(path, file, { contentType: file.type });
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
       onUploaded(publicUrl);
       toast.success('Image uploaded!');
-    } catch {
-      toast.error('Upload failed');
+    } catch (e: any) {
+      toast.error(e.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -89,10 +91,12 @@ const HeroImageUpload = ({ currentImage, onUploaded, sectionType, currentTitle, 
     try {
       const { imageUrl } = await generate('image', sectionType, { title: currentTitle, subtitle: currentSubtitle });
       if (!imageUrl) throw new Error('No image returned');
-      // If imageUrl is base64, convert to blob and upload
+      // If imageUrl is base64, convert to blob and upload under user's folder (RLS)
       if (imageUrl.startsWith('data:')) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
         const blob = await (await fetch(imageUrl)).blob();
-        const path = `hero/ai-${crypto.randomUUID()}.png`;
+        const path = `${user.id}/hero/ai-${crypto.randomUUID()}.png`;
         const { error } = await supabase.storage.from('product-images').upload(path, blob, { contentType: 'image/png' });
         if (error) throw error;
         const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
@@ -304,9 +308,11 @@ const SortableSection = ({
                           onChange={async (e) => {
                             const files = Array.from(e.target.files || []);
                             if (!files.length) return;
+                            const { data: { user } } = await supabase.auth.getUser();
+                            if (!user) { toast.error('Not authenticated'); return; }
                             for (const file of files) {
                               const ext = file.name.split('.').pop();
-                              const path = `hero/${crypto.randomUUID()}.${ext}`;
+                              const path = `${user.id}/hero/${crypto.randomUUID()}.${ext}`;
                               const { error } = await supabase.storage.from('product-images').upload(path, file, { contentType: file.type });
                               if (error) { toast.error('Upload failed'); continue; }
                               const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
