@@ -78,7 +78,9 @@ const ProductRatingBadge = ({ productId }: { productId: string }) => {
 
 const Storefront = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { store, products, loading, error } = useStorefront(slug || '');
+  const [searchParams] = useState(() => new URLSearchParams(window.location.search));
+  const isOwnerPreview = searchParams.get('preview') === 'owner';
+  const { store, products, loading, error } = useStorefront(slug || '', isOwnerPreview);
   const { user } = useCustomerAuth(slug || '');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
