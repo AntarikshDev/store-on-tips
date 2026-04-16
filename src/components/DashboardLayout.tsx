@@ -297,7 +297,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-background md:hidden">
-        {navItems.slice(0, 5).map((item) => {
+        {mobileBottomNav.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link
