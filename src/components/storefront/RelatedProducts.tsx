@@ -14,7 +14,7 @@ interface Props {
   borderRadius: number;
   wishlistProductIds: Set<string>;
   isLoggedIn: boolean;
-  onToggleWishlist: (id: string) => void | Promise<any>;
+  onToggleWishlist: (id: string) => Promise<{ action: 'added' | 'removed' }>;
 }
 
 const RelatedProducts = ({
