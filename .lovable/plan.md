@@ -1,103 +1,46 @@
 
 
-# Merchant Email Domain — White-Label Sender Identity
+# Theme Cost Management & Free Themes for Stores
 
 ## Problem
-Currently all emails go out as `StoreName <onboarding@resend.dev>`. Customers see a generic Resend domain — not the merchant's brand. For a true SaaS, each merchant needs emails from their own domain: `notifications@indilipi.com`.
+1. **Blank store pages**: Stores like `pictocart.in/store/indilipi` show blank because the `resolveTheme` function may fail silently when `themeData.name` (e.g., "fresh-green") doesn't match with extended theme properties like `colors` that are already flattened into the theme object.
+2. **No free theme packs**: All AI-generated theme packs in `theme_packs` table cost ₹499. Free-plan sellers can only use the 2 built-in basic themes from `THEME_TEMPLATES` but get no rich homepage sections.
+3. **No discount/pricing controls**: Admin can set price but has no discount system for theme packs.
 
-## Architecture Decision
+## Plan
 
-**Use Resend's multi-domain API** through the existing connector gateway. One platform Resend account manages all merchant domains programmatically. No per-merchant Resend accounts needed.
+### 1. Fix blank store page
+- Debug the `resolveTheme` function in `StorefrontLayout.tsx` — the Indilipi store has `theme.name: "fresh-green"` with colors already embedded. The function correctly handles this. The blank page is likely caused by the background color matching the text color or a CSS issue. Will add a safety fallback and ensure the default hero section always renders.
 
-**Cost**: Resend Free = 100 emails/day (3,000/month). Pro = $20/month for 50,000 emails. The platform pays one subscription — all merchants share the quota. At scale, this is pennies per merchant.
+### 2. Add price tiers for theme packs (Admin side)
+In `AdminThemes.tsx` theme editor, add:
+- **"Free" toggle**: Quick switch to set price = 0 (alongside existing price input)
+- **Compare-at price (MRP)**: A strikethrough price to show discounts (e.g., ~~₹499~~ ₹199)
+- **Discount badge**: Auto-calculated percentage shown on the card
+- Add `compare_at_price` column to `theme_packs` table via migration
 
-## Technical Plan
+### 3. Auto-assign a default theme pack to new stores
+- When a seller completes onboarding and selects a built-in theme (e.g., "minimal-light"), auto-generate default `homepage_sections` based on the selected theme template so the store is never blank.
+- Create a utility function `generateDefaultSections(themeId, storeName)` that produces hero + featured_products + trust_badges + newsletter sections.
 
-### 1. Database: `store_email_domains` table
+### 4. Show free themes prominently in ThemeMarketplace
+- In `ThemeMarketplace.tsx`, separate free themes at top with "Free Themes" heading
+- Show discount badges (e.g., "50% OFF") for discounted themes
+- Show "FREE" badge for price=0 themes instead of Crown icon
 
-```text
-store_email_domains
-├── id (uuid, PK)
-├── store_id (uuid, FK → stores, unique)
-├── domain (text)                    -- e.g., "indilipi.com"
-├── resend_domain_id (text)          -- Resend's domain ID for API calls
-├── status (text)                    -- pending | verified | failed
-├── dns_records (jsonb)              -- SPF/DKIM/MX records from Resend
-├── sender_prefix (text, default 'notifications')
-├── verified_at (timestamptz)
-├── created_at / updated_at
-```
+### 5. Ensure at least 2 free theme packs exist
+- Admin should mark at least 2 existing theme packs as free (price=0) and published
+- The ThemeMarketplace will show these to free-plan users
 
-RLS: Store owners can read/update their own domain config.
+## Technical Changes
 
-### 2. New Edge Function: `manage-email-domain`
-
-Handles three actions via the Resend API (through connector gateway):
-
-- **`add`**: Calls `POST /domains` with merchant's domain → stores DNS records and Resend domain ID in DB
-- **`verify`**: Calls `POST /domains/{id}/verify` → checks status, updates DB if verified
-- **`remove`**: Calls `DELETE /domains/{id}` → cleans up DB
-
-All calls go through `https://connector-gateway.lovable.dev/resend/domains/...` with existing RESEND_API_KEY.
-
-### 3. Onboarding Integration (Step in Domain Settings)
-
-Rather than adding another onboarding step (already 11), integrate into the existing **Domain Settings** page with a new "Email Domain" section:
-
-- Merchant enters domain (or auto-populates from custom domain if already set)
-- Click "Set Up Email Domain" → calls edge function → shows DNS records (SPF, DKIM, MX) with copy buttons
-- Click "Verify" → checks with Resend API → marks as verified
-- Status badges: Pending / Verified / Failed
-- Auto-suggest: if merchant already has a custom domain configured, pre-fill it
-
-### 4. Update `send-order-notification`
-
-```text
-Before sending:
-1. Check store_email_domains for this store
-2. If verified domain exists → from: "notifications@merchant-domain.com"
-3. If not → fallback: "StoreName <onboarding@resend.dev>"
-```
-
-One-line change in the `sendEmail` function — dynamically set the `from` field.
-
-### 5. Dashboard Indicator
-
-Add an email domain status indicator to the seller dashboard or settings sidebar:
-- Green badge if domain verified
-- Yellow "Set up email domain" prompt if not configured
-- Links to Domain Settings page
-
-## What the Merchant Does
-
-1. Goes to Domain Settings
-2. Enters their domain (e.g., `indilipi.com`)
-3. Sees 3 DNS records to add (SPF, DKIM, MX) — with copy buttons
-4. Adds records at their registrar (same flow they already did for custom domain)
-5. Clicks "Verify" — done
-
-Total effort: ~5 minutes, same as custom domain setup.
-
-## What the Customer Sees
-
-Emails arrive from: `notifications@indilipi.com` (or whatever prefix the merchant chose) with proper SPF/DKIM authentication — no spam folder issues, full brand trust.
-
-## Files to Create/Modify
-
-**Create:**
-- `supabase/functions/manage-email-domain/index.ts` — Resend domain API proxy
-- Migration for `store_email_domains` table
-
-**Modify:**
-- `src/pages/DomainSettings.tsx` — add Email Domain section with DNS records UI
-- `supabase/functions/send-order-notification/index.ts` — dynamic `from` field based on verified domain
-- Memory files
-
-## Future: Partner Program Ready
-
-This architecture supports the future partner program because:
-- Each merchant's domain is independently managed
-- Partners can set up domains for their clients during store creation
-- The platform handles all Resend API complexity behind the scenes
-- Billing can be tiered: free tier = platform domain, premium = custom email domain
+| File | Change |
+|------|--------|
+| **Migration** | Add `compare_at_price integer default null` to `theme_packs` |
+| `src/pages/admin/AdminThemes.tsx` | Add free toggle, compare_at_price input, discount badge in editor |
+| `src/components/store-design/ThemeMarketplace.tsx` | Separate free/paid sections, show discount badges, "FREE" labels |
+| `src/hooks/useThemePacks.ts` | Update `ThemePack` interface with `compare_at_price` |
+| `src/pages/Onboarding.tsx` | On go-live step, auto-generate default `homepage_sections` if none exist |
+| `src/lib/defaultSections.ts` | New utility: `generateDefaultSections()` returns hero, products, trust badges, newsletter |
+| `src/pages/Storefront.tsx` | Defensive fix for theme resolution + ensure default sections render |
 
