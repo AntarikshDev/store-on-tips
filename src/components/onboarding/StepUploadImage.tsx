@@ -4,6 +4,7 @@ import { Upload, X, ImageIcon, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { compressImage } from '@/lib/imageCompression';
 import type { OnboardingData } from '@/pages/Onboarding';
 
 interface Props {
@@ -18,35 +19,44 @@ const StepUploadImage = ({ data, setData, storeId }: Props) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
-  const uploadFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
+  const uploadFile = async (original: File) => {
+    if (!original.type.startsWith('image/')) {
       toast.error('Please upload an image file');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be under 5MB');
+    if (original.size > 30 * 1024 * 1024) {
+      toast.error('Image must be under 30 MB');
       return;
     }
 
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `onboarding/${storeId || 'temp'}/${Date.now()}.${ext}`;
+    try {
+      // Auto-compress so high-res phone photos upload reliably
+      const file = await compressImage(original, { maxWidth: 1600, maxHeight: 1600, maxSizeMB: 1.2 });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const path = `${user.id}/onboarding/${Date.now()}.jpg`;
 
-    const { error } = await supabase.storage.from('product-images').upload(path, file);
-    if (error) {
-      toast.error('Upload failed. Please try again.');
+      const { error } = await supabase.storage.from('product-images').upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+      setData((d) => ({
+        ...d,
+        productImageUrl: urlData.publicUrl,
+        productImageFile: file,
+      }));
+    } catch (err: any) {
+      console.error('Product image upload failed:', err);
+      toast.error(err?.message || 'Upload failed. Please try again.');
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
-    setData((d) => ({
-      ...d,
-      productImageUrl: urlData.publicUrl,
-      productImageFile: file,
-    }));
-    setUploading(false);
   };
+
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -115,7 +125,7 @@ const StepUploadImage = ({ data, setData, storeId }: Props) => {
             <p className="text-sm font-semibold mb-1">
               {uploading ? 'Uploading...' : 'Drag & drop or click to upload'}
             </p>
-            <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+            <p className="text-xs text-muted-foreground">PNG or JPG · Auto-compressed for fast upload</p>
             <input
               id="file-input"
               type="file"
