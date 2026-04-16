@@ -88,13 +88,13 @@ const OrderDetail = () => {
   };
 
   const handleShipped = async (waybill: string) => {
-    // Save tracking number and update status to shipped
     await supabase
       .from('orders')
       .update({ tracking_number: waybill, status: 'shipped' })
       .eq('id', order.id);
+    sendOrderNotification('order_shipped');
     refetch();
-    toast.success('Order marked as shipped');
+    toast.success('Order marked as shipped — customer notified');
   };
 
   const handleTrack = async () => {
