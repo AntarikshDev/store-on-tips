@@ -141,10 +141,12 @@ Deno.serve(async (req) => {
     }
 
     // Fetch order, store, and custom templates in parallel
-    const [orderRes, storeRes, templatesRes] = await Promise.all([
+    // Fetch order, store, custom templates, and email domain in parallel
+    const [orderRes, storeRes, templatesRes, emailDomainRes] = await Promise.all([
       supabase.from('orders').select('*').eq('id', order_id).single(),
       supabase.from('stores').select('name, user_id').eq('id', store_id).single(),
       supabase.from('store_email_templates').select('templates').eq('store_id', store_id).maybeSingle(),
+      supabase.from('store_email_domains').select('domain, sender_prefix, status').eq('store_id', store_id).maybeSingle(),
     ]);
 
     if (orderRes.error || !orderRes.data) {
