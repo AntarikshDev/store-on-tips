@@ -1,111 +1,137 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
+const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const generateEmailHTML = (type: string, data: any): { subject: string; html: string } => {
-  const storeName = data.store_name || 'Our Store';
-  const orderNumber = data.order_number || '';
-  const customerName = data.customer_name || 'Customer';
+// ── Email HTML generators ──
 
-  const baseStyle = `
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-width: 600px; margin: 0 auto; padding: 32px 24px;
-    background: #ffffff; color: #1a1a1a;
-  `;
+const baseStyle = `font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#ffffff;color:#1a1a1a;`;
+const headerStyle = `text-align:center;padding-bottom:24px;border-bottom:2px solid #f0f0f0;margin-bottom:24px;`;
 
-  const headerStyle = `
-    text-align: center; padding-bottom: 24px;
-    border-bottom: 2px solid #f0f0f0; margin-bottom: 24px;
-  `;
+function itemsTable(items: any[], total: number): string {
+  const rows = (items || []).map((item: any) => `
+    <tr style="border-bottom:1px solid #f0f0f0;">
+      <td style="padding:8px 0;">${item.title} × ${item.quantity}</td>
+      <td style="padding:8px 0;text-align:right;">₹${(item.price * item.quantity).toLocaleString('en-IN')}</td>
+    </tr>`).join('');
+  return `<table style="width:100%;border-collapse:collapse;margin:20px 0;">
+    ${rows}
+    <tr><td style="padding:12px 0;font-weight:bold;">Total</td>
+    <td style="padding:12px 0;text-align:right;font-weight:bold;">₹${total?.toLocaleString('en-IN') || '0'}</td></tr>
+  </table>`;
+}
 
-  if (type === 'order_confirmed') {
-    return {
-      subject: `Order Confirmed — ${orderNumber} | ${storeName}`,
-      html: `<div style="${baseStyle}">
-        <div style="${headerStyle}">
-          <h1 style="font-size:20px; margin:0;">${storeName}</h1>
-        </div>
-        <h2 style="font-size:18px; color:#16a34a;">✓ Order Confirmed</h2>
-        <p>Hi ${customerName},</p>
-        <p>Your order <strong>${orderNumber}</strong> has been confirmed and is being processed.</p>
-        <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-          ${(data.items || []).map((item: any) => `
-            <tr style="border-bottom:1px solid #f0f0f0;">
-              <td style="padding:8px 0;">${item.title} × ${item.quantity}</td>
-              <td style="padding:8px 0; text-align:right;">₹${(item.price * item.quantity).toLocaleString('en-IN')}</td>
-            </tr>
-          `).join('')}
-          <tr>
-            <td style="padding:12px 0; font-weight:bold;">Total</td>
-            <td style="padding:12px 0; text-align:right; font-weight:bold;">₹${data.total?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-        </table>
-        <p style="color:#666; font-size:13px;">We'll notify you when your order ships.</p>
-        <p style="margin-top:24px;">Thank you for shopping with ${storeName}!</p>
-      </div>`,
-    };
-  }
+function orderConfirmedHTML(d: any) {
+  return {
+    subject: `Order Confirmed — ${d.order_number} | ${d.store_name}`,
+    html: `<div style="${baseStyle}">
+      <div style="${headerStyle}"><h1 style="font-size:20px;margin:0;">${d.store_name}</h1></div>
+      <h2 style="font-size:18px;color:#16a34a;">✓ Order Confirmed</h2>
+      <p>Hi ${d.customer_name},</p>
+      <p>Your order <strong>${d.order_number}</strong> has been confirmed and is being processed.</p>
+      ${itemsTable(d.items, d.total)}
+      <p style="color:#666;font-size:13px;">We'll notify you when your order ships.</p>
+      <p style="margin-top:24px;">Thank you for shopping with ${d.store_name}!</p>
+    </div>`,
+  };
+}
 
-  if (type === 'order_shipped') {
-    return {
-      subject: `Your Order Has Shipped — ${orderNumber} | ${storeName}`,
-      html: `<div style="${baseStyle}">
-        <div style="${headerStyle}">
-          <h1 style="font-size:20px; margin:0;">${storeName}</h1>
-        </div>
-        <h2 style="font-size:18px; color:#2563eb;">📦 Order Shipped</h2>
-        <p>Hi ${customerName},</p>
-        <p>Great news! Your order <strong>${orderNumber}</strong> has been shipped.</p>
-        ${data.tracking_number ? `
-          <div style="background:#f7f7f7; padding:16px; border-radius:8px; margin:16px 0;">
-            <p style="margin:0; font-size:13px; color:#666;">Tracking Number</p>
-            <p style="margin:4px 0 0; font-size:16px; font-weight:bold; font-family:monospace;">${data.tracking_number}</p>
-          </div>
-        ` : ''}
-        <p style="color:#666; font-size:13px;">You'll receive your order soon!</p>
-        <p style="margin-top:24px;">Thank you for shopping with ${storeName}!</p>
-      </div>`,
-    };
-  }
+function orderShippedHTML(d: any) {
+  return {
+    subject: `Your Order Has Shipped — ${d.order_number} | ${d.store_name}`,
+    html: `<div style="${baseStyle}">
+      <div style="${headerStyle}"><h1 style="font-size:20px;margin:0;">${d.store_name}</h1></div>
+      <h2 style="font-size:18px;color:#2563eb;">📦 Order Shipped</h2>
+      <p>Hi ${d.customer_name},</p>
+      <p>Great news! Your order <strong>${d.order_number}</strong> has been shipped.</p>
+      ${d.tracking_number ? `<div style="background:#f7f7f7;padding:16px;border-radius:8px;margin:16px 0;">
+        <p style="margin:0;font-size:13px;color:#666;">Tracking Number</p>
+        <p style="margin:4px 0 0;font-size:16px;font-weight:bold;font-family:monospace;">${d.tracking_number}</p>
+      </div>` : ''}
+      <p style="color:#666;font-size:13px;">You'll receive your order soon!</p>
+      <p style="margin-top:24px;">Thank you for shopping with ${d.store_name}!</p>
+    </div>`,
+  };
+}
 
-  if (type === 'new_order_seller') {
-    return {
-      subject: `🔔 New Order Received — ${orderNumber}`,
-      html: `<div style="${baseStyle}">
-        <div style="${headerStyle}">
-          <h1 style="font-size:20px; margin:0;">${storeName} — New Order</h1>
-        </div>
-        <h2 style="font-size:18px;">New Order: ${orderNumber}</h2>
-        <p><strong>Customer:</strong> ${customerName}</p>
-        ${data.customer_phone ? `<p><strong>Phone:</strong> ${data.customer_phone}</p>` : ''}
-        ${data.customer_email ? `<p><strong>Email:</strong> ${data.customer_email}</p>` : ''}
-        <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-          ${(data.items || []).map((item: any) => `
-            <tr style="border-bottom:1px solid #f0f0f0;">
-              <td style="padding:8px 0;">${item.title} × ${item.quantity}</td>
-              <td style="padding:8px 0; text-align:right;">₹${(item.price * item.quantity).toLocaleString('en-IN')}</td>
-            </tr>
-          `).join('')}
-          <tr>
-            <td style="padding:12px 0; font-weight:bold;">Total</td>
-            <td style="padding:12px 0; text-align:right; font-weight:bold;">₹${data.total?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-        </table>
-        <p>Payment: <strong>${data.payment_method || 'N/A'}</strong></p>
-      </div>`,
-    };
-  }
+function orderDeliveredHTML(d: any) {
+  return {
+    subject: `Order Delivered — ${d.order_number} | ${d.store_name}`,
+    html: `<div style="${baseStyle}">
+      <div style="${headerStyle}"><h1 style="font-size:20px;margin:0;">${d.store_name}</h1></div>
+      <h2 style="font-size:18px;color:#16a34a;">✅ Order Delivered</h2>
+      <p>Hi ${d.customer_name},</p>
+      <p>Your order <strong>${d.order_number}</strong> has been delivered successfully.</p>
+      ${itemsTable(d.items, d.total)}
+      <p style="color:#666;font-size:13px;">We hope you love your purchase! If you have any issues, please don't hesitate to reach out.</p>
+      <p style="margin-top:24px;">Thank you for shopping with ${d.store_name}!</p>
+    </div>`,
+  };
+}
 
-  return { subject: 'Notification', html: '<p>Notification from your store.</p>' };
+function newOrderSellerHTML(d: any) {
+  return {
+    subject: `🔔 New Order Received — ${d.order_number}`,
+    html: `<div style="${baseStyle}">
+      <div style="${headerStyle}"><h1 style="font-size:20px;margin:0;">${d.store_name} — New Order</h1></div>
+      <h2 style="font-size:18px;">New Order: ${d.order_number}</h2>
+      <p><strong>Customer:</strong> ${d.customer_name}</p>
+      ${d.customer_phone ? `<p><strong>Phone:</strong> ${d.customer_phone}</p>` : ''}
+      ${d.customer_email ? `<p><strong>Email:</strong> ${d.customer_email}</p>` : ''}
+      ${itemsTable(d.items, d.total)}
+      <p>Payment: <strong>${d.payment_method || 'N/A'}</strong></p>
+    </div>`,
+  };
+}
+
+const GENERATORS: Record<string, (d: any) => { subject: string; html: string }> = {
+  order_confirmed: orderConfirmedHTML,
+  order_shipped: orderShippedHTML,
+  order_delivered: orderDeliveredHTML,
+  new_order_seller: newOrderSellerHTML,
 };
+
+// ── Send email via Resend connector gateway ──
+
+async function sendEmail(to: string, subject: string, html: string, fromName: string) {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+  if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured');
+
+  const res = await fetch(`${GATEWAY_URL}/emails`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'X-Connection-Api-Key': RESEND_API_KEY,
+    },
+    body: JSON.stringify({
+      from: `${fromName} <onboarding@resend.dev>`,
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Resend error:', err);
+    return false;
+  }
+  return true;
+}
+
+// ── Main handler ──
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -117,45 +143,30 @@ Deno.serve(async (req) => {
 
     if (!type || !order_id || !store_id) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Fetch order
-    const { data: order, error: orderErr } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', order_id)
-      .single();
+    // Fetch order + store in parallel
+    const [orderRes, storeRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('id', order_id).single(),
+      supabase.from('stores').select('name, user_id').eq('id', store_id).single(),
+    ]);
 
-    if (orderErr || !order) {
+    if (orderRes.error || !orderRes.data) {
       return new Response(JSON.stringify({ error: 'Order not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Fetch store
-    const { data: store } = await supabase
-      .from('stores')
-      .select('name, user_id')
-      .eq('id', store_id)
-      .single();
-
+    const order = orderRes.data;
+    const store = storeRes.data;
     const storeName = store?.name || 'Store';
-
-    // Fetch seller email
-    const { data: sellerProfile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', store?.user_id)
-      .single();
 
     const emailData = {
       store_name: storeName,
       order_number: order.order_number,
-      customer_name: order.customer_name,
+      customer_name: order.customer_name || 'Customer',
       customer_email: order.customer_email,
       customer_phone: order.customer_phone,
       items: order.items,
@@ -164,63 +175,40 @@ Deno.serve(async (req) => {
       payment_method: order.payment_method,
     };
 
-    const results: string[] = [];
-
-    // Send customer email
-    if ((type === 'order_confirmed' || type === 'order_shipped') && order.customer_email) {
-      const { subject, html } = generateEmailHTML(type, emailData);
-      
-      const emailRes = await fetch('https://api.lovable.dev/v1/email/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        },
-        body: JSON.stringify({
-          to: order.customer_email,
-          subject,
-          html,
-          from: `${storeName} <noreply@lovable.dev>`,
-        }),
+    const generator = GENERATORS[type];
+    if (!generator) {
+      return new Response(JSON.stringify({ error: 'Unknown notification type' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-
-      results.push(`customer_email: ${emailRes.ok ? 'sent' : 'failed'}`);
     }
 
-    // Send seller notification for new orders
+    const results: string[] = [];
+
+    // Customer email
+    if (['order_confirmed', 'order_shipped', 'order_delivered'].includes(type) && order.customer_email) {
+      const { subject, html } = generator(emailData);
+      const sent = await sendEmail(order.customer_email, subject, html, storeName);
+      results.push(`customer_email: ${sent ? 'sent' : 'failed'}`);
+    }
+
+    // Seller notification for new orders
     if (type === 'new_order_seller' && store?.user_id) {
-      // Get seller's auth email
       const { data: authUser } = await supabase.auth.admin.getUserById(store.user_id);
       const sellerEmail = authUser?.user?.email;
-
       if (sellerEmail) {
-        const { subject, html } = generateEmailHTML('new_order_seller', emailData);
-        
-        const emailRes = await fetch('https://api.lovable.dev/v1/email/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          },
-          body: JSON.stringify({
-            to: sellerEmail,
-            subject,
-            html,
-            from: `${storeName} <noreply@lovable.dev>`,
-          }),
-        });
-
-        results.push(`seller_email: ${emailRes.ok ? 'sent' : 'failed'}`);
+        const { subject, html } = generator(emailData);
+        const sent = await sendEmail(sellerEmail, subject, html, storeName);
+        results.push(`seller_email: ${sent ? 'sent' : 'failed'}`);
       }
     }
 
     return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (err) {
+  } catch (err: any) {
+    console.error('Notification error:', err);
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
