@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { generateDefaultSections } from '@/lib/defaultSections';
 import { useParams, Link } from 'react-router-dom';
 import { X, ArrowUp } from 'lucide-react';
 import { useStorefront } from '@/hooks/useStorefront';
@@ -101,11 +102,7 @@ const Storefront = () => {
   const settings = (store.settings || {}) as any;
   const seo = settings.seo || {};
   const rawSections = settings.homepage_sections || [];
-  // Fallback: if no sections configured, generate defaults so stores are never blank
-  const homepageSections = rawSections.length > 0 ? rawSections : (() => {
-    const { generateDefaultSections } = require('@/lib/defaultSections');
-    return generateDefaultSections(store.name, store.category);
-  })();
+  const homepageSections = rawSections.length > 0 ? rawSections : generateDefaultSections(store.name, store.category);
   const bannerCarouselSections = homepageSections.filter((section: any) => section.type === 'banner_carousel');
   const footerConfig: FooterConfig = { ...DEFAULT_FOOTER, ...(settings.footer || {}) };
 
