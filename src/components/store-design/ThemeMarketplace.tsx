@@ -113,17 +113,9 @@ const ThemeMarketplace = ({ onApply }: Props) => {
       // Apply theme config + homepage sections to store
       const currentSettings = (store.settings || {}) as any;
       const homeSections = (pack.pages?.home || []).map((section: any) => ({
+        ...section,
         id: crypto.randomUUID(),
-        type: section.type || 'text_block',
-        title: section.title || '',
-        subtitle: section.subtitle || '',
-        image: section.image || '',
-        images: section.images || [],
-        isSlider: section.isSlider || false,
-        layout: section.layout || 'default',
-        height: section.height || 'medium',
-        topMargin: section.margins?.top || 0,
-        animation: section.animation || 'none',
+        topMargin: section.topMargin ?? section.margins?.top ?? 0,
       }));
 
       const themeConfig = pack.theme_config || {};
