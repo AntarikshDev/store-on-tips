@@ -160,6 +160,12 @@ Deno.serve(async (req) => {
     const storeName = store?.name || 'Store';
     const customTemplates = (templatesRes.data?.templates as any) || null;
 
+    // Determine sender address from verified email domain
+    const emailDomain = emailDomainRes.data;
+    const fromAddress = emailDomain?.status === 'verified' && emailDomain.domain
+      ? `${emailDomain.sender_prefix || 'notifications'}@${emailDomain.domain}`
+      : undefined;
+
     const itemsTable = buildItemsTable(order.items as any[], order.total as number);
 
     const emailData = {
