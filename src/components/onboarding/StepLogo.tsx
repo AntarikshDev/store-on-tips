@@ -109,7 +109,7 @@ const StepLogo = ({ data, setData, storeId }: Props) => {
         )}
 
         <p className="text-xs text-muted-foreground text-center">
-          Recommended: 512×512px · PNG or JPG · Max 5 MB
+          Recommended: 512×512px · PNG or JPG · Auto-compressed for fast upload
         </p>
       </div>
     </div>
