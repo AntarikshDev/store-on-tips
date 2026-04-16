@@ -54,6 +54,7 @@ const CouponList = () => {
   const isMaxed = (c: Coupon) => c.max_uses !== null && c.used_count >= c.max_uses;
 
   return (
+    <PremiumGate feature="coupons" fallbackMessage="Upgrade to Premium to create discount codes and coupons for your customers.">
     <div className="space-y-6 pb-20 md:pb-0">
       <div className="flex items-center justify-between">
         <div>
@@ -203,6 +204,7 @@ const CouponList = () => {
         </div>
       )}
     </div>
+    </PremiumGate>
   );
 };
 
