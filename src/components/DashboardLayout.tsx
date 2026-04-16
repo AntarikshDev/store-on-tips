@@ -6,11 +6,9 @@ import {
   Package,
   ShoppingCart,
   Palette,
-  BarChart3,
-  Settings,
   LogOut,
-  Store,
   ChevronLeft,
+  ChevronDown,
   Menu,
   Shield,
   CreditCard,
@@ -24,26 +22,79 @@ import {
   FolderTree,
   UserCircle,
   Crown,
+  ShoppingBag,
+  Megaphone,
+  Settings as SettingsIcon,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-const navItems = [
+type NavLeaf = { label: string; icon: any; path: string };
+type NavGroup = { label: string; icon: any; key: string; children: NavLeaf[] };
+type NavEntry = NavLeaf | NavGroup;
+
+const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
+
+const navTree: NavEntry[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  {
+    label: 'Catalog',
+    icon: Package,
+    key: 'catalog',
+    children: [
+      { label: 'Products', icon: Package, path: '/products' },
+      { label: 'Categories', icon: FolderTree, path: '/categories' },
+    ],
+  },
+  {
+    label: 'Sales',
+    icon: ShoppingBag,
+    key: 'sales',
+    children: [
+      { label: 'Orders', icon: ShoppingCart, path: '/orders' },
+      { label: 'Coupons', icon: Ticket, path: '/coupons' },
+    ],
+  },
+  {
+    label: 'Marketing',
+    icon: Megaphone,
+    key: 'marketing',
+    children: [
+      { label: 'Blog Posts', icon: FileText, path: '/blog-posts' },
+      { label: 'Subscribers', icon: Mail, path: '/subscribers' },
+      { label: 'SEO', icon: Search, path: '/settings/seo' },
+    ],
+  },
+  {
+    label: 'Storefront',
+    icon: Sparkles,
+    key: 'storefront',
+    children: [
+      { label: 'Store Design', icon: Palette, path: '/store-design' },
+      { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
+    ],
+  },
+  {
+    label: 'Settings',
+    icon: SettingsIcon,
+    key: 'settings',
+    children: [
+      { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
+      { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
+      { label: 'Domain', icon: Globe, path: '/settings/domain' },
+      { label: 'Billing', icon: Crown, path: '/billing' },
+    ],
+  },
+];
+
+const mobileBottomNav: NavLeaf[] = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { label: 'Products', icon: Package, path: '/products' },
-  { label: 'Categories', icon: FolderTree, path: '/categories' },
   { label: 'Orders', icon: ShoppingCart, path: '/orders' },
-  { label: 'Coupons', icon: Ticket, path: '/coupons' },
-  { label: 'Blog Posts', icon: FileText, path: '/blog-posts' },
-  { label: 'Subscribers', icon: Mail, path: '/subscribers' },
-  { label: 'Store Design', icon: Palette, path: '/store-design' },
-  { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-  { label: 'SEO', icon: Search, path: '/settings/seo' },
-  { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
-  { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
-  { label: 'Domain', icon: Globe, path: '/settings/domain' },
-  { label: 'Billing', icon: Crown, path: '/billing' },
+  { label: 'Design', icon: Palette, path: '/store-design' },
+  { label: 'Profile', icon: UserCircle, path: '/profile' },
 ];
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
@@ -52,6 +103,54 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const initiallyOpen = useMemo(() => {
+    const open: Record<string, boolean> = {};
+    for (const entry of navTree) {
+      if (isGroup(entry) && entry.children.some((c) => location.pathname.startsWith(c.path))) {
+        open[entry.key] = true;
+      }
+    }
+    return open;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(initiallyOpen);
+
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const entry of navTree) {
+        if (isGroup(entry) && entry.children.some((c) => location.pathname === c.path)) {
+          next[entry.key] = true;
+        }
+      }
+      return next;
+    });
+  }, [location.pathname]);
+
+  const toggleGroup = (key: string) => setOpenGroups((p) => ({ ...p, [key]: !p[key] }));
+
+  const renderLeaf = (item: NavLeaf, indent = false) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        onClick={() => setMobileOpen(false)}
+        title={collapsed ? item.label : undefined}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+          collapsed && 'justify-center px-2'
+        )}
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex min-h-screen bg-secondary/30">
@@ -85,24 +184,41 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+          {navTree.map((entry) => {
+            if (!isGroup(entry)) return renderLeaf(entry);
+
+            if (collapsed) {
+              return (
+                <div key={entry.key} className="space-y-1">
+                  {entry.children.map((c) => renderLeaf(c))}
+                </div>
+              );
+            }
+
+            const open = openGroups[entry.key];
+            const hasActive = entry.children.some((c) => location.pathname === c.path);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-                  collapsed && 'justify-center px-2'
+              <div key={entry.key}>
+                <button
+                  onClick={() => toggleGroup(entry.key)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    hasActive
+                      ? 'text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  )}
+                  aria-expanded={open}
+                >
+                  <entry.icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 text-left truncate">{entry.label}</span>
+                  <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
+                </button>
+                {open && (
+                  <div className="mt-1 space-y-1 border-l border-sidebar-border/60 ml-4 pl-2">
+                    {entry.children.map((c) => renderLeaf(c))}
+                  </div>
                 )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
+              </div>
             );
           })}
         </nav>
@@ -181,7 +297,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-background md:hidden">
-        {navItems.slice(0, 5).map((item) => {
+        {mobileBottomNav.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link
