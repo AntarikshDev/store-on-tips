@@ -20,6 +20,7 @@ import CouponList from "@/pages/CouponList";
 import SEOSettings from "@/pages/SEOSettings";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import Storefront from "@/pages/Storefront";
 import StorefrontProduct from "@/pages/StorefrontProduct";
 import StorefrontCart from "@/pages/StorefrontCart";
@@ -58,6 +59,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/onboarding"
               element={
