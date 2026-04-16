@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Crown, Sparkles, Loader2, Palette, Trash2, Eye, IndianRupee, TrendingUp, Package } from 'lucide-react';
+import { Crown, Sparkles, Loader2, Palette, Trash2, Eye, IndianRupee, TrendingUp, Package, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -121,76 +121,191 @@ const ThemePackEditor = ({ pack, onClose }: { pack: ThemePack; onClose: () => vo
 };
 
 const ThemePreviewModal = ({ pack }: { pack: ThemePack }) => {
-  const config = pack.theme_config || {};
-  const colors = config.colors || {};
-  const fonts = config.fonts || {};
   const pages = pack.pages || {};
   const homeSections = pages.home || [];
 
+  const SectionLabel = ({ label }: { label: string }) => (
+    <div className="absolute top-1 left-1 bg-foreground/70 text-background text-[9px] font-semibold px-1.5 py-0.5 rounded z-10">
+      {label}
+    </div>
+  );
+
+  const WireframeBlock = ({ h = 'h-3', w = 'w-full' }: { h?: string; w?: string }) => (
+    <div className={`${h} ${w} rounded bg-muted-foreground/20`} />
+  );
+
   return (
-    <div className="space-y-0 rounded-lg overflow-hidden border" style={{ backgroundColor: colors.background, color: colors.text }}>
-      {/* Preview header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b" style={{ backgroundColor: colors.card }}>
-        <span className="text-sm font-bold" style={{ fontFamily: fonts.heading }}>{pack.name} Store</span>
-        <div className="flex gap-4 text-xs" style={{ fontFamily: fonts.body }}>
-          <span>Home</span><span>Shop</span><span>About</span><span>Blog</span>
+    <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+      {/* Page: Header */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Header / Navigation" />
+        <div className="mt-5 flex items-center justify-between">
+          <div className="h-6 w-20 rounded bg-muted-foreground/25" />
+          <div className="flex gap-3">
+            {['Home', 'Shop', 'About', 'Blog', 'Contact'].map(l => (
+              <div key={l} className="h-3 w-10 rounded bg-muted-foreground/15" />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <div className="h-5 w-5 rounded-full bg-muted-foreground/15" />
+            <div className="h-5 w-5 rounded-full bg-muted-foreground/15" />
+          </div>
         </div>
       </div>
 
-      {/* Render home sections preview */}
+      {/* Page: Hero Section */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Hero Banner" />
+        <div className="mt-5 h-28 rounded bg-muted-foreground/10 flex flex-col items-center justify-center gap-2">
+          <WireframeBlock h="h-4" w="w-48" />
+          <WireframeBlock h="h-3" w="w-64" />
+          <div className="h-7 w-28 rounded bg-muted-foreground/25 mt-1" />
+        </div>
+      </div>
+
+      {/* Home sections from theme data */}
       {homeSections.map((section: any, i: number) => (
-        <div key={i} className="relative">
-          {section.type === 'hero' && (
-            <div className="relative h-40 flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
-              {section.image && <img src={section.image} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-              <div className="relative z-10 text-center px-4">
-                <h2 className="text-lg font-bold text-white" style={{ fontFamily: fonts.heading }}>{section.title}</h2>
-                {section.subtitle && <p className="text-xs text-white/80 mt-1">{section.subtitle}</p>}
-              </div>
-              <div className="absolute inset-0 bg-black/30" />
-            </div>
-          )}
-          {section.type === 'featured_products' && (
-            <div className="p-4">
-              <h3 className="text-sm font-bold mb-2" style={{ fontFamily: fonts.heading }}>{section.title || 'Featured Products'}</h3>
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 3, 4].map(n => (
-                  <div key={n} className="rounded overflow-hidden" style={{ backgroundColor: colors.card, border: `1px solid ${colors.secondary}` }}>
-                    <div className="h-16" style={{ backgroundColor: colors.secondary }} />
-                    <div className="p-1.5">
-                      <div className="h-2 rounded" style={{ backgroundColor: colors.secondary, width: '70%' }} />
-                      <div className="h-2 rounded mt-1" style={{ backgroundColor: colors.primary, width: '40%' }} />
+        <div key={i} className="rounded-lg border bg-muted/30 p-3 relative">
+          <SectionLabel label={section.type?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || `Section ${i + 1}`} />
+          <div className="mt-5">
+            {section.type === 'featured_products' && (
+              <div className="space-y-2">
+                <WireframeBlock h="h-3" w="w-36" />
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map(n => (
+                    <div key={n} className="rounded border border-muted-foreground/10 overflow-hidden">
+                      <div className="h-14 bg-muted-foreground/10" />
+                      <div className="p-1.5 space-y-1">
+                        <WireframeBlock h="h-2" w="w-3/4" />
+                        <WireframeBlock h="h-2" w="w-1/2" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {section.type === 'newsletter' && (
-            <div className="p-4 text-center" style={{ backgroundColor: colors.secondary }}>
-              <h3 className="text-sm font-bold" style={{ fontFamily: fonts.heading }}>{section.title || 'Stay Updated'}</h3>
-              <div className="flex gap-2 max-w-xs mx-auto mt-2">
-                <div className="flex-1 h-7 rounded border" style={{ borderColor: colors.text + '30' }} />
-                <div className="h-7 px-3 rounded text-xs flex items-center text-white" style={{ backgroundColor: colors.primary }}>Subscribe</div>
+            )}
+            {section.type === 'newsletter' && (
+              <div className="flex flex-col items-center gap-2 py-2">
+                <WireframeBlock h="h-3" w="w-40" />
+                <div className="flex gap-2 w-full max-w-xs">
+                  <div className="flex-1 h-7 rounded border border-muted-foreground/15" />
+                  <div className="h-7 w-20 rounded bg-muted-foreground/25" />
+                </div>
               </div>
-            </div>
-          )}
-          {section.type === 'text_block' && (
-            <div className="p-4 text-center">
-              <h3 className="text-sm font-bold" style={{ fontFamily: fonts.heading }}>{section.title}</h3>
-              {section.subtitle && <p className="text-xs opacity-60 mt-1">{section.subtitle}</p>}
-            </div>
-          )}
-          {/* Animation badge */}
-          {section.animation && section.animation !== 'none' && (
-            <Badge variant="outline" className="absolute top-1 right-1 text-[8px] px-1">{section.animation}</Badge>
-          )}
+            )}
+            {section.type === 'text_block' && (
+              <div className="flex flex-col items-center gap-1.5 py-2">
+                <WireframeBlock h="h-3" w="w-44" />
+                <WireframeBlock h="h-2" w="w-56" />
+              </div>
+            )}
+            {section.type === 'hero' && (
+              <div className="h-20 rounded bg-muted-foreground/10 flex flex-col items-center justify-center gap-1.5">
+                <WireframeBlock h="h-3" w="w-32" />
+                <WireframeBlock h="h-2" w="w-48" />
+              </div>
+            )}
+            {!['featured_products', 'newsletter', 'text_block', 'hero'].includes(section.type) && (
+              <div className="h-16 rounded bg-muted-foreground/8 flex items-center justify-center">
+                <span className="text-[10px] text-muted-foreground capitalize">{section.type?.replace(/_/g, ' ')}</span>
+              </div>
+            )}
+          </div>
         </div>
       ))}
 
-      {/* Footer preview */}
-      <div className="px-4 py-3 text-center text-[10px] opacity-50 border-t" style={{ backgroundColor: colors.card }}>
-        © {pack.name} Store
+      {/* Page: Product Listing */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Product Listing Page" />
+        <div className="mt-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <WireframeBlock h="h-3" w="w-24" />
+            <div className="flex gap-2">
+              <div className="h-5 w-16 rounded border border-muted-foreground/15 bg-muted-foreground/5" />
+              <div className="h-5 w-16 rounded border border-muted-foreground/15 bg-muted-foreground/5" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[1, 2, 3, 4, 5, 6].map(n => (
+              <div key={n} className="rounded border border-muted-foreground/10 overflow-hidden">
+                <div className="h-16 bg-muted-foreground/10" />
+                <div className="p-1.5 space-y-1">
+                  <WireframeBlock h="h-2" w="w-3/4" />
+                  <WireframeBlock h="h-2" w="w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Page: Product Detail */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Product Detail Page" />
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="h-32 rounded bg-muted-foreground/10" />
+          <div className="space-y-2">
+            <WireframeBlock h="h-4" w="w-3/4" />
+            <WireframeBlock h="h-3" w="w-1/3" />
+            <WireframeBlock h="h-2" w="w-full" />
+            <WireframeBlock h="h-2" w="w-5/6" />
+            <div className="flex gap-2 mt-3">
+              <div className="h-7 w-24 rounded bg-muted-foreground/25" />
+              <div className="h-7 w-20 rounded border border-muted-foreground/15" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page: Cart */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Cart Page" />
+        <div className="mt-5 space-y-2">
+          {[1, 2].map(n => (
+            <div key={n} className="flex items-center gap-3 p-2 rounded border border-muted-foreground/10">
+              <div className="h-10 w-10 rounded bg-muted-foreground/10 shrink-0" />
+              <div className="flex-1 space-y-1">
+                <WireframeBlock h="h-2" w="w-2/3" />
+                <WireframeBlock h="h-2" w="w-1/4" />
+              </div>
+              <div className="h-6 w-14 rounded border border-muted-foreground/15" />
+            </div>
+          ))}
+          <div className="flex justify-end pt-2">
+            <div className="h-8 w-32 rounded bg-muted-foreground/25" />
+          </div>
+        </div>
+      </div>
+
+      {/* Page: Blog */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Blog Page" />
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          {[1, 2, 3].map(n => (
+            <div key={n} className="rounded border border-muted-foreground/10 overflow-hidden">
+              <div className="h-12 bg-muted-foreground/10" />
+              <div className="p-1.5 space-y-1">
+                <WireframeBlock h="h-2" w="w-full" />
+                <WireframeBlock h="h-2" w="w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Page: Footer */}
+      <div className="rounded-lg border bg-muted/30 p-3 relative">
+        <SectionLabel label="Footer" />
+        <div className="mt-5 grid grid-cols-4 gap-3">
+          {['Brand', 'Links', 'Support', 'Social'].map(col => (
+            <div key={col} className="space-y-1.5">
+              <WireframeBlock h="h-2.5" w="w-12" />
+              <WireframeBlock h="h-2" w="w-16" />
+              <WireframeBlock h="h-2" w="w-14" />
+              <WireframeBlock h="h-2" w="w-10" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -306,8 +421,14 @@ const AdminThemes = () => {
                       />
                       <span className="text-xs text-muted-foreground">Published</span>
                       <div className="flex-1" />
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPack(pack)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPack(pack)} title="Wireframe preview">
                         <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                        const previewUrl = `${window.location.origin}/store/preview-theme?theme=${pack.id}`;
+                        window.open(previewUrl, '_blank');
+                      }} title="Open full preview in new tab">
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingPack(pack)}>
                         <Palette className="h-3.5 w-3.5" />
@@ -400,8 +521,8 @@ const AdminThemes = () => {
 
       {/* Preview dialog */}
       <Dialog open={!!previewPack} onOpenChange={(o) => !o && setPreviewPack(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{previewPack?.name} — Preview</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{previewPack?.name} — Page Wireframes</DialogTitle></DialogHeader>
           {previewPack && <ThemePreviewModal pack={previewPack} />}
         </DialogContent>
       </Dialog>
