@@ -70,7 +70,7 @@ const categories = ['Fashion', 'Food & Bakery', 'Electronics', 'Beauty', 'Handcr
 /* ─── Testimonials ─── */
 const testimonials = [
   { name: 'Priya Sharma', store: 'Priya\'s Boutique', category: 'Fashion', quote: 'I set up my store in literally 5 minutes. The AI wrote better product descriptions than I ever could!', stars: 5, growth: '300% sales in 2 months' },
-  { name: 'Ravi Kumar', store: 'Ravi\'s Organic Farm', category: 'Organic Food', quote: 'As a farmer, I just take photos of my produce. Store on Tips handles everything else. My online orders have tripled.', stars: 5, growth: '₹2L monthly revenue' },
+  { name: 'Ravi Kumar', store: 'Ravi\'s Organic Farm', category: 'Organic Food', quote: 'As a farmer, I just take photos of my produce. Pic to Cart handles everything else. My online orders have tripled.', stars: 5, growth: '₹2L monthly revenue' },
   { name: 'Meera Jain', store: 'Sparkle Jewelry', category: 'Jewelry', quote: 'The premium themes are gorgeous. My customers think I hired a professional web designer. Worth every rupee!', stars: 5, growth: '500+ orders in first month' },
 ];
 
@@ -110,9 +110,9 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       <SEOHead
-        title="Store on Tips — Launch Your Online Store in 5 Minutes"
+        title="Pic to Cart — Launch Your Online Store in 5 Minutes"
         description="Create your online store instantly. Just snap a photo — AI generates product titles, descriptions, pricing & SEO. Free forever. 50+ premium themes."
-        url="https://store-on-tips.lovable.app"
+        url="https://pictocart.in"
         type="website"
       />
 
@@ -126,7 +126,7 @@ const LandingPage = () => {
                 <Store className="h-5 w-5 text-white" />
               </div>
               <span className={`font-extrabold text-lg tracking-tight ${scrolled ? 'text-slate-900' : 'text-white'}`}>
-                Store on Tips
+                Pic to Cart
               </span>
             </div>
 
