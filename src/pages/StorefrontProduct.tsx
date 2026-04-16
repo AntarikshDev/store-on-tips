@@ -221,7 +221,6 @@ const StorefrontProduct = () => {
                 {added ? <><Check className="h-4 w-4" /> Added!</> : <><ShoppingBag className="h-4 w-4" /> Add to Cart</>}
               </button>
             )}
-            </button>
 
             {/* Description */}
             {product.description && (
