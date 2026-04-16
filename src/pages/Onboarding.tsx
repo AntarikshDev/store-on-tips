@@ -83,6 +83,7 @@ const defaultData: OnboardingData = {
   storeInfo: { phone: '', city: '', gst: '' },
   paymentSettings: { cod: true, upi: false, razorpay: false },
   emailTemplatesGenerated: false,
+  slugAvailable: false,
 };
 
 const Onboarding = () => {
