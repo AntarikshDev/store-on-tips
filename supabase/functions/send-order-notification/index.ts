@@ -90,11 +90,16 @@ function applyCustomTemplate(template: { subject: string; html: string }, data: 
 
 // ── Send email via Resend connector gateway ──
 
-async function sendEmail(to: string, subject: string, html: string, fromName: string) {
+async function sendEmail(to: string, subject: string, html: string, fromName: string, fromAddress?: string) {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
   if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured');
+
+  // Use verified custom domain or fallback to platform default
+  const fromField = fromAddress
+    ? `${fromName} <${fromAddress}>`
+    : `${fromName} <onboarding@resend.dev>`;
 
   const res = await fetch(`${GATEWAY_URL}/emails`, {
     method: 'POST',
@@ -104,7 +109,7 @@ async function sendEmail(to: string, subject: string, html: string, fromName: st
       'X-Connection-Api-Key': RESEND_API_KEY,
     },
     body: JSON.stringify({
-      from: `${fromName} <onboarding@resend.dev>`,
+      from: fromField,
       to: [to],
       subject,
       html,
