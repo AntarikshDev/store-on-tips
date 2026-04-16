@@ -146,7 +146,7 @@ const Onboarding = () => {
       } else {
         const updates: any = { onboarding_step: step };
         if (data.storeName) updates.name = data.storeName;
-        if (data.slug) updates.slug = data.slug;
+        // slug is never updated after creation to keep store URL intact
         if (data.category) updates.category = data.category;
         if (data.description) updates.description = data.description;
         updates.logo_url = data.logoUrl || null;
