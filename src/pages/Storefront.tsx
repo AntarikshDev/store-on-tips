@@ -100,7 +100,12 @@ const Storefront = () => {
   const filtered = selectedCategory ? products.filter((p) => p.category === selectedCategory) : products;
   const settings = (store.settings || {}) as any;
   const seo = settings.seo || {};
-  const homepageSections = settings.homepage_sections || [];
+  const rawSections = settings.homepage_sections || [];
+  // Fallback: if no sections configured, generate defaults so stores are never blank
+  const homepageSections = rawSections.length > 0 ? rawSections : (() => {
+    const { generateDefaultSections } = require('@/lib/defaultSections');
+    return generateDefaultSections(store.name, store.category);
+  })();
   const bannerCarouselSections = homepageSections.filter((section: any) => section.type === 'banner_carousel');
   const footerConfig: FooterConfig = { ...DEFAULT_FOOTER, ...(settings.footer || {}) };
 
