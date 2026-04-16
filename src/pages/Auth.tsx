@@ -73,10 +73,16 @@ const Auth = () => {
             <Store className="h-6 w-6" />
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isLogin ? 'Welcome back' : 'Create your store'}
+            {isForgotPassword
+              ? 'Reset Password'
+              : isLogin
+              ? 'Welcome back'
+              : 'Create your store'}
           </CardTitle>
           <CardDescription>
-            {isLogin
+            {isForgotPassword
+              ? "Enter your email and we'll send you a reset link"
+              : isLogin
               ? 'Sign in to manage your store'
               : 'Start selling online in minutes'}
           </CardDescription>
