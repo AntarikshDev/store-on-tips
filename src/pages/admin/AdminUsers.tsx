@@ -32,6 +32,8 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
   const [viewUser, setViewUser] = useState<AdminUser | null>(null);
+  const [resetUser, setResetUser] = useState<AdminUser | null>(null);
+  const [newPassword, setNewPassword] = useState('');
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
