@@ -200,8 +200,11 @@ const Storefront = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {products.slice(0, 8).map((product) => (
                 <Link key={product.id} to={`/store/${slug}/product/${product.id}`} className="group overflow-hidden transition-all hover:shadow-lg" style={{ backgroundColor: colors.card, borderRadius: `${borderRadius}px`, border: `1px solid ${colors.secondary}` }}>
-                  <div className="aspect-square overflow-hidden" style={{ backgroundColor: colors.secondary }}>
+                  <div className="aspect-square overflow-hidden relative" style={{ backgroundColor: colors.secondary }}>
                     {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-xs opacity-30">No image</div>}
+                    {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
+                      <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
+                    )}
                   </div>
                   <div className="p-2.5">
                     <h3 className="text-xs font-semibold truncate">{product.title}</h3>
@@ -371,8 +374,11 @@ const Storefront = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                 {filtered.map((product) => (
                   <Link key={product.id} to={`/store/${slug}/product/${product.id}`} className="group overflow-hidden transition-all hover:shadow-lg active:scale-[0.98]" style={{ backgroundColor: colors.card, borderRadius: `${borderRadius}px`, border: `1px solid ${colors.secondary}` }}>
-                    <div className="aspect-square overflow-hidden" style={{ backgroundColor: colors.secondary }}>
+                    <div className="aspect-square overflow-hidden relative" style={{ backgroundColor: colors.secondary }}>
                       {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-xs opacity-30">No image</div>}
+                      {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
+                        <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
+                      )}
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
@@ -423,8 +429,11 @@ const Storefront = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                 {filtered.map((product) => (
                   <Link key={product.id} to={`/store/${slug}/product/${product.id}`} className="group overflow-hidden transition-all hover:shadow-lg active:scale-[0.98]" style={{ backgroundColor: colors.card, borderRadius: `${borderRadius}px`, border: `1px solid ${colors.secondary}` }}>
-                    <div className="aspect-square overflow-hidden" style={{ backgroundColor: colors.secondary }}>
+                    <div className="aspect-square overflow-hidden relative" style={{ backgroundColor: colors.secondary }}>
                       {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-xs opacity-30">No image</div>}
+                      {(product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0) && (
+                        <div className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: '#ef4444', color: '#fff' }}>Out of Stock</div>
+                      )}
                     </div>
                     <div className="p-2.5 md:p-3">
                       <h3 className="text-xs md:text-sm font-semibold truncate" style={{ fontFamily: fonts.heading }}>{product.title}</h3>
