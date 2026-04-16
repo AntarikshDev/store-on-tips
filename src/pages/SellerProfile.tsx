@@ -217,25 +217,29 @@ const SellerProfile = () => {
       {/* Store Quick Info */}
       {store && (
         <Card>
-          <CardHeader>
+        <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Store className="h-4 w-4" />
               Store Overview
             </CardTitle>
             <CardDescription>Your store details at a glance</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Store Name</p>
-                <p className="text-sm font-medium">{store.name}</p>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Store Name</Label>
+                <Input
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  placeholder="Your store name"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Category</p>
                 <p className="text-sm font-medium">{store.category || 'Not set'}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Store URL</p>
+                <p className="text-xs text-muted-foreground">Store URL (cannot be changed)</p>
                 <a
                   href={`${window.location.origin}/store/${store.slug}`}
                   target="_blank"
@@ -255,6 +259,20 @@ const SellerProfile = () => {
                 </p>
               </div>
             </div>
+            <Button
+              onClick={async () => {
+                if (!storeName.trim()) { toast.error('Store name cannot be empty'); return; }
+                setStoreNameLoading(true);
+                const { error } = await supabase.from('stores').update({ name: storeName.trim() }).eq('id', store.id);
+                if (error) { toast.error('Failed to update store name'); }
+                else { toast.success('Store name updated'); setStore({ ...store, name: storeName.trim() }); }
+                setStoreNameLoading(false);
+              }}
+              disabled={storeNameLoading || storeName.trim() === store.name}
+              className="w-fit"
+            >
+              {storeNameLoading ? 'Saving...' : 'Save Store Name'}
+            </Button>
           </CardContent>
         </Card>
       )}
