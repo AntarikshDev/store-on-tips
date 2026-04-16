@@ -79,10 +79,9 @@ const ProductForm = () => {
       setIsActive(existingProduct.is_active ?? true);
       setSeoTitle(existingProduct.seo_title || '');
       setSeoDescription(existingProduct.seo_description || '');
-      const aiData = (existingProduct.ai_generated_data || {}) as Record<string, any>;
       if (aiData.product_type) setProductType(aiData.product_type as ProductType);
       if (aiData.highlights) setHighlights(aiData.highlights);
-      const { product_type, highlights: _, ...rest } = aiData;
+      const { product_type, highlights: _, product_hint: _hint, ...rest } = aiData;
       setTypeMetadata(rest);
     }
   }, [existingProduct]);
