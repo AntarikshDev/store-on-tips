@@ -321,21 +321,16 @@ function EmailDomainSection({ store }: { store: any }) {
     if (!emailDomain.trim() || !store) return;
     setLoading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/manage-email-domain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('manage-email-domain', {
+        body: {
           action: 'add',
           store_id: store.id,
           domain: emailDomain.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '').trim(),
           sender_prefix: senderPrefix,
-        }),
+        },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Setup failed');
+      if (error) throw new Error((data as any)?.error || error.message || 'Setup failed');
 
-      // Refetch config
       const { data: updated } = await supabase
         .from('store_email_domains')
         .select('*')
@@ -353,22 +348,17 @@ function EmailDomainSection({ store }: { store: any }) {
     if (!store) return;
     setVerifying(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/manage-email-domain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', store_id: store.id }),
+      const { data, error } = await supabase.functions.invoke('manage-email-domain', {
+        body: { action: 'verify', store_id: store.id },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      if (error) throw new Error((data as any)?.error || error.message || 'Verification failed');
 
-      if (data.verified) {
+      if ((data as any)?.verified) {
         toast.success('Email domain verified! Emails will now be sent from your domain.');
       } else {
         toast.error('DNS records not yet propagated. Please wait and try again.');
       }
 
-      // Refetch
       const { data: updated } = await supabase
         .from('store_email_domains')
         .select('*')
@@ -385,17 +375,15 @@ function EmailDomainSection({ store }: { store: any }) {
     if (!store) return;
     setLoading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      await fetch(`https://${projectId}.supabase.co/functions/v1/manage-email-domain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'remove', store_id: store.id }),
+      const { data, error } = await supabase.functions.invoke('manage-email-domain', {
+        body: { action: 'remove', store_id: store.id },
       });
+      if (error) throw new Error((data as any)?.error || error.message || 'Failed to remove');
       setEmailConfig(null);
       setEmailDomain('');
       toast.success('Email domain removed');
-    } catch {
-      toast.error('Failed to remove email domain');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to remove email domain');
     }
     setLoading(false);
   };
