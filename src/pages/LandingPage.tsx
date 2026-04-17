@@ -200,6 +200,7 @@ const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showcaseIdx, setShowcaseIdx] = useState(0);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -210,6 +211,12 @@ const LandingPage = () => {
   // Auto-rotate testimonials
   useEffect(() => {
     const t = setInterval(() => setTestimonialIdx(i => (i + 1) % testimonials.length), 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Sync: shuffle the website deck + drive typewriter on the same beat
+  useEffect(() => {
+    const t = setInterval(() => setShowcaseIdx(i => (i + 1) % merchantShowcase.length), 2800);
     return () => clearInterval(t);
   }, []);
 
