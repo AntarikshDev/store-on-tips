@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -58,23 +58,19 @@ import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 
 const queryClient = new QueryClient();
 
-// Routes mounted at "/" when the visitor arrives via a merchant's custom domain
-// (Cloudflare for SaaS). The marketing site and seller dashboard are hidden.
-const CustomDomainRoutes = ({ slug }: { slug: string }) => (
-  <Routes>
-    <Route path="/" element={<Storefront customSlug={slug} />} />
-    <Route path="/product/:productId" element={<StorefrontProduct customSlug={slug} />} />
-    <Route path="/cart" element={<StorefrontCart customSlug={slug} />} />
-    <Route path="/checkout" element={<StorefrontCheckout customSlug={slug} />} />
-    <Route path="/blog" element={<StorefrontBlog customSlug={slug} />} />
-    <Route path="/blog/:postSlug" element={<StorefrontBlogPost customSlug={slug} />} />
-    <Route path="/account/auth" element={<CustomerAuth customSlug={slug} />} />
-    <Route path="/account" element={<CustomerRoute><CustomerAccount customSlug={slug} /></CustomerRoute>} />
-    <Route path="/account/wishlist" element={<CustomerRoute><CustomerWishlist customSlug={slug} /></CustomerRoute>} />
-    <Route path="/:policyType" element={<StorefrontPolicy customSlug={slug} />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+// When the visitor lands on a merchant's custom domain (Cloudflare for SaaS),
+// rewrite incoming paths like `/`, `/product/x`, `/cart` to the canonical
+// platform paths `/store/:slug/...` so all existing storefront pages keep
+// working unchanged. We use `replace` so the browser history stays clean.
+const CustomDomainRedirect = ({ slug }: { slug: string }) => {
+  const { pathname, search, hash } = useLocation();
+  // Strip any leading slash; map "/" to ""
+  const sub = pathname === "/" ? "" : pathname.replace(/^\//, "");
+  // Account paths preserved as-is (e.g. /account, /account/auth, /account/wishlist)
+  // Policy/blog/product/cart/checkout pass through too.
+  const target = `/store/${slug}${sub ? `/${sub}` : ""}${search}${hash}`;
+  return <Navigate to={target} replace />;
+};
 
 const AppRoutes = () => {
   const { data: hostStore, isLoading } = useStoreByHost();
