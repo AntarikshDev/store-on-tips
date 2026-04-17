@@ -85,7 +85,7 @@ const AppRoutes = () => {
   }
 
   if (!onPlatform && hostStore) {
-    return <CustomDomainRoutes slug={hostStore.slug} />;
+    return <CustomDomainRedirect slug={hostStore.slug} />;
   }
 
   return (
