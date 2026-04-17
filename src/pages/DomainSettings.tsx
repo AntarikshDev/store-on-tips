@@ -574,150 +574,275 @@ function EmailDomainSection({ store }: { store: any }) {
   );
 }
 
-// ── Main Page ──
+// ── Main Page (Cloudflare for SaaS) ──
+
+type SslStatus = 'pending' | 'pending_validation' | 'pending_issuance' | 'pending_deployment' | 'active' | 'failed' | null;
 
 const DomainSettings = () => {
-  const { store, setStore } = useStore();
+  const { store, refetchStore } = useStore();
   const [domain, setDomain] = useState('');
-  const [config, setConfig] = useState<DomainConfig | null>(null);
   const [saving, setSaving] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{
-    txt_ok: boolean;
-    a_ok: boolean;
-  } | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [hostnameStatus, setHostnameStatus] = useState<string | null>(null);
+  const [sslStatus, setSslStatus] = useState<SslStatus>(null);
+  const [verificationErrors, setVerificationErrors] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (store?.settings) {
-      const s = store.settings as any;
-      if (s?.domain) {
-        setConfig(s.domain);
-        setDomain(s.domain.domain || '');
-      }
-    }
-  }, [store]);
-
+  const cnameTarget = 'fallback.pictocart.in';
+  const customDomain: string | null = (store as any)?.custom_domain ?? null;
   const storeUrl = store ? `${window.location.origin}/store/${store.slug}` : '';
 
-  const handleSaveDomain = async () => {
+  useEffect(() => {
+    if (customDomain) setDomain(customDomain);
+    setSslStatus(((store as any)?.ssl_status as SslStatus) ?? null);
+  }, [customDomain, store]);
+
+  // Auto-poll status every 15s while pending
+  useEffect(() => {
+    if (!customDomain || sslStatus === 'active' || sslStatus === 'failed') return;
+    const id = setInterval(() => { void handleCheck(); }, 15000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customDomain, sslStatus]);
+
+  const handleConnect = async () => {
     if (!store) return;
-    if (!domain.trim()) {
-      toast.error('Enter a domain name');
+    const clean = domain.replace(/^(https?:\/\/)?/i, '').replace(/\/.*$/, '').trim().toLowerCase();
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(clean)) {
+      toast.error('Enter a valid domain like mystore.com');
       return;
     }
-    const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '').trim();
     setSaving(true);
-    const newConfig: DomainConfig = {
-      domain: cleanDomain,
-      verified: false,
-      verification_token: config?.verification_token || generateToken(),
-      connected_at: null,
-    };
-    const settings = { ...(store.settings as any), domain: newConfig };
-    const { error } = await supabase.from('stores').update({ settings }).eq('id', store.id);
-    if (error) {
-      toast.error('Failed to save domain');
-    } else {
-      setConfig(newConfig);
-      setDomain(cleanDomain);
-      setStore({ ...store, settings });
-      toast.success('Domain saved — now configure your DNS records');
+    try {
+      const { data, error } = await supabase.functions.invoke('provision-custom-hostname', {
+        body: { store_id: store.id, domain: clean },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success('Domain registered — now add the CNAME records at your registrar');
+      setSslStatus(((data as any)?.ssl_status as SslStatus) ?? 'pending');
+      await refetchStore();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to connect domain');
     }
     setSaving(false);
   };
 
-  const handleVerify = async () => {
-    if (!config?.domain || !store) return;
-    setVerifying(true);
-    setVerificationResult(null);
+  const handleCheck = async () => {
+    if (!store || !customDomain) return;
+    setChecking(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/verify-domain`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            domain: config.domain,
-            verification_token: config.verification_token,
-            expected_ip: PLATFORM_IP,
-          }),
-        }
-      );
-      const data = await res.json();
-      setVerificationResult({ txt_ok: data.txt_verified, a_ok: data.a_verified });
-      if (data.txt_verified && data.a_verified) {
-        const updatedConfig = { ...config, verified: true, connected_at: new Date().toISOString() };
-        const settings = { ...(store.settings as any), domain: updatedConfig };
-        await supabase.from('stores').update({ settings }).eq('id', store.id);
-        setConfig(updatedConfig);
-        setStore({ ...store, settings });
-        toast.success('Domain verified and connected!');
-      } else {
-        toast.error('DNS records not yet configured correctly.');
+      const { data, error } = await supabase.functions.invoke('check-custom-hostname', {
+        body: { store_id: store.id },
+      });
+      if (error) throw error;
+      const d = data as any;
+      if (d?.error) throw new Error(d.error);
+      setHostnameStatus(d.hostname_status);
+      setSslStatus(d.ssl_status as SslStatus);
+      const errs: string[] = [];
+      (d.verification_errors ?? []).forEach((e: any) => errs.push(typeof e === 'string' ? e : JSON.stringify(e)));
+      (d.ssl_validation_errors ?? []).forEach((e: any) => errs.push(e?.message ?? JSON.stringify(e)));
+      setVerificationErrors(errs);
+      if (d.is_active) {
+        toast.success('Domain is live with SSL!');
+        await refetchStore();
       }
-    } catch {
-      toast.error('Verification failed — please try again');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Check failed');
     }
-    setVerifying(false);
+    setChecking(false);
   };
 
-  const handleRemoveDomain = async () => {
+  const handleRemove = async () => {
     if (!store) return;
-    const settings = { ...(store.settings as any) };
-    delete settings.domain;
-    await supabase.from('stores').update({ settings }).eq('id', store.id);
-    setConfig(null);
-    setDomain('');
-    setStore({ ...store, settings });
-    toast.success('Domain removed');
+    setRemoving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('remove-custom-hostname', {
+        body: { store_id: store.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setDomain('');
+      setSslStatus(null);
+      setHostnameStatus(null);
+      setVerificationErrors([]);
+      toast.success('Domain removed');
+      await refetchStore();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to remove domain');
+    }
+    setRemoving(false);
   };
 
   const statusBadge = () => {
-    if (!config) return <Badge variant="secondary">Not Configured</Badge>;
-    if (config.verified) return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
-    return <Badge variant="outline" className="border-yellow-300 text-yellow-700">Pending Verification</Badge>;
+    if (!customDomain) return <Badge variant="secondary">Not Configured</Badge>;
+    if (sslStatus === 'active') return <Badge className="bg-green-100 text-green-800 border-green-200">Live (SSL Active)</Badge>;
+    if (sslStatus === 'failed') return <Badge variant="destructive">Failed</Badge>;
+    return <Badge variant="outline" className="border-yellow-300 text-yellow-700">Pending DNS / SSL</Badge>;
   };
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Domain & Email Settings</h1>
-        <p className="text-sm text-muted-foreground">Connect your domain and set up branded email sending</p>
+        <p className="text-sm text-muted-foreground">Connect your own domain — SSL is provisioned automatically</p>
       </div>
 
-      <StoreUrlCard storeUrl={storeUrl} config={config} statusBadge={statusBadge()} />
+      {/* Store URL */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Globe className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Store URL</CardTitle>
+                <CardDescription>Your store's default address</CardDescription>
+              </div>
+            </div>
+            {statusBadge()}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+            <code className="flex-1 text-sm font-mono truncate">{storeUrl}</code>
+            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(storeUrl)}><Copy className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" asChild>
+              <a href={storeUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" /></a>
+            </Button>
+          </div>
+          {customDomain && sslStatus === 'active' && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3">
+              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+              <code className="flex-1 text-sm font-mono text-green-800 truncate">https://{customDomain}</code>
+              <Button variant="ghost" size="icon" onClick={() => copyToClipboard(`https://${customDomain}`)}><Copy className="h-4 w-4" /></Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <CustomDomainCard
-        domain={domain}
-        setDomain={setDomain}
-        config={config}
-        saving={saving}
-        handleSaveDomain={handleSaveDomain}
-        handleRemoveDomain={handleRemoveDomain}
-      />
+      {/* Connect a Custom Domain */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{customDomain ? 'Connected Domain' : 'Connect Your Domain'}</CardTitle>
+          <CardDescription>
+            Bring your own domain — we'll handle SSL automatically via Cloudflare for SaaS
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Domain Name</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="mystore.com"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                disabled={!!customDomain}
+              />
+              {!customDomain && (
+                <Button onClick={handleConnect} disabled={saving || !domain.trim()}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Connect'}
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enter without http:// or www — e.g. <code>mystore.com</code>
+            </p>
+          </div>
 
-      {config && !config.verified && (
-        <DnsInstructionsCard
-          config={config}
-          verifying={verifying}
-          verificationResult={verificationResult}
-          handleVerify={handleVerify}
-        />
+          {customDomain && (
+            <Button variant="destructive" size="sm" onClick={handleRemove} disabled={removing}>
+              {removing && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Remove Domain
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* DNS Instructions */}
+      {customDomain && sslStatus !== 'active' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
+              Add DNS Records at Your Registrar
+            </CardTitle>
+            <CardDescription>
+              Go to your DNS provider (GoDaddy, Namecheap, Cloudflare, etc.) and add the following CNAME records.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                <h3 className="text-sm font-semibold">Root domain (apex)</h3>
+              </div>
+              <DnsRecordRow type="CNAME" name="@" value={cnameTarget} />
+              <p className="text-xs text-muted-foreground">
+                Some registrars don't allow CNAME on the apex — use ALIAS / ANAME / flattened CNAME instead. If yours doesn't, set up only <code>www</code> below and add a redirect from apex.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                <h3 className="text-sm font-semibold">www subdomain</h3>
+              </div>
+              <DnsRecordRow type="CNAME" name="www" value={cnameTarget} />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                <h3 className="text-sm font-semibold">Wait & verify</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                After adding the records, wait 1–10 minutes for propagation. We'll automatically check status every 15 seconds. SSL is issued automatically once DNS propagates.
+              </p>
+              <Button onClick={handleCheck} disabled={checking}>
+                {checking ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRight className="h-4 w-4 mr-2" />}
+                Check Status Now
+              </Button>
+
+              {(hostnameStatus || sslStatus) && (
+                <div className="rounded-lg border p-4 space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <span><strong>Hostname:</strong> {hostnameStatus ?? '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {sslStatus === 'active'
+                      ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <span><strong>SSL:</strong> {sslStatus ?? 'pending'}</span>
+                  </div>
+                  {verificationErrors.length > 0 && (
+                    <div className="rounded bg-destructive/10 p-3 text-destructive text-xs space-y-1">
+                      {verificationErrors.map((e, i) => <p key={i}>{e}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800 space-y-1">
+              <p className="font-medium">💡 How this works</p>
+              <p>Your DNS points to our edge. Cloudflare for SaaS issues a free SSL certificate for your domain automatically — no manual setup, no expiry headaches.</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {config?.verified && (
+      {customDomain && sslStatus === 'active' && (
         <Card className="border-green-200 bg-green-50/50">
           <CardContent className="py-6">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
               <div>
-                <p className="font-semibold text-green-800">Domain Connected!</p>
+                <p className="font-semibold text-green-800">Domain Connected & SSL Active!</p>
                 <p className="text-sm text-green-600">
-                  Your store is live at <strong>https://{config.domain}</strong>
-                  {config.connected_at && (
-                    <> — connected on {new Date(config.connected_at).toLocaleDateString()}</>
-                  )}
+                  Your store is live at <strong>https://{customDomain}</strong>
                 </p>
               </div>
             </div>
