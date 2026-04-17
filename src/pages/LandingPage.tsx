@@ -127,7 +127,7 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
         return (
           <div
             key={key}
-            className="absolute inset-0 transition-all duration-[1100ms] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform"
+            className="absolute inset-0 transition-all duration-[2400ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] will-change-transform"
             style={{
               transform: `translate3d(${s.x}px, ${s.y}px, 0) scale(${s.scale}) rotateY(${s.rotate}deg) rotateX(${slot * 1.2}deg)`,
               opacity: s.opacity,
@@ -164,7 +164,7 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
                     style={{
                       background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)',
                       transform: 'translateX(-100%)',
-                      animation: 'deck-glare 1.4s ease-out 0.35s 1 forwards',
+                      animation: 'deck-glare 2.4s ease-out 0.6s 1 forwards',
                     }}
                   />
                 )}
@@ -173,7 +173,7 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
                   <div
                     key={`tag-${idx}`}
                     className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/10"
-                    style={{ animation: 'fade-in 0.6s ease-out 0.4s both' }}
+                    style={{ animation: 'fade-in 0.9s ease-out 0.8s both' }}
                   >
                     {item.label}
                   </div>
@@ -228,7 +228,7 @@ const LandingPage = () => {
 
   // Sync: shuffle the website deck + drive typewriter on the same beat
   useEffect(() => {
-    const t = setInterval(() => setShowcaseIdx(i => (i + 1) % merchantShowcase.length), 2800);
+    const t = setInterval(() => setShowcaseIdx(i => (i + 1) % merchantShowcase.length), 4800);
     return () => clearInterval(t);
   }, []);
 
