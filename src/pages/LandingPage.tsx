@@ -79,42 +79,66 @@ const Typewriter = ({ idx }: { idx: number }) => {
   );
 };
 
-/* ─── Shuffling website card deck — synced to merchant type ─── */
+/* ─── Shuffling website card deck — front slides LEFT, next rises forward ─── */
+/*
+ * UX strategy (20yr lens): humans need to see WHERE the old card went and
+ * WHERE the new one came from. We render 5 cards in a fixed z-stack but assign
+ * each card an "anchored slot" (0=front, 1..3=behind, 4=exiting-left).
+ * On every tick we rotate which deck-index lives in which slot. CSS transitions
+ * the card from its previous slot to its new slot — so the old front naturally
+ * slides left & fades, and the slot-1 card rises into the front position with
+ * a glare sweep. No mid-air remounts; the eye tracks the motion cleanly.
+ */
+const SLOT_STYLES = [
+  // slot 0 — front, hero
+  { x: 0,    y: 0,   scale: 1,    rotate: -2, blur: 0,   opacity: 1,    z: 50 },
+  // slot 1 — second
+  { x: -22,  y: 28,  scale: 0.94, rotate: 1,  blur: 1.2, opacity: 0.85, z: 40 },
+  // slot 2 — third
+  { x: -40,  y: 52,  scale: 0.88, rotate: 3,  blur: 2.4, opacity: 0.55, z: 30 },
+  // slot 3 — back
+  { x: -54,  y: 72,  scale: 0.82, rotate: 5,  blur: 3.6, opacity: 0.3,  z: 20 },
+  // slot 4 — EXITING to the left (off-stage)
+  { x: -480, y: -20, scale: 0.92, rotate: -18, blur: 4,  opacity: 0,    z: 10 },
+];
+
 const ShowcaseDeck = ({ idx }: { idx: number }) => {
   const len = merchantShowcase.length;
-  // Build z-ordered stack: front card = idx, then idx+1, idx+2, idx+3 behind
-  const stack = Array.from({ length: 4 }, (_, i) => (idx + i) % len);
+
+  // Render a fixed pool of 5 stable card identities (by deck index window)
+  // We always show: idx-1 (exiting), idx, idx+1, idx+2, idx+3.
+  const cards = Array.from({ length: 5 }, (_, i) => {
+    const deckIdx = (idx - 1 + i + len) % len;
+    // Slot mapping: i=0 → slot 4 (exiting), i=1 → slot 0 (front), i=2..4 → slots 1..3
+    const slot = i === 0 ? 4 : i - 1;
+    return { deckIdx, slot, key: deckIdx };
+  });
 
   return (
     <div className="relative w-full max-w-[560px] aspect-[4/3] mx-auto" style={{ perspective: '1800px' }}>
-      {/* ambient glow behind deck */}
+      {/* ambient glow behind deck — shifts color with front card */}
       <div className={`absolute inset-0 -z-10 blur-3xl opacity-40 rounded-[3rem] bg-gradient-to-br ${merchantShowcase[idx].accent} transition-all duration-700`} />
 
-      {stack.map((cardIdx, pos) => {
-        const item = merchantShowcase[cardIdx];
-        // pos 0 = front, 3 = deepest back
-        const translateY = pos * 22;
-        const translateX = pos * -14;
-        const scale = 1 - pos * 0.06;
-        const rotate = -4 + pos * 2;
-        const opacity = pos === 0 ? 1 : 0.55 - pos * 0.1;
-        const blur = pos === 0 ? 0 : pos * 1.2;
-        const z = 40 - pos;
+      {cards.map(({ deckIdx, slot, key }) => {
+        const item = merchantShowcase[deckIdx];
+        const s = SLOT_STYLES[slot];
+        const isFront = slot === 0;
 
         return (
           <div
-            key={`${cardIdx}-${pos}`}
-            className="absolute inset-0 transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            key={key}
+            className="absolute inset-0 transition-all duration-[1100ms] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform"
             style={{
-              transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale}) rotateY(${rotate}deg) rotateX(${pos * 1.5}deg)`,
-              opacity,
-              filter: `blur(${blur}px)`,
-              zIndex: z,
+              transform: `translate3d(${s.x}px, ${s.y}px, 0) scale(${s.scale}) rotateY(${s.rotate}deg) rotateX(${slot * 1.2}deg)`,
+              opacity: s.opacity,
+              filter: `blur(${s.blur}px)`,
+              zIndex: s.z,
               transformStyle: 'preserve-3d',
+              pointerEvents: isFront ? 'auto' : 'none',
             }}
           >
             {/* Browser-window card */}
-            <div className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-900 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7),0_25px_50px_-25px_rgba(99,102,241,0.5)] ring-1 ring-white/10">
+            <div className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-900 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.75),0_25px_50px_-25px_rgba(99,102,241,0.55)] ring-1 ring-white/10">
               {/* Browser chrome */}
               <div className="h-8 bg-gradient-to-b from-slate-800 to-slate-900 border-b border-white/5 flex items-center px-3 gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
@@ -132,21 +156,25 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
                 />
                 {/* Vignette */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                {/* Glare sweep — only on front card */}
-                {pos === 0 && (
+                {/* Glare sweep — fires on whichever card is now front */}
+                {isFront && (
                   <div
-                    key={`glare-${cardIdx}`}
+                    key={`glare-${idx}`}
                     className="absolute inset-0 pointer-events-none"
                     style={{
                       background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)',
                       transform: 'translateX(-100%)',
-                      animation: 'deck-glare 1.4s ease-out 0.25s 1 forwards',
+                      animation: 'deck-glare 1.4s ease-out 0.35s 1 forwards',
                     }}
                   />
                 )}
-                {/* Category tag — front card only */}
-                {pos === 0 && (
-                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/10">
+                {/* Category tag — front card only, fades in with card */}
+                {isFront && (
+                  <div
+                    key={`tag-${idx}`}
+                    className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/10"
+                    style={{ animation: 'fade-in 0.6s ease-out 0.4s both' }}
+                  >
                     {item.label}
                   </div>
                 )}
@@ -155,7 +183,6 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
           </div>
         );
       })}
-
     </div>
   );
 };
