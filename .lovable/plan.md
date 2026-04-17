@@ -1,127 +1,71 @@
 
 
-# Premium Product Experience — Storefront & Merchant Overhaul
+## Goal
+Complete the Cloudflare for SaaS integration you've already wired up at the infrastructure level by teaching the Lovable app to serve the correct merchant storefront when a request arrives on a custom domain.
 
-## What This Delivers
-A world-class product detail page for customers (inspired by Myntra, Nykaa, Amazon India) and an intelligent, category-aware product form for merchants. Every element is designed to maximize conversion and delight.
+## Scope (code only — Cloudflare side is already done by you)
 
----
+### 1. Host-based storefront routing
+- New hook `src/hooks/useStoreByHost.ts`:
+  - Reads `window.location.hostname`
+  - If hostname is one of: `localhost`, `*.lovable.app`, `*.lovableproject.com`, `pictocart.in`, `www.pictocart.in` → return `null` (platform host, use normal routing)
+  - Otherwise → query `stores` table where `custom_domain = hostname` OR `custom_domain = hostname.replace(/^www\./, '')`
+  - Returns the store row or null
+- Update `src/App.tsx`:
+  - At the top of the router, check `useStoreByHost`
+  - If a custom-domain store is found, mount the storefront routes at `/` (rewrite `/` → `Storefront` for that store, `/product/:id` → `StorefrontProduct`, `/cart`, `/checkout`, `/account`, etc.)
+  - Skip the marketing landing page and `/dashboard` routes entirely on custom-domain hosts
+- Update `src/hooks/useStorefront.ts` to accept a store object directly (avoid double-fetching by slug when we already resolved by host).
 
-## Part A: Customer-Facing Product Page (StorefrontProduct.tsx)
+### 2. DomainSettings page rewrite
+Rewrite `src/pages/DomainSettings.tsx` to match the new Cloudflare-for-SaaS flow instead of the old A-record-to-185.158.133.1 flow:
+- Input: merchant enters their domain (e.g., `indilipi.com`)
+- Show clear instructions: at your registrar, add  
+  `CNAME  @  →  fallback.pictocart.in`  
+  `CNAME  www  →  fallback.pictocart.in`
+- Save `custom_domain` to the store row
+- Show status: "Pending DNS" → "SSL Active" by calling a new edge function that checks Cloudflare
 
-### 1. Image Gallery Upgrade
-- **Desktop**: Vertical thumbnail rail on the left, large image on the right with smooth crossfade transitions and image zoom on hover (CSS transform scale on mousemove)
-- **Mobile**: Keep swiper but add pinch-to-zoom feel with larger dots and image counter ("2/5")
-- Fade-in animation when the page loads
+### 3. Edge functions to manage Custom Hostnames via Cloudflare API
+So merchants don't require you to manually add each domain in the Cloudflare dashboard:
+- `supabase/functions/provision-custom-hostname/index.ts` — POST to `https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames` with the merchant's domain. Save returned `id` in `stores.cloudflare_hostname_id`.
+- `supabase/functions/check-custom-hostname/index.ts` — GET hostname status, return `ssl_status` (pending/active/failed) + `verification_errors`.
+- `supabase/functions/remove-custom-hostname/index.ts` — DELETE when merchant disconnects.
+- Secrets needed (you add via Lovable Cloud secrets UI):
+  - `CLOUDFLARE_API_TOKEN` (scoped: Zone:SSL+Certs:Edit, Zone:Custom Hostnames:Edit on pictocart.in zone)
+  - `CLOUDFLARE_ZONE_ID` (your pictocart.in zone ID)
+  - `CLOUDFLARE_FALLBACK_TARGET=fallback.pictocart.in`
 
-### 2. "Buy Now" Button + Dual CTA
-- Add a **"Buy Now"** button alongside "Add to Cart" — navigates directly to checkout with the product
-- Desktop: Two side-by-side buttons (Add to Cart outline, Buy Now filled)
-- Mobile sticky bar: Two buttons — "Add to Cart" + "Buy Now"
+### 4. DB migration
+Add to `stores` table:
+- `cloudflare_hostname_id text`
+- `ssl_status text` (pending | active | failed)
+- `ssl_last_checked_at timestamptz`
 
-### 3. Variant Selector (Size/Color/Weight)
-- Render product `variants` as interactive pill selectors on the product page
-- Color variants show color swatches, size variants show pill buttons
-- Selected variant highlighted with primary color border + scale animation
+(`custom_domain` already exists per memory.)
 
-### 4. Delivery & Trust Signals
-- **Pincode Checker** integrated inline (already exists, just needs to be wired in)
-- **Trust badges row**: Free Shipping / Easy Returns / Secure Payment / COD Available — shown as icon + text chips with subtle entrance animation
-- **Estimated delivery date** display
+### 5. Fix `pictocart.in` itself (no code — instructions only)
+In Cloudflare DNS:
+- Change `pictocart.in` A record from **Proxied** to **DNS only** (grey cloud), OR delete the A and add a Custom Hostname for `pictocart.in` too.
+- Same for `www`.
+- Then in Lovable Project Settings → Domains, complete verification (TXT records `_lovable` and `_lovable.www` are already present — good).
 
-### 5. Product Info Accordion
-- Replace flat description with expandable accordion sections:
-  - Description (open by default)
-  - Additional Information (weight, dimensions, material — from product metadata)
-  - Shipping & Returns policy
-  - Reviews summary link
-- Smooth height animation on open/close
+## Files
 
-### 6. "You May Also Like" Section
-- Query other products from same category/store
-- Horizontal scrollable product card carousel at bottom
-- Cards with hover lift effect, rating badge, wishlist heart
+**New:**
+- `src/hooks/useStoreByHost.ts`
+- `supabase/functions/provision-custom-hostname/index.ts`
+- `supabase/functions/check-custom-hostname/index.ts`
+- `supabase/functions/remove-custom-hostname/index.ts`
+- Migration adding 3 columns to `stores`
 
-### 7. Enhanced Reviews Section
-- Add photo reviews display (images already supported in DB)
-- Review photos shown as mini gallery thumbnails
-- "Most Helpful" sorting
-- Animated progress bars for rating distribution
+**Edited:**
+- `src/App.tsx` — host-based route mounting
+- `src/pages/DomainSettings.tsx` — new CNAME-based flow + status polling
+- `src/hooks/useStorefront.ts` — accept pre-resolved store
 
-### 8. Visual Polish & Animations
-- Page entrance: image slides in from left, details fade in from right (CSS keyframes)
-- Price: animated count-up effect on discount percentage
-- "Added to Cart" success: confetti-like micro-animation on the button
-- Smooth scroll to reviews when clicking rating badge
-- Breadcrumb with category trail (Home > Category > Product)
-
----
-
-## Part B: Merchant Product Form (ProductForm.tsx)
-
-### 1. Product Type Selector
-- Add a **"Product Type"** dropdown at the top of the form with options:
-  - Physical Product (default)
-  - Digital Product
-  - Food & Beverage
-  - Fashion & Apparel
-  - Electronics
-  - Beauty & Cosmetics
-  - Handmade / Craft
-  - Service
-- Default pre-selected based on merchant's store category from onboarding
-
-### 2. Category-Aware Dynamic Fields
-Each product type shows/hides relevant fields:
-
-| Product Type | Extra Fields |
-|---|---|
-| **Fashion** | Material, Care Instructions, Fit Type (Slim/Regular/Loose), Gender |
-| **Food** | Ingredients, Nutritional Info, Shelf Life, Allergens, FSSAI License |
-| **Electronics** | Warranty Period, Model Number, Power Rating, Connectivity |
-| **Beauty** | Ingredients, Skin Type, Usage Instructions, Expiry Date |
-| **Handmade** | Making Time, Customization Available (toggle), Material |
-| **Digital** | File Format, Download Link, License Type |
-
-These are stored in the existing `ai_generated_data` JSON column (no migration needed).
-
-### 3. Rich Description Editor
-- Add tab switcher: "Plain Text" / "Highlights"
-- Highlights mode: bullet-point key features editor (add/remove/reorder)
-- These render as formatted feature bullets on the storefront
-
-### 4. Improved AI Generation
-- Pass the selected product type to the AI so it generates type-specific descriptions, features, and metadata
-- Auto-populate the dynamic fields based on AI analysis of the image
-
-### 5. Product Preview Card
-- Live mini-preview of how the product card will look on the storefront (in the sidebar)
-- Updates in real-time as merchant fills in details
-
----
-
-## Part C: Mobile Add-to-Cart Bar Enhancement
-- Redesign to include both "Add to Cart" (outline) and "Buy Now" (filled) buttons
-- Add quantity selector inline in the bar
-- Show selected variant (e.g., "Size: M") as a chip
-
----
-
-## Technical Changes
-
-| File | Change |
-|---|---|
-| `src/pages/StorefrontProduct.tsx` | Complete redesign — image gallery, variant selector, dual CTAs, accordion, trust badges, related products, animations |
-| `src/components/storefront/MobileAddToCart.tsx` | Add Buy Now button, quantity controls, variant chip |
-| `src/components/storefront/ProductImageSwiper.tsx` | Add image counter, improved dots |
-| `src/pages/ProductForm.tsx` | Product type selector, dynamic category fields, highlights editor, live preview card |
-| `src/components/products/VariantMatrix.tsx` | Expand presets for all product types |
-| `src/components/storefront/RelatedProducts.tsx` | **New** — horizontal carousel of same-category products |
-| `src/components/storefront/TrustBadges.tsx` | **New** — reusable trust signals row |
-| `src/components/storefront/ProductAccordion.tsx` | **New** — animated accordion for product details |
-| `src/components/products/ProductTypeFields.tsx` | **New** — dynamic fields per product type |
-| `src/components/products/ProductPreviewCard.tsx` | **New** — live storefront preview in product form |
-| `src/index.css` | Add keyframe animations for page entrance, zoom, fade effects |
-
-No database migrations needed — all additional product metadata stored in existing `ai_generated_data` JSONB column.
+## Confirmation needed
+1. Confirm I should use Cloudflare for SaaS API (you'll provide `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID` as secrets when prompted).
+2. Confirm fallback target = `fallback.pictocart.in`.
+3. After build, you'll fix `pictocart.in`'s own DNS per step 5 (one-time manual).
 
