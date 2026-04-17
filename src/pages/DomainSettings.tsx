@@ -574,6 +574,85 @@ function EmailDomainSection({ store }: { store: any }) {
   );
 }
 
+// ── Helpers for live DNS / SSL UI ──
+
+function DnsStatusPill({ check, loading }: { check: { ok: boolean; records: string[] } | null; loading: boolean }) {
+  if (loading || !check) {
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Loader2 className="h-3 w-3 animate-spin" /> Checking…
+      </Badge>
+    );
+  }
+  if (check.ok) {
+    return (
+      <Badge className="bg-green-100 text-green-800 border-green-200 gap-1">
+        <CheckCircle2 className="h-3 w-3" /> Detected
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="border-yellow-300 text-yellow-700 gap-1">
+      <XCircle className="h-3 w-3" /> Not yet
+    </Badge>
+  );
+}
+
+function DomainProgressBar({
+  apexOk,
+  wwwOk,
+  sslStatus,
+}: {
+  apexOk: boolean;
+  wwwOk: boolean;
+  sslStatus: string | null;
+}) {
+  const dnsOk = apexOk || wwwOk; // Either one is enough to start SSL issuance
+  const sslActive = sslStatus === 'active';
+  const steps = [
+    { label: 'Domain registered', done: true },
+    { label: 'DNS detected', done: dnsOk, active: !dnsOk },
+    { label: 'SSL issued', done: sslActive, active: dnsOk && !sslActive },
+    { label: 'Live', done: sslActive, active: false },
+  ];
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4">
+      <div className="flex items-center justify-between gap-2">
+        {steps.map((s, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center gap-1.5 text-center">
+            <div
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                s.done
+                  ? 'bg-green-600 text-white'
+                  : s.active
+                  ? 'bg-primary text-primary-foreground animate-pulse'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+            </div>
+            <span className={`text-[10px] sm:text-xs ${s.done ? 'text-green-700 font-medium' : 'text-muted-foreground'}`}>
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function humanSsl(s: string | null): string {
+  switch (s) {
+    case 'active': return 'Active 🎉';
+    case 'pending': return 'Pending — waiting for DNS';
+    case 'pending_validation': return 'Validating domain ownership…';
+    case 'pending_issuance': return 'Issuing certificate…';
+    case 'pending_deployment': return 'Deploying certificate to edge…';
+    case 'failed': return 'Failed — check DNS records';
+    default: return 'Pending';
+  }
+}
+
 // ── Main Page (Cloudflare for SaaS) ──
 
 type SslStatus = 'pending' | 'pending_validation' | 'pending_issuance' | 'pending_deployment' | 'active' | 'failed' | null;
