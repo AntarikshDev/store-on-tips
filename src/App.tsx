@@ -54,18 +54,46 @@ import Billing from "@/pages/Billing";
 import StorefrontPolicy from "@/pages/storefront/StorefrontPolicy";
 import CustomerWishlist from "@/pages/storefront/CustomerWishlist";
 import NotFound from "./pages/NotFound.tsx";
+import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <StoreProvider>
-          <Routes>
+// Routes mounted at "/" when the visitor arrives via a merchant's custom domain
+// (Cloudflare for SaaS). The marketing site and seller dashboard are hidden.
+const CustomDomainRoutes = ({ slug }: { slug: string }) => (
+  <Routes>
+    <Route path="/" element={<Storefront customSlug={slug} />} />
+    <Route path="/product/:productId" element={<StorefrontProduct customSlug={slug} />} />
+    <Route path="/cart" element={<StorefrontCart customSlug={slug} />} />
+    <Route path="/checkout" element={<StorefrontCheckout customSlug={slug} />} />
+    <Route path="/blog" element={<StorefrontBlog customSlug={slug} />} />
+    <Route path="/blog/:postSlug" element={<StorefrontBlogPost customSlug={slug} />} />
+    <Route path="/account/auth" element={<CustomerAuth customSlug={slug} />} />
+    <Route path="/account" element={<CustomerRoute><CustomerAccount customSlug={slug} /></CustomerRoute>} />
+    <Route path="/account/wishlist" element={<CustomerRoute><CustomerWishlist customSlug={slug} /></CustomerRoute>} />
+    <Route path="/:policyType" element={<StorefrontPolicy customSlug={slug} />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
+const AppRoutes = () => {
+  const { data: hostStore, isLoading } = useStoreByHost();
+  const onPlatform = typeof window !== "undefined" && isPlatformHost(window.location.hostname);
+
+  if (!onPlatform && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Loading store…
+      </div>
+    );
+  }
+
+  if (!onPlatform && hostStore) {
+    return <CustomDomainRoutes slug={hostStore.slug} />;
+  }
+
+  return (
+    <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -232,6 +260,18 @@ const App = () => (
             <Route path="/store/:slug/:policyType" element={<StorefrontPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <StoreProvider>
+            <AppRoutes />
           </StoreProvider>
         </AuthProvider>
       </BrowserRouter>
