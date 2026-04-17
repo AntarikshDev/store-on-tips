@@ -355,58 +355,9 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* Right - Phone Mockup */}
+            {/* Right - Shuffling Website Deck */}
             <div className="relative flex justify-center lg:justify-end">
-              <div className="relative animate-float">
-                {/* Phone frame */}
-                <div className="w-[280px] sm:w-[320px] rounded-[2.5rem] border-[8px] border-slate-700 bg-slate-800 shadow-2xl shadow-black/50 overflow-hidden">
-                  {/* Status bar */}
-                  <div className="h-7 bg-slate-900 flex items-center justify-center">
-                    <div className="w-20 h-4 bg-slate-800 rounded-full" />
-                  </div>
-                  {/* Screen content */}
-                  <div className="bg-white">
-                    {/* Store header */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-5">
-                      <div className="h-3 w-24 bg-white/30 rounded mb-2" />
-                      <div className="h-2 w-32 bg-white/20 rounded" />
-                    </div>
-                    {/* Product grid */}
-                    <div className="p-3 grid grid-cols-2 gap-2">
-                      {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="rounded-xl overflow-hidden border border-slate-100">
-                          <div className={`h-24 ${i % 2 === 0 ? 'bg-gradient-to-br from-violet-100 to-indigo-100' : 'bg-gradient-to-br from-emerald-50 to-teal-100'}`} />
-                          <div className="p-2">
-                            <div className="h-2 w-16 bg-slate-200 rounded mb-1" />
-                            <div className="h-2 w-10 bg-emerald-200 rounded" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Bottom nav */}
-                    <div className="flex justify-around py-3 border-t border-slate-100">
-                      {[Store, Search, ShoppingCart, Users].map((Icon, i) => (
-                        <Icon key={i} className={`h-4 w-4 ${i === 0 ? 'text-indigo-600' : 'text-slate-300'}`} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                {/* Floating badges */}
-                <div className="absolute -left-8 top-1/4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 animate-fade-up" style={{ animationDelay: '0.5s' }}>
-                  <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Camera className="h-4 w-4 text-emerald-600" /></div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">Photo Uploaded</div>
-                    <div className="text-[10px] text-slate-400">AI processing...</div>
-                  </div>
-                </div>
-                <div className="absolute -right-6 bottom-1/3 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 animate-fade-up" style={{ animationDelay: '1s' }}>
-                  <div className="h-8 w-8 rounded-lg bg-violet-50 flex items-center justify-center"><Sparkles className="h-4 w-4 text-violet-600" /></div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">AI Generated</div>
-                    <div className="text-[10px] text-slate-400">Title, price, SEO ✓</div>
-                  </div>
-                </div>
-              </div>
+              <ShowcaseDeck idx={showcaseIdx} />
             </div>
           </div>
         </div>
