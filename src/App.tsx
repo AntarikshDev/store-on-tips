@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -54,18 +54,42 @@ import Billing from "@/pages/Billing";
 import StorefrontPolicy from "@/pages/storefront/StorefrontPolicy";
 import CustomerWishlist from "@/pages/storefront/CustomerWishlist";
 import NotFound from "./pages/NotFound.tsx";
+import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <StoreProvider>
-          <Routes>
+// When the visitor lands on a merchant's custom domain (Cloudflare for SaaS),
+// rewrite incoming paths like `/`, `/product/x`, `/cart` to the canonical
+// platform paths `/store/:slug/...` so all existing storefront pages keep
+// working unchanged. We use `replace` so the browser history stays clean.
+const CustomDomainRedirect = ({ slug }: { slug: string }) => {
+  const { pathname, search, hash } = useLocation();
+  // Strip any leading slash; map "/" to ""
+  const sub = pathname === "/" ? "" : pathname.replace(/^\//, "");
+  // Account paths preserved as-is (e.g. /account, /account/auth, /account/wishlist)
+  // Policy/blog/product/cart/checkout pass through too.
+  const target = `/store/${slug}${sub ? `/${sub}` : ""}${search}${hash}`;
+  return <Navigate to={target} replace />;
+};
+
+const AppRoutes = () => {
+  const { data: hostStore, isLoading } = useStoreByHost();
+  const onPlatform = typeof window !== "undefined" && isPlatformHost(window.location.hostname);
+
+  if (!onPlatform && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Loading store…
+      </div>
+    );
+  }
+
+  if (!onPlatform && hostStore) {
+    return <CustomDomainRedirect slug={hostStore.slug} />;
+  }
+
+  return (
+    <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -232,6 +256,18 @@ const App = () => (
             <Route path="/store/:slug/:policyType" element={<StorefrontPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <StoreProvider>
+            <AppRoutes />
           </StoreProvider>
         </AuthProvider>
       </BrowserRouter>
