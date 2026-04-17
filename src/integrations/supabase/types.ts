@@ -588,7 +588,9 @@ export type Database = {
         Row: {
           banner_url: string | null
           category: string | null
+          cloudflare_hostname_id: string | null
           created_at: string
+          custom_domain: string | null
           description: string | null
           id: string
           is_published: boolean | null
@@ -597,6 +599,8 @@ export type Database = {
           onboarding_step: number | null
           settings: Json | null
           slug: string
+          ssl_last_checked_at: string | null
+          ssl_status: string | null
           theme: Json | null
           updated_at: string
           user_id: string
@@ -604,7 +608,9 @@ export type Database = {
         Insert: {
           banner_url?: string | null
           category?: string | null
+          cloudflare_hostname_id?: string | null
           created_at?: string
+          custom_domain?: string | null
           description?: string | null
           id?: string
           is_published?: boolean | null
@@ -613,6 +619,8 @@ export type Database = {
           onboarding_step?: number | null
           settings?: Json | null
           slug: string
+          ssl_last_checked_at?: string | null
+          ssl_status?: string | null
           theme?: Json | null
           updated_at?: string
           user_id: string
@@ -620,7 +628,9 @@ export type Database = {
         Update: {
           banner_url?: string | null
           category?: string | null
+          cloudflare_hostname_id?: string | null
           created_at?: string
+          custom_domain?: string | null
           description?: string | null
           id?: string
           is_published?: boolean | null
@@ -629,6 +639,8 @@ export type Database = {
           onboarding_step?: number | null
           settings?: Json | null
           slug?: string
+          ssl_last_checked_at?: string | null
+          ssl_status?: string | null
           theme?: Json | null
           updated_at?: string
           user_id?: string
