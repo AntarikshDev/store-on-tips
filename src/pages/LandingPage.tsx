@@ -156,21 +156,6 @@ const ShowcaseDeck = ({ idx }: { idx: number }) => {
         );
       })}
 
-      {/* Floating accent badges (kept, but pinned to deck) */}
-      <div className="absolute -left-6 top-6 bg-white rounded-xl shadow-2xl p-3 flex items-center gap-2 z-50 animate-fade-up">
-        <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Camera className="h-4 w-4 text-emerald-600" /></div>
-        <div>
-          <div className="text-xs font-bold text-slate-800">Photo Uploaded</div>
-          <div className="text-[10px] text-slate-400">AI processing…</div>
-        </div>
-      </div>
-      <div className="absolute -right-4 bottom-10 bg-white rounded-xl shadow-2xl p-3 flex items-center gap-2 z-50 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-        <div className="h-8 w-8 rounded-lg bg-violet-50 flex items-center justify-center"><Sparkles className="h-4 w-4 text-violet-600" /></div>
-        <div>
-          <div className="text-xs font-bold text-slate-800">AI Generated</div>
-          <div className="text-[10px] text-slate-400">Title, price, SEO ✓</div>
-        </div>
-      </div>
     </div>
   );
 };
