@@ -68,7 +68,15 @@ Deno.serve(async (req) => {
     });
     const cfData = await cfRes.json();
     if (!cfRes.ok || !cfData.success) {
-      return jsonError(cfData.errors?.[0]?.message ?? 'Cloudflare API error', 400);
+      console.error('Cloudflare provision failed', JSON.stringify(cfData));
+      const cfErr = cfData.errors?.[0];
+      const code = cfErr?.code ? ` (code ${cfErr.code})` : '';
+      const msg = cfErr?.message ?? 'Cloudflare API error';
+      // Code 10000 = Authentication error → token invalid/expired or missing permissions
+      const hint = cfErr?.code === 10000
+        ? ' — Your Cloudflare API token is invalid or lacks "SSL and Certificates: Edit" + "Zone: Read" permissions on the zone. Please update the CLOUDFLARE_API_TOKEN secret.'
+        : '';
+      return jsonError(`Cloudflare: ${msg}${code}${hint}`, 400);
     }
 
     const hostnameId = cfData.result.id as string;
