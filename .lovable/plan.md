@@ -1,71 +1,120 @@
 
 
-## Goal
-Complete the Cloudflare for SaaS integration you've already wired up at the infrastructure level by teaching the Lovable app to serve the correct merchant storefront when a request arrives on a custom domain.
+# Cloudflare Auto-Pilot Agent for Super Admin
 
-## Scope (code only — Cloudflare side is already done by you)
+Build an autonomous agent inside the Super Admin panel that owns the entire Cloudflare for SaaS lifecycle — provisioning, monitoring, healing, and notifying — so you (Super Admin) log in once and the platform runs itself.
 
-### 1. Host-based storefront routing
-- New hook `src/hooks/useStoreByHost.ts`:
-  - Reads `window.location.hostname`
-  - If hostname is one of: `localhost`, `*.lovable.app`, `*.lovableproject.com`, `pictocart.in`, `www.pictocart.in` → return `null` (platform host, use normal routing)
-  - Otherwise → query `stores` table where `custom_domain = hostname` OR `custom_domain = hostname.replace(/^www\./, '')`
-  - Returns the store row or null
-- Update `src/App.tsx`:
-  - At the top of the router, check `useStoreByHost`
-  - If a custom-domain store is found, mount the storefront routes at `/` (rewrite `/` → `Storefront` for that store, `/product/:id` → `StorefrontProduct`, `/cart`, `/checkout`, `/account`, etc.)
-  - Skip the marketing landing page and `/dashboard` routes entirely on custom-domain hosts
-- Update `src/hooks/useStorefront.ts` to accept a store object directly (avoid double-fetching by slug when we already resolved by host).
+## What you get
 
-### 2. DomainSettings page rewrite
-Rewrite `src/pages/DomainSettings.tsx` to match the new Cloudflare-for-SaaS flow instead of the old A-record-to-185.158.133.1 flow:
-- Input: merchant enters their domain (e.g., `indilipi.com`)
-- Show clear instructions: at your registrar, add  
-  `CNAME  @  →  fallback.pictocart.in`  
-  `CNAME  www  →  fallback.pictocart.in`
-- Save `custom_domain` to the store row
-- Show status: "Pending DNS" → "SSL Active" by calling a new edge function that checks Cloudflare
+1. **One-time Super Admin login** with configurable session timeout (15 min → 30 days).
+2. **Cloudflare Auto-Pilot dashboard** at `/admin/cloudflare` — a real-time control room showing every merchant domain, its health, SSL, DNS, and uptime.
+3. **Auto-healing background agent** that runs every 5 minutes via `pg_cron` → re-provisions broken hostnames, retries failed SSL, deletes orphans, and alerts you only when human action is needed.
+4. **Automated downtime emails** to merchants + customers when their store goes down, with auto-resolved follow-ups when it recovers.
+5. **Live indilipi.com fix** as the first action after you update the Cloudflare token.
 
-### 3. Edge functions to manage Custom Hostnames via Cloudflare API
-So merchants don't require you to manually add each domain in the Cloudflare dashboard:
-- `supabase/functions/provision-custom-hostname/index.ts` — POST to `https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames` with the merchant's domain. Save returned `id` in `stores.cloudflare_hostname_id`.
-- `supabase/functions/check-custom-hostname/index.ts` — GET hostname status, return `ssl_status` (pending/active/failed) + `verification_errors`.
-- `supabase/functions/remove-custom-hostname/index.ts` — DELETE when merchant disconnects.
-- Secrets needed (you add via Lovable Cloud secrets UI):
-  - `CLOUDFLARE_API_TOKEN` (scoped: Zone:SSL+Certs:Edit, Zone:Custom Hostnames:Edit on pictocart.in zone)
-  - `CLOUDFLARE_ZONE_ID` (your pictocart.in zone ID)
-  - `CLOUDFLARE_FALLBACK_TARGET=fallback.pictocart.in`
+## Architecture
 
-### 4. DB migration
-Add to `stores` table:
-- `cloudflare_hostname_id text`
-- `ssl_status text` (pending | active | failed)
-- `ssl_last_checked_at timestamptz`
+```text
+                    ┌─────────────────────────────┐
+                    │  Super Admin (one login)    │
+                    │   /admin/cloudflare         │
+                    └─────────────┬───────────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              ▼                   ▼                   ▼
+      [Live Dashboard]    [Manual Actions]    [Settings]
+      All domains +       Re-provision,       Session TTL,
+      health pills        force-SSL, delete   alert email
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │  cloudflare-agent edge fn   │◄──── pg_cron every 5 min
+                    │  (autonomous healer)        │
+                    └─────────────┬───────────────┘
+                                  │
+              ┌───────────────────┼────────────────────┐
+              ▼                   ▼                    ▼
+        Cloudflare API      Health checks       Notifications
+        (provision/         (HEAD requests      (downtime/
+         check/delete)       to each domain)     recovery emails)
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │  domain_health_log table    │
+                    │  (uptime history + alerts)  │
+                    └─────────────────────────────┘
+```
 
-(`custom_domain` already exists per memory.)
+## Build steps
 
-### 5. Fix `pictocart.in` itself (no code — instructions only)
-In Cloudflare DNS:
-- Change `pictocart.in` A record from **Proxied** to **DNS only** (grey cloud), OR delete the A and add a Custom Hostname for `pictocart.in` too.
-- Same for `www`.
-- Then in Lovable Project Settings → Domains, complete verification (TXT records `_lovable` and `_lovable.www` are already present — good).
+### 1. Database (1 migration)
+- New table `domain_health_log` — uptime history per store (status, http_code, ssl_valid, checked_at, response_ms).
+- New table `admin_settings` — single-row JSONB for super admin preferences (session_timeout_minutes, alert_email, auto_heal_enabled, downtime_threshold_minutes, notify_merchants, notify_customers).
+- Add columns to `stores`: `last_health_check_at`, `consecutive_failures int default 0`, `downtime_started_at`, `downtime_notified_at`.
+
+### 2. Configurable session timeout
+- New page `/admin/security` — Super Admin sets session TTL (15m / 1h / 8h / 7d / 30d).
+- Update `AdminRoute.tsx` to enforce the chosen TTL via a `lastActivity` timestamp in `localStorage` + auto-logout when expired.
+- Sliding-window refresh on each navigation so an active admin never gets kicked out mid-task.
+
+### 3. The autonomous agent — `cloudflare-agent` edge function
+Runs every 5 min via `pg_cron`. For each store with a `custom_domain`:
+- **Step A — Sync**: GET hostname status from Cloudflare. If missing in CF but present in DB → auto re-provision. If present in CF but missing in DB → mark orphan.
+- **Step B — Health check**: HEAD request to `https://{domain}` with 10s timeout. Record status + response time in `domain_health_log`.
+- **Step C — DNS check**: DNS-over-HTTPS lookup for apex + www CNAMEs.
+- **Step D — Auto-heal**:
+  - SSL stuck on `pending_validation` > 30 min → re-trigger validation
+  - 3 consecutive failures → set `downtime_started_at`
+  - 5 consecutive failures + downtime > 10 min → send downtime email to merchant + customers (one-shot, deduped via `downtime_notified_at`)
+  - Recovers → send "Back online" email + reset counters
+- **Step E — Escalate**: If auto-heal can't fix (e.g., merchant's DNS is wrong), email Super Admin with one-click "Open in Cloudflare Auto-Pilot" link.
+
+### 4. Cloudflare Auto-Pilot dashboard — `/admin/cloudflare`
+- **Top row KPIs**: Total domains | Active | Pending SSL | Down | Auto-healed today
+- **Live table**: domain, store name, SSL status pill, uptime % (24h), last check, response time, [Re-provision] [Force SSL] [Delete] [Open] buttons
+- **Incident timeline**: live feed of agent actions (re-provisioned indilipi.com, sent downtime email to 3 customers, etc.)
+- **Search + filter** by status (down / pending / active)
+- **Bulk actions**: re-check all, re-provision all failed
+
+### 5. Notification templates
+Two new email templates in `manage-email-domain` style:
+- `store-downtime.html` — "Your store {name} is currently unreachable. We're investigating. ETA: {minutes} min."
+- `store-recovered.html` — "Your store {name} is back online. Total downtime: {duration}."
+- Customer version: only sent if downtime > 10 min and customer has an active order in last 30 days.
+
+### 6. Fix indilipi.com immediately (your first task after deploy)
+After you update the `CLOUDFLARE_API_TOKEN` secret with the correct permissions:
+1. Open `/admin/cloudflare`
+2. Click **Re-provision** next to indilipi.com
+3. Agent provisions, polls, validates SSL, marks live — all hands-off.
 
 ## Files
 
 **New:**
-- `src/hooks/useStoreByHost.ts`
-- `supabase/functions/provision-custom-hostname/index.ts`
-- `supabase/functions/check-custom-hostname/index.ts`
-- `supabase/functions/remove-custom-hostname/index.ts`
-- Migration adding 3 columns to `stores`
+- `supabase/functions/cloudflare-agent/index.ts` — the autonomous healer
+- `supabase/functions/admin-cloudflare-action/index.ts` — manual actions (re-provision/delete/force-SSL) from dashboard
+- `src/pages/admin/AdminCloudflare.tsx` — control room
+- `src/pages/admin/AdminSecurity.tsx` — session timeout config
+- `src/hooks/useDomainHealth.ts` — realtime subscription to health log
+- Migration: `domain_health_log`, `admin_settings`, 4 columns on `stores`, pg_cron schedule
 
 **Edited:**
-- `src/App.tsx` — host-based route mounting
-- `src/pages/DomainSettings.tsx` — new CNAME-based flow + status polling
-- `src/hooks/useStorefront.ts` — accept pre-resolved store
+- `src/components/AdminRoute.tsx` — sliding-window session timeout
+- `src/components/AdminLayout.tsx` — add "Cloudflare" + "Security" nav items
+- `src/App.tsx` — register new admin routes
+- `supabase/functions/provision-custom-hostname/index.ts` — log to `domain_health_log` on provision
 
-## Confirmation needed
-1. Confirm I should use Cloudflare for SaaS API (you'll provide `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID` as secrets when prompted).
-2. Confirm fallback target = `fallback.pictocart.in`.
-3. After build, you'll fix `pictocart.in`'s own DNS per step 5 (one-time manual).
+## Permissions reminder
+The Cloudflare token you'll add needs:
+- **Zone → SSL and Certificates → Edit** (zone-scoped to pictocart.in)
+- **Zone → Zone → Read**
+- **Zone → SSL and Certificates → Read** (for status polling)
+- *(optional but recommended)* **Account → Custom Hostnames → Edit** if your zone uses Cloudflare for SaaS at account level.
+
+## After you approve
+1. I run the migration + deploy 2 edge functions + build the 2 admin pages.
+2. You paste the new Cloudflare token (I'll prompt via the secrets tool).
+3. You set your session timeout preference in `/admin/security`.
+4. We re-provision indilipi.com in one click and watch it go live in real time.
+5. The agent then runs forever — you only hear from it when something needs your eyes.
 
