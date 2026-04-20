@@ -880,6 +880,28 @@ const DomainSettings = () => {
               sslStatus={sslStatus}
             />
 
+            {/* Nameserver guidance */}
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm space-y-2">
+              <p className="font-semibold text-blue-900 flex items-center gap-2">
+                <Globe className="h-4 w-4" /> Do I need to change nameservers?
+              </p>
+              <p className="text-blue-800">
+                <strong>No</strong> — keep your current registrar's nameservers. You only need to add the two CNAME records below.
+              </p>
+              <p className="text-blue-800">
+                <strong>Exception:</strong> if your domain is on <em>"parking" nameservers</em> (e.g. <code className="font-mono text-xs">horizon.dns-parking.com</code>, <code className="font-mono text-xs">orbit.dns-parking.com</code>), they don't allow custom DNS records. Switch to your registrar's standard DNS nameservers first:
+              </p>
+              <ul className="text-blue-800 text-xs space-y-1 ml-4 list-disc">
+                <li><strong>Hostinger:</strong> <code className="font-mono">ns1.dns-parking.com</code> → use Hostinger's <em>"Use Hostinger nameservers"</em> button, or set <code className="font-mono">ns1.hostinger.com</code> + <code className="font-mono">ns2.hostinger.com</code></li>
+                <li><strong>GoDaddy:</strong> default is fine — just add the CNAMEs in DNS Management</li>
+                <li><strong>Namecheap:</strong> use "Namecheap BasicDNS" (default)</li>
+                <li><strong>Cloudflare:</strong> works as-is — set CNAMEs to <em>DNS only</em> (grey cloud), not proxied</li>
+              </ul>
+              <p className="text-blue-800 text-xs pt-1">
+                After switching nameservers, wait 10–30 minutes for propagation, then add the records below.
+              </p>
+            </div>
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
