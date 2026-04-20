@@ -12,6 +12,8 @@ import {
   Menu,
   IndianRupee,
   UserCircle,
+  Zap,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -23,6 +25,8 @@ const adminNavItems = [
   { label: 'Users', icon: Users, path: '/admin/users' },
   { label: 'Themes', icon: Palette, path: '/admin/themes' },
   { label: 'Revenue', icon: IndianRupee, path: '/admin/revenue' },
+  { label: 'Cloudflare', icon: Zap, path: '/admin/cloudflare' },
+  { label: 'Security', icon: Lock, path: '/admin/security' },
   { label: 'Platform Settings', icon: Settings, path: '/admin/settings' },
 ];
 

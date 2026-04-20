@@ -2,3 +2,6 @@ project_id = "qxeyndsvkfsmkilkzmuc"
 
 [functions.check-dns-records]
 verify_jwt = false
+
+[functions.cloudflare-agent]
+verify_jwt = false

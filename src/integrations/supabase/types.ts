@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          alert_email: string | null
+          auto_heal_enabled: boolean
+          downtime_threshold_minutes: number
+          id: number
+          notify_customers: boolean
+          notify_merchants: boolean
+          session_timeout_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          alert_email?: string | null
+          auto_heal_enabled?: boolean
+          downtime_threshold_minutes?: number
+          id?: number
+          notify_customers?: boolean
+          notify_merchants?: boolean
+          session_timeout_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          alert_email?: string | null
+          auto_heal_enabled?: boolean
+          downtime_threshold_minutes?: number
+          id?: number
+          notify_customers?: boolean
+          notify_merchants?: boolean
+          session_timeout_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_incidents: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          domain: string | null
+          id: string
+          severity: string
+          store_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          domain?: string | null
+          id?: string
+          severity?: string
+          store_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          domain?: string | null
+          id?: string
+          severity?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_incidents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           body: string | null
@@ -190,6 +261,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domain_health_log: {
+        Row: {
+          checked_at: string
+          domain: string
+          error_message: string | null
+          http_code: number | null
+          id: string
+          response_ms: number | null
+          ssl_valid: boolean | null
+          status: string
+          store_id: string
+        }
+        Insert: {
+          checked_at?: string
+          domain: string
+          error_message?: string | null
+          http_code?: number | null
+          id?: string
+          response_ms?: number | null
+          ssl_valid?: boolean | null
+          status: string
+          store_id: string
+        }
+        Update: {
+          checked_at?: string
+          domain?: string
+          error_message?: string | null
+          http_code?: number | null
+          id?: string
+          response_ms?: number | null
+          ssl_valid?: boolean | null
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_health_log_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -589,11 +704,15 @@ export type Database = {
           banner_url: string | null
           category: string | null
           cloudflare_hostname_id: string | null
+          consecutive_failures: number
           created_at: string
           custom_domain: string | null
           description: string | null
+          downtime_notified_at: string | null
+          downtime_started_at: string | null
           id: string
           is_published: boolean | null
+          last_health_check_at: string | null
           logo_url: string | null
           name: string
           onboarding_step: number | null
@@ -609,11 +728,15 @@ export type Database = {
           banner_url?: string | null
           category?: string | null
           cloudflare_hostname_id?: string | null
+          consecutive_failures?: number
           created_at?: string
           custom_domain?: string | null
           description?: string | null
+          downtime_notified_at?: string | null
+          downtime_started_at?: string | null
           id?: string
           is_published?: boolean | null
+          last_health_check_at?: string | null
           logo_url?: string | null
           name: string
           onboarding_step?: number | null
@@ -629,11 +752,15 @@ export type Database = {
           banner_url?: string | null
           category?: string | null
           cloudflare_hostname_id?: string | null
+          consecutive_failures?: number
           created_at?: string
           custom_domain?: string | null
           description?: string | null
+          downtime_notified_at?: string | null
+          downtime_started_at?: string | null
           id?: string
           is_published?: boolean | null
+          last_health_check_at?: string | null
           logo_url?: string | null
           name?: string
           onboarding_step?: number | null
