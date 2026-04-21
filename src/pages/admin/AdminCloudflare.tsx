@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAgentIncidents, useDomainStores, useHealthSummary, type StoreWithHealth } from '@/hooks/useDomainHealth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Activity, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ShieldCheck, Trash2, Zap, ExternalLink, Clock } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ShieldCheck, Trash2, Zap, ExternalLink, Clock, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type Filter = 'all' | 'active' | 'pending' | 'down';
