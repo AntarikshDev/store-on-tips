@@ -192,7 +192,7 @@ const AdminCloudflare = () => {
                           </TableCell>
                         </TableRow>
                       )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </TableBody>
