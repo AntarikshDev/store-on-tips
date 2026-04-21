@@ -126,8 +126,8 @@ const AdminCloudflare = () => {
                     const isDown = (s.consecutive_failures ?? 0) >= 3;
                     const isOpen = expandedId === s.id;
                     return (
-                      <>
-                      <TableRow key={s.id}>
+                      <Fragment key={s.id}>
+                      <TableRow>
                         <TableCell className="pr-0">
                           <button onClick={() => setExpandedId(isOpen ? null : s.id)} className="p-1 rounded hover:bg-muted" aria-label="Toggle details">
                             {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
