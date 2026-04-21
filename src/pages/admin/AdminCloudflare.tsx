@@ -109,7 +109,9 @@ const AdminCloudflare = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8" />
                     <TableHead>Domain</TableHead>
+                    <TableHead>State</TableHead>
                     <TableHead>SSL</TableHead>
                     <TableHead>Uptime 24h</TableHead>
                     <TableHead>Last check</TableHead>
@@ -122,12 +124,20 @@ const AdminCloudflare = () => {
                     const total = uptime[s.id]?.total ?? 0;
                     const pct = total ? Math.round((up / total) * 100) : null;
                     const isDown = (s.consecutive_failures ?? 0) >= 3;
+                    const isOpen = expandedId === s.id;
                     return (
+                      <>
                       <TableRow key={s.id}>
+                        <TableCell className="pr-0">
+                          <button onClick={() => setExpandedId(isOpen ? null : s.id)} className="p-1 rounded hover:bg-muted" aria-label="Toggle details">
+                            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </button>
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium text-sm">{s.custom_domain}</div>
                           <div className="text-xs text-muted-foreground">{s.name}</div>
                         </TableCell>
+                        <TableCell><StateBadge state={s.domain_state} strategy={s.domain_strategy} /></TableCell>
                         <TableCell><SSLBadge status={s.ssl_status} down={isDown} /></TableCell>
                         <TableCell>
                           {pct === null ? <span className="text-xs text-muted-foreground">—</span> :
@@ -146,6 +156,43 @@ const AdminCloudflare = () => {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {isOpen && (
+                        <TableRow key={`${s.id}-detail`} className="bg-muted/30 hover:bg-muted/30">
+                          <TableCell />
+                          <TableCell colSpan={6} className="py-3">
+                            <div className="grid md:grid-cols-2 gap-4 text-xs">
+                              <div className="space-y-1">
+                                <Field label="Strategy" value={s.domain_strategy ?? '—'} />
+                                <Field label="NS provider" value={s.ns_provider ?? '—'} />
+                                <Field label="State age" value={s.state_entered_at ? formatDistanceToNow(new Date(s.state_entered_at), { addSuffix: true }) : '—'} />
+                                <Field label="Hostname ID" value={s.cloudflare_hostname_id ?? '— (no SaaS hostname)'} />
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-medium text-sm">SSL validation record</div>
+                                {s.ssl_validation_name && s.ssl_validation_value ? (
+                                  <>
+                                    <CopyRow label="Type" value="TXT" onCopy={copy} />
+                                    <CopyRow label="Name" value={s.ssl_validation_name} onCopy={copy} />
+                                    <CopyRow label="Value" value={s.ssl_validation_value} onCopy={copy} />
+                                  </>
+                                ) : (
+                                  <p className="text-muted-foreground">No live token. Click <strong>Recheck</strong> to fetch from Cloudflare, or <strong>Force SSL</strong> to switch to TXT validation.</p>
+                                )}
+                                <div className="flex gap-2 pt-2">
+                                  <Button size="sm" variant="outline" onClick={() => action(s.id, 'refresh_validation_token')} disabled={busyId === `${s.id}-refresh_validation_token`}>
+                                    {busyId === `${s.id}-refresh_validation_token` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                                    Refresh token
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => action(s.id, 'clear_stale_id')} disabled={busyId === `${s.id}-clear_stale_id`}>
+                                    Clear stale ID
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      </>
                     );
                   })}
                 </TableBody>
