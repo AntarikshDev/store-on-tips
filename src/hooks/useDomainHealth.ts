@@ -47,7 +47,7 @@ export const useDomainStores = () =>
     queryFn: async (): Promise<StoreWithHealth[]> => {
       const { data, error } = await supabase
         .from('stores')
-        .select('id, name, slug, custom_domain, cloudflare_hostname_id, ssl_status, last_health_check_at, consecutive_failures, downtime_started_at')
+        .select('id, name, slug, custom_domain, cloudflare_hostname_id, ssl_status, last_health_check_at, consecutive_failures, downtime_started_at, domain_state, domain_strategy, ns_provider, ssl_validation_name, ssl_validation_value, state_entered_at')
         .not('custom_domain', 'is', null)
         .order('name');
       if (error) throw error;
