@@ -20,6 +20,7 @@ const AdminCloudflare = () => {
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const kpis = useMemo(() => {
     const total = stores.length;
