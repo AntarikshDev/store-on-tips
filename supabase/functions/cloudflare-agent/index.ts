@@ -34,7 +34,14 @@ Deno.serve(async (req) => {
   const zoneId = Deno.env.get('CLOUDFLARE_ZONE_ID')!;
   const fallback = Deno.env.get('CLOUDFLARE_FALLBACK_TARGET') ?? 'store-on-tips.lovable.app';
 
-  const { data: settings } = await supabase.from('admin_settings').select('*').eq('id', 1).maybeSingle();
+  const { error: cleanupError } = await supabase.rpc('cleanup_domain_health_log', { _retain_days: 3 });
+  if (cleanupError) console.warn('health log cleanup skipped', cleanupError.message);
+
+  const { data: settings } = await supabase
+    .from('admin_settings')
+    .select('downtime_threshold_minutes, auto_heal_enabled, notify_merchants, alert_email')
+    .eq('id', 1)
+    .maybeSingle();
   const downtimeThresholdMin = settings?.downtime_threshold_minutes ?? 10;
   const autoHeal = settings?.auto_heal_enabled ?? true;
   const notifyMerchants = settings?.notify_merchants ?? true;
@@ -147,12 +154,7 @@ async function processStore(store: any, ctx: any) {
   }
   const responseMs = Date.now() - start;
 
-  await supabase.from('domain_health_log').insert({
-    store_id: store.id, domain,
-    status: healthy ? 'up' : 'down',
-    http_code: httpCode, ssl_valid: sslStatus === 'active',
-    response_ms: responseMs, error_message: errorMessage,
-  });
+  let shouldWriteHealthLog = healthy;
 
   // --- 4. State + downtime tracking ---
   const updates: any = {
@@ -173,6 +175,7 @@ async function processStore(store: any, ctx: any) {
   if (store.domain_state !== nextState) {
     updates.domain_state = nextState;
     updates.state_entered_at = new Date().toISOString();
+    shouldWriteHealthLog = true;
     await logIncident(supabase, store, `state→${nextState}`, 'info', { strategy, ns_provider: nsProvider });
   }
 
@@ -187,6 +190,7 @@ async function processStore(store: any, ctx: any) {
     updates.downtime_notified_at = null;
   } else {
     const failures = (store.consecutive_failures ?? 0) + 1;
+    shouldWriteHealthLog = failures <= 5 || failures % 15 === 0;
     updates.consecutive_failures = failures;
     if (failures >= 3 && !store.downtime_started_at) updates.downtime_started_at = new Date().toISOString();
     const downStart = store.downtime_started_at ? new Date(store.downtime_started_at) : (updates.downtime_started_at ? new Date(updates.downtime_started_at) : null);
@@ -196,6 +200,15 @@ async function processStore(store: any, ctx: any) {
       await logIncident(supabase, store, 'downtime_alert', 'error', { failures, downtime_min: Math.round(downMin), error: errorMessage });
       updates.downtime_notified_at = new Date().toISOString();
     }
+  }
+
+  if (shouldWriteHealthLog) {
+    await supabase.from('domain_health_log').insert({
+      store_id: store.id, domain,
+      status: healthy ? 'up' : 'down',
+      http_code: httpCode, ssl_valid: sslStatus === 'active',
+      response_ms: responseMs, error_message: errorMessage,
+    });
   }
 
   await supabase.from('stores').update(updates).eq('id', store.id);

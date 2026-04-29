@@ -38,7 +38,7 @@ export const useStoreByHost = () => {
       const apex = hostname.replace(/^www\./i, '');
       const { data, error } = await supabase
         .from('stores')
-        .select('*')
+        .select('slug')
         .or(`custom_domain.eq.${hostname},custom_domain.eq.${apex}`)
         .eq('is_published', true)
         .maybeSingle();
