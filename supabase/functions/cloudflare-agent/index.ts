@@ -34,7 +34,15 @@ Deno.serve(async (req) => {
   const zoneId = Deno.env.get('CLOUDFLARE_ZONE_ID')!;
   const fallback = Deno.env.get('CLOUDFLARE_FALLBACK_TARGET') ?? 'store-on-tips.lovable.app';
 
-  const { data: settings } = await supabase.from('admin_settings').select('*').eq('id', 1).maybeSingle();
+  await supabase.rpc('cleanup_domain_health_log', { _retain_days: 3 }).catch((err: any) => {
+    console.warn('health log cleanup skipped', err?.message);
+  });
+
+  const { data: settings } = await supabase
+    .from('admin_settings')
+    .select('downtime_threshold_minutes, auto_heal_enabled, notify_merchants, alert_email')
+    .eq('id', 1)
+    .maybeSingle();
   const downtimeThresholdMin = settings?.downtime_threshold_minutes ?? 10;
   const autoHeal = settings?.auto_heal_enabled ?? true;
   const notifyMerchants = settings?.notify_merchants ?? true;
