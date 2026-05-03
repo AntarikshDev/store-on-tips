@@ -1,5 +1,5 @@
 import { Truck, RotateCcw, Award, HandHeart } from 'lucide-react';
-import { tokens } from './tokens';
+import { tokens } from '../tokens';
 
 const items = [
   { icon: HandHeart, label: 'Handmade in India' },

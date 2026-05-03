@@ -13,16 +13,16 @@ export const THEMES = {
 
 export type ThemeId = keyof typeof THEMES;
 
-export const ThemeRenderer = <T,>({
-  themeId,
-  bundle,
-  fallback,
-}: {
+interface ThemeRendererProps {
   themeId: string;
-  bundle: T;
+  bundle: unknown;
   fallback?: React.ReactNode;
-}) => {
-  const Theme = (THEMES as Record<string, ComponentType<{ bundle: T }>>)[themeId] ?? THEMES.bazaar;
+}
+
+export const ThemeRenderer = ({ themeId, bundle, fallback }: ThemeRendererProps) => {
+  const Theme =
+    (THEMES as Record<string, ComponentType<{ bundle: unknown }>>)[themeId] ??
+    (THEMES.bazaar as unknown as ComponentType<{ bundle: unknown }>);
   return (
     <Suspense fallback={fallback ?? <div className="p-10 text-center text-sm">Loading theme…</div>}>
       <Theme bundle={bundle} />
