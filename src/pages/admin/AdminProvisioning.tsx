@@ -38,6 +38,7 @@ interface ProvisionRequest {
   new_project_subdomain: string | null;
   notes: string | null;
   queued_at: string;
+  completed_at?: string | null;
 }
 
 const STATUSES = ['queued', 'remixing', 'patching', 'domain_pending', 'live', 'failed'];
@@ -85,7 +86,7 @@ const AdminProvisioning = () => {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<ProvisionRequest> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
       const { error } = await supabase.from('provision_requests').update(patch).eq('id', id);
       if (error) throw error;
     },
