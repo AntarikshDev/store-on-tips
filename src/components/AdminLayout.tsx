@@ -14,6 +14,7 @@ import {
   UserCircle,
   Zap,
   Lock,
+  Rocket,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ import { useState } from 'react';
 const adminNavItems = [
   { label: 'Overview', icon: LayoutDashboard, path: '/admin' },
   { label: 'Stores', icon: Store, path: '/admin/stores' },
+  { label: 'Provisioning', icon: Rocket, path: '/admin/provisioning' },
   { label: 'Users', icon: Users, path: '/admin/users' },
   { label: 'Themes', icon: Palette, path: '/admin/themes' },
   { label: 'Revenue', icon: IndianRupee, path: '/admin/revenue' },
