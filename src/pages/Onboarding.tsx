@@ -10,31 +10,14 @@ import { THEME_TEMPLATES } from '@/lib/themes';
 
 import StepStoreName from '@/components/onboarding/StepStoreName';
 import StepCategory from '@/components/onboarding/StepCategory';
-import StepLogo from '@/components/onboarding/StepLogo';
 import StepTheme from '@/components/onboarding/StepTheme';
-import StepUploadImage from '@/components/onboarding/StepUploadImage';
-import StepAIGenerate from '@/components/onboarding/StepAIGenerate';
-import StepStoreInfo from '@/components/onboarding/StepStoreInfo';
-import StepPaymentSetup from '@/components/onboarding/StepPaymentSetup';
-import StepStorePreview from '@/components/onboarding/StepStorePreview';
 import StepGoLive from '@/components/onboarding/StepGoLive';
-import StepEmailBranding from '@/components/onboarding/StepEmailBranding';
 
-const TOTAL_STEPS = 11;
+// Phase 1: collapsed from 11 → 4 mandatory steps. Logo/Products/Payments/Email/etc.
+// are now setup checklist cards on the Dashboard.
+const TOTAL_STEPS = 4;
 
-const stepLabels = [
-  'Store Name',
-  'Category',
-  'Logo',
-  'Theme',
-  'Product Image',
-  'AI Magic',
-  'Store Info',
-  'Payments',
-  'Email Branding',
-  'Preview',
-  'Go Live',
-];
+const stepLabels = ['Store Name', 'Category', 'Theme', 'Go Live'];
 
 export interface OnboardingData {
   storeName: string;
@@ -212,34 +195,20 @@ const Onboarding = () => {
     switch (currentStep) {
       case 1: return data.storeName.trim().length >= 2 && data.slugAvailable;
       case 2: return data.category !== '';
-      case 3: return true;
-      case 4: return data.selectedThemeId !== '';
-      case 5: return true;
-      case 6: return true;
-      case 7: return true;
-      case 8: return true;
-      case 9: return true;
-      case 10: return true;
-      case 11: return true;
+      case 3: return data.selectedThemeId !== '';
+      case 4: return true;
       default: return true;
     }
   };
 
-  const isSkippable = (step: number) => [3, 5, 6, 7, 9].includes(step);
+  const isSkippable = (_step: number) => false;
 
   const renderStep = () => {
     switch (currentStep) {
       case 1: return <StepStoreName data={data} setData={setData} />;
       case 2: return <StepCategory data={data} setData={setData} />;
-      case 3: return <StepLogo data={data} setData={setData} storeId={store?.id} />;
-      case 4: return <StepTheme data={data} setData={setData} />;
-      case 5: return <StepUploadImage data={data} setData={setData} storeId={store?.id} />;
-      case 6: return <StepAIGenerate data={data} setData={setData} storeId={store?.id} />;
-      case 7: return <StepStoreInfo data={data} setData={setData} />;
-      case 8: return <StepPaymentSetup data={data} setData={setData} />;
-      case 9: return <StepEmailBranding data={data} setData={setData} storeId={store?.id} />;
-      case 10: return <StepStorePreview data={data} storeSlug={store?.slug} />;
-      case 11: return <StepGoLive data={data} store={store} onFinish={async () => {
+      case 3: return <StepTheme data={data} setData={setData} />;
+      case 4: return <StepGoLive data={data} store={store} onFinish={async () => {
         await saveStep(TOTAL_STEPS);
         if (store) {
           if (data.aiProduct && data.aiProduct.title) {
