@@ -377,10 +377,12 @@ const ThemeMasterRow = ({ master, onChange }: { master: ThemeMaster; onChange: (
   );
 };
 
+const REQUIRED_FIELDS = ['store_name', 'slug', 'store_id', 'logo_url', 'primary', 'accent'] as const;
+
 const CreateRequestForm = ({
   stores, themes, onDone,
 }: {
-  stores: Array<{ id: string; name: string; category?: string | null }>;
+  stores: Array<{ id: string; name: string; slug?: string; logo_url?: string | null; custom_domain?: string | null; category?: string | null }>;
   themes: ThemeMaster[];
   onDone: () => void;
 }) => {
@@ -391,14 +393,30 @@ const CreateRequestForm = ({
   const [tagline, setTagline] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Suggest default theme based on store category
   const selectedStore = stores.find((s) => s.id === storeId);
   const suggested = selectedStore?.category
     ? themes.find((t) => t.is_active && t.is_default && t.category === selectedStore.category)
     : null;
 
+  // Auto-filled payload preview
+  const payload: Record<string, string | null | undefined> = {
+    store_name: selectedStore?.name,
+    slug: selectedStore?.slug,
+    store_id: selectedStore?.id,
+    logo_url: selectedStore?.logo_url,
+    custom_domain: selectedStore?.custom_domain,
+    primary,
+    accent,
+    tagline,
+  };
+  const missing = REQUIRED_FIELDS.filter((k) => {
+    const v = payload[k];
+    return v === undefined || v === null || String(v).trim() === '';
+  });
+
   const submit = async () => {
     if (!storeId) { toast.error('Pick a store'); return; }
+    if (missing.length) { toast.error(`Missing required: ${missing.join(', ')}`); return; }
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke('provision-storefront', {
       body: {
@@ -408,9 +426,9 @@ const CreateRequestForm = ({
       },
     });
     setSubmitting(false);
-    if (error || (data as { error?: unknown })?.error) {
-      const err = (data as { error?: unknown; missing?: string[] }) ?? {};
-      toast.error(`Validation failed${err.missing ? `: missing ${err.missing.join(', ')}` : ''}`);
+    const errPayload = (data as { error?: unknown; missing?: string[] }) ?? {};
+    if (error || errPayload?.error) {
+      toast.error(`Validation failed${errPayload.missing ? `: missing ${errPayload.missing.join(', ')}` : ''}`);
       return;
     }
     toast.success('Request queued');
