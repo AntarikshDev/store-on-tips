@@ -33,10 +33,16 @@ const StepAIGenerate = ({ data, setData, storeId }: Props) => {
           imageUrl: data.productImageUrl,
           category: data.category,
           storeName: data.storeName,
+          store_id: storeId,
         },
       });
 
       if (error) throw error;
+      if (result?.error === 'INSUFFICIENT_CREDITS') {
+        toast.error('Out of AI credits. Top up from Wallet to continue.');
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+      if (result?.error) throw new Error(result.error);
 
       if (result?.product) {
         setData((d) => ({ ...d, aiProduct: result.product }));
