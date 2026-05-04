@@ -13,7 +13,7 @@ declare global {
   interface Window { Razorpay: any; }
 }
 
-const RAZORPAY_KEY_ID = 'rzp_test_SlF6JsCqM0XzQJ';
+// Razorpay key ID is returned by the create-razorpay-subscription edge function (sourced from RAZORPAY_KEY_ID secret)
 
 const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
   { key: 'product_limit',      label: 'Products' },
@@ -70,7 +70,7 @@ const Billing = () => {
 
       const targetPlan = plans.find((p) => p.plan === target);
       const rzp = new window.Razorpay({
-        key: data.razorpay_key_id || RAZORPAY_KEY_ID,
+        key: data.razorpay_key_id,
         subscription_id: data.subscription_id,
         name: 'Pic to Cart',
         description: `${targetPlan?.display_name} — ₹${targetPlan?.price_inr}/month`,
