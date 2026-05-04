@@ -28,13 +28,16 @@ const BlogPostForm = () => {
   const [slug, setSlug] = useState('');
   const [body, setBody] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [thumbnailImage, setThumbnailImage] = useState('');
   const [isPublished, setIsPublished] = useState(false);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingField, setUploadingField] = useState<'cover' | 'thumbnail' | null>(null);
+  const coverGalleryRef = useRef<HTMLInputElement>(null);
+  const coverCameraRef = useRef<HTMLInputElement>(null);
+  const thumbGalleryRef = useRef<HTMLInputElement>(null);
+  const thumbCameraRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (existing) {
@@ -42,6 +45,7 @@ const BlogPostForm = () => {
       setSlug(existing.slug);
       setBody(existing.body || '');
       setCoverImage(existing.cover_image || '');
+      setThumbnailImage((existing as any).thumbnail_image || '');
       setIsPublished(existing.is_published);
       setSeoTitle(existing.seo_title || '');
       setSeoDescription(existing.seo_description || '');
