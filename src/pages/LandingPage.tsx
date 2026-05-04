@@ -8,31 +8,19 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from '@/components/ui/accordion';
 import themeFashion from '@/assets/theme-fashion.jpg';
 import themeFood from '@/assets/theme-food.jpg';
 import themeElectronics from '@/assets/theme-electronics.jpg';
 import themeBeauty from '@/assets/theme-beauty.jpg';
 import themeHandcraft from '@/assets/theme-handcraft.jpg';
 import themeBooks from '@/assets/theme-books.jpg';
-import flow01 from '@/assets/flow/01-signup.jpg';
-import flow02 from '@/assets/flow/02-onboarding.jpg';
-import flow03 from '@/assets/flow/03-products.jpg';
-import flow04 from '@/assets/flow/04-theme.jpg';
-import flow05 from '@/assets/flow/05-domain-payments.jpg';
-import flow06 from '@/assets/flow/06-golive.jpg';
-import flow07 from '@/assets/flow/07-grow.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
+import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
+import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 
-/* ─── Merchant journey: 7 steps from sign-up → first sale ─── */
-const merchantJourney = [
-  { step: '01', icon: Users,      title: 'Sign Up Free',           desc: 'Create your account in 30 seconds with email or Google. No credit card required.',                            image: flow01, accent: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50' },
-  { step: '02', icon: Store,      title: 'Tell Us About Your Store', desc: 'Pick a name, category and language. Our wizard guides you through 7 quick steps — no jargon.',             image: flow02, accent: 'from-orange-500 to-amber-500',     bg: 'bg-orange-50'  },
-  { step: '03', icon: Camera,     title: 'Snap & Add Products',     desc: 'Take a photo. AI generates the title, description, pricing and SEO tags. Edit if you want — or just publish.', image: flow03, accent: 'from-rose-500 to-pink-500',         bg: 'bg-rose-50'    },
-  { step: '04', icon: Palette,    title: 'Pick a Beautiful Theme',  desc: 'Choose from 50+ AI-crafted themes built for Indian shoppers. Customize colors, fonts, layout in clicks.',   image: flow04, accent: 'from-violet-500 to-indigo-500',    bg: 'bg-violet-50'  },
-  { step: '05', icon: Globe,      title: 'Connect Domain & Payments', desc: 'Bring your own domain (or use a free one), wire up Razorpay, UPI & COD. Verified in minutes.',           image: flow05, accent: 'from-sky-500 to-blue-500',          bg: 'bg-sky-50'     },
-  { step: '06', icon: Rocket,     title: 'Go Live',                 desc: 'Hit publish. Share your store link on WhatsApp, Instagram, Facebook — with one tap.',                       image: flow06, accent: 'from-fuchsia-500 to-purple-500',    bg: 'bg-fuchsia-50' },
-  { step: '07', icon: TrendingUp, title: 'Grow With Insights',      desc: 'Track orders, revenue and visitors. AI suggests coupons, abandoned-cart wins and theme upgrades weekly.',  image: flow07, accent: 'from-indigo-500 to-blue-600',       bg: 'bg-indigo-50'  },
-];
 
 /* ─── Intersection Observer hook for scroll animations ─── */
 const useScrollReveal = () => {
