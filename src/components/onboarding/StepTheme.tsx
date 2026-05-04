@@ -14,11 +14,10 @@ const StepTheme = ({ data, setData }: Props) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
-  const freeThemes = THEME_TEMPLATES.filter((t) => !t.isPremium);
-  const premiumThemes = THEME_TEMPLATES.filter((t) => t.isPremium);
+  // All themes are free during onboarding. Premium tier moves to dashboard.
+  const allThemes = THEME_TEMPLATES;
 
   const selectTheme = (theme: ThemeTemplate) => {
-    if (theme.isPremium) return;
     setData((d) => ({ ...d, selectedThemeId: theme.id }));
   };
 
