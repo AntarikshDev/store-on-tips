@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['fashion', 'food', 'electronics', 'beauty', 'health', 'sports', 'home-decor', 'general'];
@@ -29,8 +29,68 @@ interface ThemeMaster {
   client_patch_prompt: string;
   is_active: boolean;
   is_default: boolean;
+  current_version: string;
+  latest_changelog: string | null;
   created_at: string;
 }
+
+const PublishVersionDialog = ({ theme, open, onOpenChange }: { theme: ThemeMaster; open: boolean; onOpenChange: (o: boolean) => void }) => {
+  const [version, setVersion] = useState('');
+  const [summary, setSummary] = useState('');
+  const [changelog, setChangelog] = useState('');
+  const qc = useQueryClient();
+
+  const publish = useMutation({
+    mutationFn: async () => {
+      const v = version.trim();
+      if (!v) throw new Error('Version is required (e.g. 1.1.0)');
+      const { error: vErr } = await supabase.from('theme_versions').insert({
+        theme_master_id: theme.id, version: v, summary: summary.trim(), changelog: changelog.trim(),
+      });
+      if (vErr) throw vErr;
+      const { error: tErr } = await supabase.from('theme_master_projects')
+        .update({ current_version: v, latest_changelog: changelog.trim() } as any)
+        .eq('id', theme.id);
+      if (tErr) throw tErr;
+    },
+    onSuccess: () => {
+      toast.success(`Published v${version} of ${theme.name}. Merchants will see the update.`);
+      qc.invalidateQueries({ queryKey: ['admin-theme-masters'] });
+      setVersion(''); setSummary(''); setChangelog('');
+      onOpenChange(false);
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to publish'),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Publish new version — {theme.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="text-xs text-muted-foreground">Current version: <Badge variant="outline">v{theme.current_version}</Badge></div>
+          <div>
+            <Label className="text-xs">New version (semver)</Label>
+            <Input placeholder="e.g. 1.1.0" value={version} onChange={(e) => setVersion(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Summary (one line)</Label>
+            <Input placeholder="What's new in a sentence" value={summary} onChange={(e) => setSummary(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Changelog (full notes)</Label>
+            <Textarea rows={6} placeholder="• Added Journal section&#10;• Improved hero spacing&#10;• Fixed mobile cart overflow" value={changelog} onChange={(e) => setChangelog(e.target.value)} />
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={() => publish.mutate()} disabled={publish.isPending}>
+              <Rocket className="mr-1 h-3.5 w-3.5" /> Publish
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const emptyTheme: Partial<ThemeMaster> = {
   theme_id: '',
