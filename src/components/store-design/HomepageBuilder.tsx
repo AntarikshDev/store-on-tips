@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { GripVertical, Plus, Trash2, Image, Type, ShoppingBag, Mail, Rows3, Upload, Loader2, X, Sparkles, Clock, MessageSquare, Award } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Image, Type, ShoppingBag, Mail, Rows3, Upload, Loader2, X, Sparkles, Clock, MessageSquare, Award, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { ICON_OPTIONS } from '@/components/storefront/TrustBadgeIcon';
 
@@ -181,6 +181,8 @@ const SECTION_TYPES = [
   { value: 'collection_showcase', label: 'Collection Showcase', icon: Rows3 },
   { value: 'announcement_bar', label: 'Announcement Bar', icon: Type },
   { value: 'brand_marquee', label: 'Brand Marquee', icon: Type },
+  { value: 'whatsapp_chat', label: 'WhatsApp Business Chat', icon: Phone },
+  { value: 'video_hero', label: 'Video Hero', icon: Image },
 ] as const;
 
 const SortableSection = ({
