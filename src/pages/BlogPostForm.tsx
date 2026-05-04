@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { ArrowLeft, Sparkles, Loader2, Save, ImagePlus, X, Camera } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Save, ImagePlus, X, Camera, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage } from '@/lib/imageCompression';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,9 @@ const BlogPostForm = () => {
   const [seoDescription, setSeoDescription] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [uploadingField, setUploadingField] = useState<'cover' | 'thumbnail' | null>(null);
+  const [aiImageField, setAiImageField] = useState<'cover' | 'thumbnail' | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [imagePromptHint, setImagePromptHint] = useState<string>('');
   const coverGalleryRef = useRef<HTMLInputElement>(null);
   const coverCameraRef = useRef<HTMLInputElement>(null);
   const thumbGalleryRef = useRef<HTMLInputElement>(null);
@@ -69,12 +72,58 @@ const BlogPostForm = () => {
       });
       if (error) throw error;
       if (data?.body) setBody(data.body);
+      if (data?.seo_title) setSeoTitle(data.seo_title);
       if (data?.seo_description) setSeoDescription(data.seo_description);
+      if (Array.isArray(data?.tags)) setTags(data.tags);
+      if (data?.image_prompt) setImagePromptHint(data.image_prompt);
       toast.success('Blog content generated!');
     } catch {
       toast.error('AI generation failed');
     }
     setAiLoading(false);
+  };
+
+  const handleAIGenerateImage = async (field: 'cover' | 'thumbnail') => {
+    if (!title) { toast.error('Enter a title first'); return; }
+    setAiImageField(field);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-blog-image', {
+        body: {
+          title,
+          body: imagePromptHint || body,
+          store_name: store?.name,
+          category: store?.category,
+          kind: field === 'cover' ? 'cover' : 'thumbnail',
+        },
+      });
+      if (error) throw error;
+      const dataUrl: string | undefined = data?.image;
+      if (!dataUrl) throw new Error('No image returned');
+
+      // Convert data URL → File → compress → upload to storage
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `ai-${field}.png`, { type: blob.type || 'image/png' });
+      const compressed = await compressImage(file, {
+        maxWidth: field === 'thumbnail' ? 800 : 1600,
+        maxHeight: field === 'thumbnail' ? 800 : 900,
+        maxSizeMB: field === 'thumbnail' ? 0.5 : 1.2,
+      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const path = `${user.id}/blog/${crypto.randomUUID()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from('store-assets')
+        .upload(path, compressed, { contentType: compressed.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('store-assets').getPublicUrl(path);
+      if (field === 'cover') setCoverImage(publicUrl); else setThumbnailImage(publicUrl);
+      toast.success(`AI ${field === 'cover' ? 'main image' : 'thumbnail'} generated!`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || 'AI image generation failed');
+    } finally {
+      setAiImageField(null);
+    }
   };
 
   const handleImageFile = async (
@@ -192,9 +241,22 @@ const BlogPostForm = () => {
                 const hint = field === 'cover'
                   ? 'Wide image shown at the top of the post. Recommended 1600×900.'
                   : 'Square-ish image shown in the blog listing. Recommended 800×800. Falls back to main image if empty.';
+                const aiBusy = aiImageField === field;
                 return (
                   <div key={field} className="space-y-2">
-                    <Label>{label}</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label>{label}</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAIGenerateImage(field)}
+                        disabled={aiBusy || uploading}
+                      >
+                        {aiBusy ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
+                        {aiBusy ? 'Generating…' : 'Generate with AI'}
+                      </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground">{hint}</p>
                     {value ? (
                       <div className="relative w-full overflow-hidden rounded-lg border bg-muted">
