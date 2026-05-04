@@ -380,6 +380,11 @@ const Storefront = () => {
     }
   };
 
+  // Dedicated React theme path (bazaar, etc) — short-circuit and render via ThemeRenderer.
+  if (hasDedicatedTheme) {
+    return <DedicatedThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} />;
+  }
+
   return (
     <StorefrontLayout store={store} products={products} footerConfig={footerConfig}>
       <SEOHead title={seo.meta_title || store.name} description={seo.meta_description || store.description || `Shop at ${store.name}`} ogImage={seo.og_image || store.banner_url || undefined} url={`${window.location.origin}/store/${slug}`} />
@@ -432,6 +437,28 @@ const Storefront = () => {
         )}
       </section>
     </StorefrontLayout>
+  );
+};
+
+/**
+ * Renders a registered React theme (e.g. bazaar) using the storefront bundle.
+ * Lives outside Storefront() because it needs its own React Query call (rules of hooks).
+ */
+const DedicatedThemeView = ({ slug, themeId, seo, store }: { slug: string; themeId: string; seo: any; store: any }) => {
+  const { data: bundle, isLoading } = useStorefrontBundle({ slug });
+  if (isLoading || !bundle) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+  return (
+    <>
+      <SEOHead
+        title={seo.meta_title || store.name}
+        description={seo.meta_description || store.description || `Shop at ${store.name}`}
+        ogImage={seo.og_image || store.banner_url || undefined}
+        url={`${window.location.origin}/store/${slug}`}
+      />
+      <ThemeRenderer themeId={themeId} bundle={bundle} />
+    </>
   );
 };
 
