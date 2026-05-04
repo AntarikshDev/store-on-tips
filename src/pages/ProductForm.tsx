@@ -180,6 +180,7 @@ const ProductForm = () => {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-20 md:pb-0">
+      <RechargeSheet open={rechargeOpen} onOpenChange={setRechargeOpen} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
