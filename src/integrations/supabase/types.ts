@@ -1103,6 +1103,7 @@ export type Database = {
           downtime_notified_at: string | null
           downtime_started_at: string | null
           id: string
+          installed_theme_version: string | null
           is_published: boolean | null
           last_health_check_at: string | null
           logo_url: string | null
@@ -1117,6 +1118,7 @@ export type Database = {
           ssl_validation_value: string | null
           state_entered_at: string | null
           theme: Json | null
+          theme_update_dismissed_version: string | null
           updated_at: string
           user_id: string
         }
@@ -1133,6 +1135,7 @@ export type Database = {
           downtime_notified_at?: string | null
           downtime_started_at?: string | null
           id?: string
+          installed_theme_version?: string | null
           is_published?: boolean | null
           last_health_check_at?: string | null
           logo_url?: string | null
@@ -1147,6 +1150,7 @@ export type Database = {
           ssl_validation_value?: string | null
           state_entered_at?: string | null
           theme?: Json | null
+          theme_update_dismissed_version?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1163,6 +1167,7 @@ export type Database = {
           downtime_notified_at?: string | null
           downtime_started_at?: string | null
           id?: string
+          installed_theme_version?: string | null
           is_published?: boolean | null
           last_health_check_at?: string | null
           logo_url?: string | null
@@ -1177,6 +1182,7 @@ export type Database = {
           ssl_validation_value?: string | null
           state_entered_at?: string | null
           theme?: Json | null
+          theme_update_dismissed_version?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1323,10 +1329,12 @@ export type Database = {
           category: string | null
           client_patch_prompt: string
           created_at: string
+          current_version: string
           description: string | null
           id: string
           is_active: boolean
           is_default: boolean
+          latest_changelog: string | null
           lovable_project_url: string | null
           name: string
           preview_image: string | null
@@ -1338,10 +1346,12 @@ export type Database = {
           category?: string | null
           client_patch_prompt?: string
           created_at?: string
+          current_version?: string
           description?: string | null
           id?: string
           is_active?: boolean
           is_default?: boolean
+          latest_changelog?: string | null
           lovable_project_url?: string | null
           name: string
           preview_image?: string | null
@@ -1353,10 +1363,12 @@ export type Database = {
           category?: string | null
           client_patch_prompt?: string
           created_at?: string
+          current_version?: string
           description?: string | null
           id?: string
           is_active?: boolean
           is_default?: boolean
+          latest_changelog?: string | null
           lovable_project_url?: string | null
           name?: string
           preview_image?: string | null
@@ -1485,6 +1497,44 @@ export type Database = {
           variant_name?: string
         }
         Relationships: []
+      }
+      theme_versions: {
+        Row: {
+          changelog: string
+          created_at: string
+          id: string
+          released_at: string
+          summary: string
+          theme_master_id: string
+          version: string
+        }
+        Insert: {
+          changelog?: string
+          created_at?: string
+          id?: string
+          released_at?: string
+          summary?: string
+          theme_master_id: string
+          version: string
+        }
+        Update: {
+          changelog?: string
+          created_at?: string
+          id?: string
+          released_at?: string
+          summary?: string
+          theme_master_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_versions_theme_master_id_fkey"
+            columns: ["theme_master_id"]
+            isOneToOne: false
+            referencedRelation: "theme_master_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trial_reminders_sent: {
         Row: {

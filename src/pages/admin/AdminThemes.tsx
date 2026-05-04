@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['fashion', 'food', 'electronics', 'beauty', 'health', 'sports', 'home-decor', 'general'];
@@ -29,8 +29,68 @@ interface ThemeMaster {
   client_patch_prompt: string;
   is_active: boolean;
   is_default: boolean;
+  current_version: string;
+  latest_changelog: string | null;
   created_at: string;
 }
+
+const PublishVersionDialog = ({ theme, open, onOpenChange }: { theme: ThemeMaster; open: boolean; onOpenChange: (o: boolean) => void }) => {
+  const [version, setVersion] = useState('');
+  const [summary, setSummary] = useState('');
+  const [changelog, setChangelog] = useState('');
+  const qc = useQueryClient();
+
+  const publish = useMutation({
+    mutationFn: async () => {
+      const v = version.trim();
+      if (!v) throw new Error('Version is required (e.g. 1.1.0)');
+      const { error: vErr } = await supabase.from('theme_versions').insert({
+        theme_master_id: theme.id, version: v, summary: summary.trim(), changelog: changelog.trim(),
+      });
+      if (vErr) throw vErr;
+      const { error: tErr } = await supabase.from('theme_master_projects')
+        .update({ current_version: v, latest_changelog: changelog.trim() } as any)
+        .eq('id', theme.id);
+      if (tErr) throw tErr;
+    },
+    onSuccess: () => {
+      toast.success(`Published v${version} of ${theme.name}. Merchants will see the update.`);
+      qc.invalidateQueries({ queryKey: ['admin-theme-masters'] });
+      setVersion(''); setSummary(''); setChangelog('');
+      onOpenChange(false);
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to publish'),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Publish new version — {theme.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="text-xs text-muted-foreground">Current version: <Badge variant="outline">v{theme.current_version}</Badge></div>
+          <div>
+            <Label className="text-xs">New version (semver)</Label>
+            <Input placeholder="e.g. 1.1.0" value={version} onChange={(e) => setVersion(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Summary (one line)</Label>
+            <Input placeholder="What's new in a sentence" value={summary} onChange={(e) => setSummary(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Changelog (full notes)</Label>
+            <Textarea rows={6} placeholder="• Added Journal section&#10;• Improved hero spacing&#10;• Fixed mobile cart overflow" value={changelog} onChange={(e) => setChangelog(e.target.value)} />
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={() => publish.mutate()} disabled={publish.isPending}>
+              <Rocket className="mr-1 h-3.5 w-3.5" /> Publish
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const emptyTheme: Partial<ThemeMaster> = {
   theme_id: '',
@@ -145,6 +205,7 @@ const MasterProjectsTab = () => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<ThemeMaster | null>(null);
   const [creating, setCreating] = useState(false);
+  const [publishing, setPublishing] = useState<ThemeMaster | null>(null);
 
   const { data: themes = [], isLoading } = useQuery({
     queryKey: ['admin-theme-masters'],
@@ -199,9 +260,12 @@ const MasterProjectsTab = () => {
                 </div>
               </div>
               <CardContent className="p-3 flex-1 flex flex-col gap-2">
-                <div>
-                  <h3 className="font-semibold text-sm">{t.name}</h3>
-                  <p className="text-[11px] text-muted-foreground capitalize">{t.category} · {t.theme_id}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-sm">{t.name}</h3>
+                    <p className="text-[11px] text-muted-foreground capitalize">{t.category} · {t.theme_id}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0">v{t.current_version}</Badge>
                 </div>
                 {t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
                 <div className="mt-auto flex gap-1.5 pt-2">
@@ -219,6 +283,9 @@ const MasterProjectsTab = () => {
                       {editing && <ThemeMasterForm initial={editing} onClose={() => setEditing(null)} />}
                     </DialogContent>
                   </Dialog>
+                  <Button size="sm" variant="outline" onClick={() => setPublishing(t)} title="Publish new version">
+                    <Rocket className="h-3.5 w-3.5 text-primary" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { if (confirm(`Delete "${t.name}"?`)) remove.mutate(t.id); }}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
@@ -227,6 +294,9 @@ const MasterProjectsTab = () => {
             </Card>
           ))}
         </div>
+      )}
+      {publishing && (
+        <PublishVersionDialog theme={publishing} open={!!publishing} onOpenChange={(o) => !o && setPublishing(null)} />
       )}
     </div>
   );
