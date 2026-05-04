@@ -14,11 +14,10 @@ const StepTheme = ({ data, setData }: Props) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
-  const freeThemes = THEME_TEMPLATES.filter((t) => !t.isPremium);
-  const premiumThemes = THEME_TEMPLATES.filter((t) => t.isPremium);
+  // All themes are free during onboarding. Premium tier moves to dashboard.
+  const allThemes = THEME_TEMPLATES;
 
   const selectTheme = (theme: ThemeTemplate) => {
-    if (theme.isPremium) return;
     setData((d) => ({ ...d, selectedThemeId: theme.id }));
   };
 
@@ -34,11 +33,11 @@ const StepTheme = ({ data, setData }: Props) => {
         </p>
       </div>
 
-      {/* Free themes */}
+      {/* All themes — free during onboarding */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Free Themes</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">All Themes (Free)</p>
         <div className="grid grid-cols-2 gap-4">
-          {freeThemes.map((theme, i) => (
+          {allThemes.map((theme, i) => (
             <ThemeCard
               key={theme.id}
               theme={theme}
@@ -48,28 +47,10 @@ const StepTheme = ({ data, setData }: Props) => {
             />
           ))}
         </div>
+        <p className="text-xs text-center text-muted-foreground">
+          You can switch themes any time from the dashboard.
+        </p>
       </div>
-
-      {premiumThemes.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Premium Themes</p>
-          <div className="grid grid-cols-2 gap-4">
-            {premiumThemes.map((theme, i) => (
-              <ThemeCard
-                key={theme.id}
-                theme={theme}
-                selected={false}
-                onClick={() => {}}
-                locked
-                delay={i * 80 + 200}
-              />
-            ))}
-          </div>
-          <p className="text-xs text-center text-muted-foreground">
-            Premium themes can be unlocked from the dashboard after setup.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

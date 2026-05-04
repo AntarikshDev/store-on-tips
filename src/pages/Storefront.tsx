@@ -100,7 +100,11 @@ const Storefront = () => {
     </div>
   );
 
-  const theme = resolveTheme(store.theme);
+  const previewThemeId = searchParams.get('preview_theme');
+  const themeData = previewThemeId
+    ? { ...(store.theme as any), theme_id: previewThemeId, name: previewThemeId }
+    : store.theme;
+  const theme = resolveTheme(themeData);
   const { colors, fonts, borderRadius } = theme;
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = selectedCategory ? products.filter((p) => p.category === selectedCategory) : products;
