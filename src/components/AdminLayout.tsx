@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-// (Link/useLocation already imported above)
+import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard,
   Store,
