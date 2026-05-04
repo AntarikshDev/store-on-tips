@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Sparkles, Loader2, X, Save, Plus, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAICredits } from '@/hooks/useAICredits';
+import RechargeSheet from '@/components/wallet/RechargeSheet';
 
 const ProductForm = () => {
   const { id } = useParams();
@@ -55,6 +57,8 @@ const ProductForm = () => {
   const [highlights, setHighlights] = useState<string[]>([]);
   const [highlightInput, setHighlightInput] = useState('');
   const [descriptionTab, setDescriptionTab] = useState('plain');
+  const [rechargeOpen, setRechargeOpen] = useState(false);
+  const aiCredits = useAICredits({ onInsufficient: () => setRechargeOpen(true) });
 
   // Populate form for edit
   useEffect(() => {
@@ -90,10 +94,11 @@ const ProductForm = () => {
     if (images.length === 0) { toast.error('Upload at least one image to generate with AI'); return; }
     setAiLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-product', {
-        body: { imageUrl: images[0], category: category || store?.category, storeName: store?.name, productType, productHint: productHint || undefined },
+      const { data, insufficient } = await aiCredits.invoke<{ product: any }>('generate-product', {
+        imageUrl: images[0], category: category || store?.category, storeName: store?.name, productType, productHint: productHint || undefined,
       });
-      if (error) throw error;
+      if (insufficient) { setRechargeOpen(true); return; }
+      if (!data) return;
       const p = data.product;
       if (p.title) setTitle(p.title);
       if (p.description) setDescription(p.description);
@@ -175,6 +180,7 @@ const ProductForm = () => {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-20 md:pb-0">
+      <RechargeSheet open={rechargeOpen} onOpenChange={setRechargeOpen} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
