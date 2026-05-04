@@ -205,6 +205,7 @@ const MasterProjectsTab = () => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<ThemeMaster | null>(null);
   const [creating, setCreating] = useState(false);
+  const [publishing, setPublishing] = useState<ThemeMaster | null>(null);
 
   const { data: themes = [], isLoading } = useQuery({
     queryKey: ['admin-theme-masters'],
@@ -259,9 +260,12 @@ const MasterProjectsTab = () => {
                 </div>
               </div>
               <CardContent className="p-3 flex-1 flex flex-col gap-2">
-                <div>
-                  <h3 className="font-semibold text-sm">{t.name}</h3>
-                  <p className="text-[11px] text-muted-foreground capitalize">{t.category} · {t.theme_id}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-sm">{t.name}</h3>
+                    <p className="text-[11px] text-muted-foreground capitalize">{t.category} · {t.theme_id}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0">v{t.current_version}</Badge>
                 </div>
                 {t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
                 <div className="mt-auto flex gap-1.5 pt-2">
@@ -279,6 +283,9 @@ const MasterProjectsTab = () => {
                       {editing && <ThemeMasterForm initial={editing} onClose={() => setEditing(null)} />}
                     </DialogContent>
                   </Dialog>
+                  <Button size="sm" variant="outline" onClick={() => setPublishing(t)} title="Publish new version">
+                    <Rocket className="h-3.5 w-3.5 text-primary" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { if (confirm(`Delete "${t.name}"?`)) remove.mutate(t.id); }}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
@@ -287,6 +294,9 @@ const MasterProjectsTab = () => {
             </Card>
           ))}
         </div>
+      )}
+      {publishing && (
+        <PublishVersionDialog theme={publishing} open={!!publishing} onOpenChange={(o) => !o && setPublishing(null)} />
       )}
     </div>
   );
