@@ -181,73 +181,87 @@ const BlogPostForm = () => {
                 <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16} placeholder="Write your blog post content..." className="font-mono text-sm" />
               </div>
 
-              {/* Cover image — upload + URL */}
-              <div className="space-y-2">
-                <Label>Cover Image</Label>
-                {coverImage ? (
-                  <div className="relative w-full overflow-hidden rounded-lg border bg-muted">
-                    <img src={coverImage} alt="Cover preview" className="w-full max-h-64 object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setCoverImage('')}
-                      className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 shadow hover:bg-background"
-                      aria-label="Remove cover"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
+              {/* Image picker — reusable for both fields */}
+              {(['thumbnail', 'cover'] as const).map((field) => {
+                const value = field === 'cover' ? coverImage : thumbnailImage;
+                const setValue = field === 'cover' ? setCoverImage : setThumbnailImage;
+                const galleryRef = field === 'cover' ? coverGalleryRef : thumbGalleryRef;
+                const cameraRef = field === 'cover' ? coverCameraRef : thumbCameraRef;
+                const uploading = uploadingField === field;
+                const label = field === 'cover' ? 'Main Image (post hero)' : 'Thumbnail (blog listing)';
+                const hint = field === 'cover'
+                  ? 'Wide image shown at the top of the post. Recommended 1600×900.'
+                  : 'Square-ish image shown in the blog listing. Recommended 800×800. Falls back to main image if empty.';
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label>{label}</Label>
+                    <p className="text-xs text-muted-foreground">{hint}</p>
+                    {value ? (
+                      <div className="relative w-full overflow-hidden rounded-lg border bg-muted">
+                        <img src={value} alt={`${label} preview`} className="w-full max-h-64 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setValue('')}
+                          className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 shadow hover:bg-background"
+                          aria-label={`Remove ${label}`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        <label
+                          className={cn(
+                            'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/25 py-6 transition-colors hover:border-primary/50 hover:bg-accent/50',
+                            uploading && 'pointer-events-none opacity-60'
+                          )}
+                        >
+                          {uploading ? (
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          ) : (
+                            <>
+                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Upload from device</span>
+                            </>
+                          )}
+                          <input
+                            ref={galleryRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageFile(e.target.files?.[0], field)}
+                            disabled={uploading}
+                          />
+                        </label>
+                        <label
+                          className={cn(
+                            'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 py-6 transition-colors hover:bg-primary/10',
+                            uploading && 'pointer-events-none opacity-60'
+                          )}
+                        >
+                          <Camera className="h-5 w-5 text-primary" />
+                          <span className="text-xs font-medium text-primary">Use camera</span>
+                          <input
+                            ref={cameraRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => handleImageFile(e.target.files?.[0], field)}
+                            disabled={uploading}
+                          />
+                        </label>
+                      </div>
+                    )}
+                    <Input
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      placeholder="…or paste an image URL"
+                      className="text-xs"
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <label
-                      className={cn(
-                        'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/25 py-6 transition-colors hover:border-primary/50 hover:bg-accent/50',
-                        uploading && 'pointer-events-none opacity-60'
-                      )}
-                    >
-                      {uploading ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      ) : (
-                        <>
-                          <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">Upload from device</span>
-                        </>
-                      )}
-                      <input
-                        ref={galleryInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleCoverFile(e.target.files?.[0])}
-                        disabled={uploading}
-                      />
-                    </label>
-                    <label
-                      className={cn(
-                        'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 py-6 transition-colors hover:bg-primary/10',
-                        uploading && 'pointer-events-none opacity-60'
-                      )}
-                    >
-                      <Camera className="h-5 w-5 text-primary" />
-                      <span className="text-xs font-medium text-primary">Use camera</span>
-                      <input
-                        ref={cameraInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={(e) => handleCoverFile(e.target.files?.[0])}
-                        disabled={uploading}
-                      />
-                    </label>
-                  </div>
-                )}
-                <Input
-                  value={coverImage}
-                  onChange={(e) => setCoverImage(e.target.value)}
-                  placeholder="…or paste an image URL"
-                  className="text-xs"
-                />
-              </div>
+                );
+              })}
 
               <div className="flex items-center gap-3 pt-2">
                 <Switch checked={isPublished} onCheckedChange={setIsPublished} />
