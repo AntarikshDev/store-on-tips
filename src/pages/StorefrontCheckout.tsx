@@ -10,6 +10,7 @@ import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone, Tag, X }
 import { toast } from 'sonner';
 import PincodeChecker from '@/components/storefront/PincodeChecker';
 import SEOHead from '@/components/storefront/SEOHead';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 
 declare global {
   interface Window {
@@ -41,6 +42,13 @@ const StorefrontCheckout = () => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; code: string; discount: number } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const track = useTrackEvent();
+  useEffect(() => {
+    if (store?.id && items.length > 0) {
+      track({ store_id: store.id, event_type: 'checkout_start', value: totalPrice, metadata: { item_count: items.length } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.id]);
 
   const [form, setForm] = useState({
     name: '',
@@ -237,6 +245,7 @@ const StorefrontCheckout = () => {
               body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
             }).catch(() => {});
             clearCart();
+            track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: Number(order.total || totalPrice), metadata: { payment: 'razorpay' } });
             setOrderPlaced(order.order_number);
           } else {
             toast.error('Payment verification failed. Contact support.');
@@ -278,6 +287,7 @@ const StorefrontCheckout = () => {
         body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
       }).catch(() => {});
       clearCart();
+      track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: Number(order.total || totalPrice), metadata: { payment: 'cod' } });
       setOrderPlaced(order.order_number);
     } catch (err) {
       console.error(err);
