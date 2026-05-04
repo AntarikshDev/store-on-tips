@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Loader2, TrendingUp, AlertTriangle, CheckCircle2, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import PremiumGate from '@/components/PremiumGate';
+import ConversionFunnel from '@/components/dashboard/ConversionFunnel';
 
 interface EngagementReport {
   score: number;
@@ -81,6 +82,8 @@ const StoreAnalytics = () => {
           </Card>
         ))}
       </div>
+
+      {store && <ConversionFunnel storeId={store.id} days={30} />}
 
       {report && (
         <>
