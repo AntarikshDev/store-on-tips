@@ -77,12 +77,19 @@ const BlogPostForm = () => {
     setAiLoading(false);
   };
 
-  const handleCoverFile = async (file: File | null | undefined) => {
+  const handleImageFile = async (
+    file: File | null | undefined,
+    field: 'cover' | 'thumbnail'
+  ) => {
     if (!file) return;
     if (file.size > 30 * 1024 * 1024) { toast.error('Image must be under 30 MB'); return; }
-    setUploading(true);
+    setUploadingField(field);
     try {
-      const compressed = await compressImage(file, { maxWidth: 1600, maxHeight: 1600, maxSizeMB: 1.2 });
+      const compressed = await compressImage(file, {
+        maxWidth: field === 'thumbnail' ? 800 : 1600,
+        maxHeight: field === 'thumbnail' ? 800 : 1600,
+        maxSizeMB: field === 'thumbnail' ? 0.5 : 1.2,
+      });
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       const path = `${user.id}/blog/${crypto.randomUUID()}.jpg`;
@@ -91,15 +98,16 @@ const BlogPostForm = () => {
         .upload(path, compressed, { contentType: compressed.type, upsert: false });
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from('store-assets').getPublicUrl(path);
-      setCoverImage(publicUrl);
-      toast.success('Cover image uploaded');
+      if (field === 'cover') setCoverImage(publicUrl); else setThumbnailImage(publicUrl);
+      toast.success(`${field === 'cover' ? 'Main image' : 'Thumbnail'} uploaded`);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || 'Upload failed');
     } finally {
-      setUploading(false);
-      if (galleryInputRef.current) galleryInputRef.current.value = '';
-      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      setUploadingField(null);
+      [coverGalleryRef, coverCameraRef, thumbGalleryRef, thumbCameraRef].forEach(r => {
+        if (r.current) r.current.value = '';
+      });
     }
   };
 
