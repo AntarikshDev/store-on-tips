@@ -13,23 +13,24 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error('Missing API key');
 
     const isThumb = kind === 'thumbnail';
-    const aspectHint = isThumb
-      ? 'Square 1:1 composition, subject perfectly centered, balanced negative space on all sides — must work as a small thumbnail.'
-      : 'Wide cinematic 16:9 composition, hero-banner style with strong focal point on the right or left third. Leave breathing room for an overlay headline. Do NOT add any text, logos, watermarks, captions, or letters in the image.';
-
     const excerpt = (body || '').replace(/[#*_`>\-]/g, ' ').slice(0, 600);
 
-    const visualPrompt = `Editorial, high-end, photorealistic ${isThumb ? 'square thumbnail' : 'magazine cover image'} for a blog post.
+    // Two visually distinct compositions so cover and thumbnail never look identical.
+    const compositionBrief = isThumb
+      ? `SQUARE 1:1 thumbnail composition. Tight, intimate close-up framing — focus on a single hero detail (a textile pattern, a hand styling fabric, an accessory, a folded garment, or a still-life flat-lay). Subject centered, shallow depth of field, soft bokeh background. Different camera angle and focal length than a wide editorial banner: think 50–85mm portrait crop or overhead macro. Warm natural light, gallery-like negative space.`
+      : `WIDE 16:9 cinematic hero banner. Full editorial environmental scene — show the model or subject in context with rich background storytelling (architecture, garden, interior, market). Wide-angle composition (24–35mm look), subject placed on the left or right third, generous breathing room on the opposite side for an overlay headline. Golden-hour daylight, lifestyle magazine cover energy.`;
+
+    const visualPrompt = `Editorial, high-end, photorealistic image for a blog post — premium e-commerce magazine quality.
 
 Blog title: "${title}"
 Store: ${store_name || 'an online store'} (category: ${category || 'general'})
 Article context: ${excerpt}
 
-Style: premium e-commerce editorial photography, natural daylight, shallow depth of field, rich realistic colors, lifestyle composition relevant to the topic and category. Tasteful, brand-safe, no people staring at camera unless natural.
+${compositionBrief}
 
-${aspectHint}
+Style: rich realistic colors, natural daylight, lifestyle composition relevant to the topic and category, brand-safe, tasteful. ${isThumb ? 'Macro / detail / still-life mood — NOT a wide environmental scene.' : 'Environmental wide scene — NOT a tight macro crop.'}
 
-Absolutely no text, no captions, no typography, no watermark, no logo of any kind in the image. Pure imagery only.`;
+ABSOLUTE RULES: No text, no captions, no typography, no watermark, no logos, no letters, no numbers anywhere in the image. Pure photographic imagery only.`;
 
     const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
