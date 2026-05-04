@@ -366,8 +366,25 @@ const BlogPostForm = () => {
                 {seoDescription && (
                   <p className="text-lg text-muted-foreground italic">{seoDescription}</p>
                 )}
-                <div className="prose prose-sm md:prose-base max-w-none whitespace-pre-wrap text-foreground/90 leading-relaxed">
-                  {body || (
+                <div className="max-w-none text-foreground/90 leading-[1.85] text-[1.0625rem]">
+                  {body ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="mt-8 mb-4 text-3xl md:text-4xl font-semibold tracking-tight">{children}</h1>,
+                        h2: ({ children }) => <h2 className="mt-10 mb-3 text-2xl md:text-3xl font-semibold tracking-tight">{children}</h2>,
+                        h3: ({ children }) => <h3 className="mt-6 mb-2 text-xl font-semibold">{children}</h3>,
+                        p: ({ children }) => <p className="my-4">{children}</p>,
+                        ul: ({ children }) => <ul className="my-4 ml-6 list-disc space-y-2">{children}</ul>,
+                        ol: ({ children }) => <ol className="my-4 ml-6 list-decimal space-y-2">{children}</ol>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        blockquote: ({ children }) => <blockquote className="my-5 border-l-2 border-primary pl-4 italic opacity-80">{children}</blockquote>,
+                      }}
+                    >
+                      {body}
+                    </ReactMarkdown>
+                  ) : (
                     <span className="text-muted-foreground italic">
                       Start writing in the Edit tab to see the preview here.
                     </span>
