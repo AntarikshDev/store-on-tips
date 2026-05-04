@@ -8,31 +8,19 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from '@/components/ui/accordion';
 import themeFashion from '@/assets/theme-fashion.jpg';
 import themeFood from '@/assets/theme-food.jpg';
 import themeElectronics from '@/assets/theme-electronics.jpg';
 import themeBeauty from '@/assets/theme-beauty.jpg';
 import themeHandcraft from '@/assets/theme-handcraft.jpg';
 import themeBooks from '@/assets/theme-books.jpg';
-import flow01 from '@/assets/flow/01-signup.jpg';
-import flow02 from '@/assets/flow/02-onboarding.jpg';
-import flow03 from '@/assets/flow/03-products.jpg';
-import flow04 from '@/assets/flow/04-theme.jpg';
-import flow05 from '@/assets/flow/05-domain-payments.jpg';
-import flow06 from '@/assets/flow/06-golive.jpg';
-import flow07 from '@/assets/flow/07-grow.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
+import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
+import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 
-/* ─── Merchant journey: 7 steps from sign-up → first sale ─── */
-const merchantJourney = [
-  { step: '01', icon: Users,      title: 'Sign Up Free',           desc: 'Create your account in 30 seconds with email or Google. No credit card required.',                            image: flow01, accent: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50' },
-  { step: '02', icon: Store,      title: 'Tell Us About Your Store', desc: 'Pick a name, category and language. Our wizard guides you through 7 quick steps — no jargon.',             image: flow02, accent: 'from-orange-500 to-amber-500',     bg: 'bg-orange-50'  },
-  { step: '03', icon: Camera,     title: 'Snap & Add Products',     desc: 'Take a photo. AI generates the title, description, pricing and SEO tags. Edit if you want — or just publish.', image: flow03, accent: 'from-rose-500 to-pink-500',         bg: 'bg-rose-50'    },
-  { step: '04', icon: Palette,    title: 'Pick a Beautiful Theme',  desc: 'Choose from 50+ AI-crafted themes built for Indian shoppers. Customize colors, fonts, layout in clicks.',   image: flow04, accent: 'from-violet-500 to-indigo-500',    bg: 'bg-violet-50'  },
-  { step: '05', icon: Globe,      title: 'Connect Domain & Payments', desc: 'Bring your own domain (or use a free one), wire up Razorpay, UPI & COD. Verified in minutes.',           image: flow05, accent: 'from-sky-500 to-blue-500',          bg: 'bg-sky-50'     },
-  { step: '06', icon: Rocket,     title: 'Go Live',                 desc: 'Hit publish. Share your store link on WhatsApp, Instagram, Facebook — with one tap.',                       image: flow06, accent: 'from-fuchsia-500 to-purple-500',    bg: 'bg-fuchsia-50' },
-  { step: '07', icon: TrendingUp, title: 'Grow With Insights',      desc: 'Track orders, revenue and visitors. AI suggests coupons, abandoned-cart wins and theme upgrades weekly.',  image: flow07, accent: 'from-indigo-500 to-blue-600',       bg: 'bg-indigo-50'  },
-];
 
 /* ─── Intersection Observer hook for scroll animations ─── */
 const useScrollReveal = () => {
@@ -231,6 +219,13 @@ const LandingPage = () => {
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showcaseIdx, setShowcaseIdx] = useState(0);
+  const howItWorksRef = useRef<HTMLElement>(null);
+
+  // Track scroll depth on the 7-step section
+  useEffect(() => {
+    if (!howItWorksRef.current) return;
+    return observeScrollDepth(howItWorksRef.current, 'how-it-works');
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -415,15 +410,19 @@ const LandingPage = () => {
       </section>
 
       {/* ─── HOW IT WORKS ─── */}
-      <section id="how-it-works" className="py-20 sm:py-28 bg-gradient-to-b from-white via-slate-50 to-white">
+      <section
+        id="how-it-works"
+        ref={howItWorksRef}
+        className="py-16 sm:py-24 lg:py-28 bg-gradient-to-b from-white via-slate-50 to-white"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <RevealSection>
-            <div className="text-center mb-16">
+            <div className="text-center mb-12 sm:mb-16">
               <span className="inline-block px-4 py-1 rounded-full bg-orange-50 text-orange-600 text-sm font-semibold mb-4">The Merchant Journey</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4">
                 From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">7 Steps</span>
               </h2>
-              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
                 Every screen you'll see, in the order you'll see them. No surprises, no setup calls, no developer needed.
               </p>
             </div>
@@ -431,47 +430,52 @@ const LandingPage = () => {
 
           {/* Vertical alternating timeline */}
           <div className="relative">
-            {/* Spine */}
+            {/* Spine — desktop only */}
             <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent -translate-x-1/2" aria-hidden />
 
-            <div className="space-y-16 lg:space-y-24">
+            <div className="space-y-12 sm:space-y-16 lg:space-y-24">
               {merchantJourney.map((item, i) => {
                 const reverse = i % 2 === 1;
                 return (
                   <RevealSection key={item.step} delay={i * 60}>
-                    <div className={`grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
-                      {/* Copy */}
-                      <div className={`text-center lg:text-left ${reverse ? 'lg:text-right' : ''}`}>
-                        <div className={`inline-flex items-center gap-3 mb-4 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
-                          <div className={`h-12 w-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
-                            <item.icon className={`h-6 w-6 text-transparent bg-clip-text bg-gradient-to-br ${item.accent}`} style={{ stroke: 'url(#g)' }} />
-                            <item.icon className={`h-6 w-6 absolute ${item.accent.includes('emerald') ? 'text-emerald-600' : item.accent.includes('orange') ? 'text-orange-600' : item.accent.includes('rose') ? 'text-rose-600' : item.accent.includes('violet') ? 'text-violet-600' : item.accent.includes('sky') ? 'text-sky-600' : item.accent.includes('fuchsia') ? 'text-fuchsia-600' : 'text-indigo-600'}`} />
+                    <Link
+                      to="/how-it-works"
+                      onClick={() => trackMarketing({ event: 'journey_step_click', section: 'how-it-works', label: item.title, value: item.step })}
+                      className={`block group rounded-3xl -mx-2 sm:mx-0 p-2 sm:p-0 active:bg-slate-50 sm:active:bg-transparent transition-colors`}
+                    >
+                      <div className={`grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                        {/* Copy */}
+                        <div className={`text-center lg:text-left ${reverse ? 'lg:text-right' : ''}`}>
+                          <div className={`inline-flex items-center gap-3 mb-3 sm:mb-4 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+                            <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
+                              <item.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${item.iconText}`} />
+                            </div>
+                            <span className="text-xs sm:text-sm font-mono font-semibold text-slate-400">STEP {item.step}</span>
                           </div>
-                          <span className="text-sm font-mono font-semibold text-slate-400">STEP {item.step}</span>
+                          <h3 className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-slate-900 mb-3 sm:mb-4 leading-tight">
+                            {item.title}
+                          </h3>
+                          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0">
+                            {item.desc}
+                          </p>
                         </div>
-                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
-                          {item.title}
-                        </h3>
-                        <p className="text-lg text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0">
-                          {item.desc}
-                        </p>
-                      </div>
 
-                      {/* Screenshot */}
-                      <div className="relative group">
-                        <div className={`absolute -inset-4 bg-gradient-to-br ${item.accent} rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500`} />
-                        <div className="relative rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-2xl shadow-slate-900/10 bg-white transform transition-transform duration-500 group-hover:-translate-y-1">
-                          <img
-                            src={item.image}
-                            alt={`Step ${item.step}: ${item.title}`}
-                            width={1024}
-                            height={768}
-                            loading="lazy"
-                            className="w-full h-auto"
-                          />
+                        {/* Screenshot */}
+                        <div className="relative">
+                          <div className={`absolute -inset-3 sm:-inset-4 bg-gradient-to-br ${item.accent} rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500`} />
+                          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-xl sm:shadow-2xl shadow-slate-900/10 bg-white transform transition-transform duration-500 group-hover:-translate-y-1">
+                            <img
+                              src={item.image}
+                              alt={`Step ${item.step}: ${item.title}`}
+                              width={1024}
+                              height={768}
+                              loading="lazy"
+                              className="w-full h-auto"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </RevealSection>
                 );
               })}
@@ -480,13 +484,63 @@ const LandingPage = () => {
 
           {/* CTA at end of journey */}
           <RevealSection>
-            <div className="mt-20 text-center">
+            <div className="mt-14 sm:mt-20 text-center px-4">
               <Link to="/auth">
-                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-10 py-6 shadow-2xl shadow-orange-500/30">
+                <Button
+                  size="lg"
+                  onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'journey-end' })}
+                  className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 shadow-2xl shadow-orange-500/30 min-h-[52px]"
+                >
                   Start Your Journey — It's Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <p className="mt-4 text-sm text-slate-500">No credit card · Free forever plan · 5-minute setup</p>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-slate-500">
+                <span>No credit card · Free forever plan · 5-minute setup</span>
+              </div>
+              <Link
+                to="/how-it-works"
+                onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-full-walkthrough' })}
+                className="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                See full walkthrough <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </RevealSection>
+
+          {/* FAQ */}
+          <RevealSection>
+            <div id="faq" className="mt-20 sm:mt-28 max-w-3xl mx-auto">
+              <div className="text-center mb-8 sm:mb-10">
+                <span className="inline-block px-4 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-4">FAQs</span>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-3">
+                  Common questions before you sign up
+                </h2>
+                <p className="text-base text-slate-500">Pricing, payments, setup time — answered.</p>
+              </div>
+              <Accordion type="single" collapsible className="bg-white rounded-2xl border border-slate-200 px-2 sm:px-4 shadow-sm">
+                {merchantFAQs.slice(0, 6).map((f, i) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border-slate-100">
+                    <AccordionTrigger
+                      className="text-left text-base font-semibold text-slate-900 py-4 sm:py-5 hover:no-underline min-h-[52px]"
+                      onClick={() => trackMarketing({ event: 'faq_open', section: 'how-it-works', label: f.q })}
+                    >
+                      {f.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm sm:text-base text-slate-600 leading-relaxed pb-4 sm:pb-5">
+                      {f.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+              <div className="text-center mt-6">
+                <Link
+                  to="/how-it-works#faq"
+                  onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-all-faqs' })}
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                >
+                  See all questions <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </RevealSection>
         </div>
@@ -661,60 +715,115 @@ const LandingPage = () => {
             </div>
           </RevealSection>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free */}
-            <RevealSection delay={0}>
-              <div className="rounded-3xl border border-slate-200 p-8 bg-white hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-bold text-slate-900 mb-1">Free</h3>
-                <p className="text-slate-400 text-sm mb-6">Everything you need to start selling</p>
-                <div className="mb-8">
-                  <span className="text-5xl font-extrabold text-slate-900">₹0</span>
-                  <span className="text-slate-400 ml-2">/forever</span>
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                name: 'Free',
+                tagline: 'Get your store online today',
+                price: '₹0',
+                period: '/forever',
+                commission: '3% platform commission',
+                cta: 'Get Started Free',
+                ctaVariant: 'outline' as const,
+                highlight: false,
+                features: [
+                  'Up to 10 products',
+                  '1 free theme',
+                  'AI product generation',
+                  'COD & UPI payments',
+                  'WhatsApp share + free subdomain',
+                  'Order management',
+                ],
+              },
+              {
+                name: 'Starter',
+                tagline: 'For sellers ready to grow',
+                price: '₹499',
+                period: '/month',
+                commission: '2% platform commission',
+                cta: 'Start with Starter',
+                ctaVariant: 'default' as const,
+                highlight: true,
+                features: [
+                  'Up to 100 products',
+                  '3 themes (Free + Premium)',
+                  'Custom domain + SSL',
+                  'Razorpay payouts to your bank',
+                  'Shipping (Delhivery)',
+                  'Blog, coupons & SEO tools',
+                  'Branded emails + Analytics',
+                ],
+              },
+              {
+                name: 'Growth',
+                tagline: 'For serious brands scaling fast',
+                price: '₹1,499',
+                period: '/month',
+                commission: '1% platform commission · 14-day trial',
+                cta: 'Try Growth Free',
+                ctaVariant: 'default' as const,
+                highlight: false,
+                features: [
+                  'Up to 1,000 products',
+                  '10 themes incl. all premium',
+                  'Multi-domain support',
+                  'Advanced analytics + AI insights',
+                  'Abandoned-cart recovery',
+                  'Priority support',
+                  'Everything in Starter',
+                ],
+              },
+            ].map((p, i) => (
+              <RevealSection key={p.name} delay={i * 120}>
+                <div
+                  className={`h-full rounded-3xl p-7 sm:p-8 transition-shadow flex flex-col relative ${
+                    p.highlight
+                      ? 'border-2 border-indigo-500 bg-gradient-to-b from-indigo-50/50 to-white shadow-xl shadow-indigo-500/10'
+                      : 'border border-slate-200 bg-white hover:shadow-lg'
+                  }`}
+                >
+                  {p.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold whitespace-nowrap">
+                      Most Popular
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold text-slate-900 mb-1">{p.name}</h3>
+                  <p className="text-slate-400 text-sm mb-5">{p.tagline}</p>
+                  <div className="mb-3">
+                    <span className="text-4xl sm:text-5xl font-extrabold text-slate-900">{p.price}</span>
+                    <span className="text-slate-400 ml-2">{p.period}</span>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-500 mb-6">{p.commission}</p>
+                  <ul className="space-y-2.5 mb-8 flex-1">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-slate-600">
+                        <Check className={`h-4 w-4 shrink-0 mt-0.5 ${p.highlight ? 'text-indigo-500' : 'text-emerald-500'}`} />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/auth" className="block">
+                    <Button
+                      variant={p.ctaVariant}
+                      onClick={() => trackMarketing({ event: 'pricing_cta_click', section: 'pricing', label: p.name })}
+                      className={`w-full py-5 font-semibold min-h-[48px] ${
+                        p.highlight
+                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25'
+                          : p.ctaVariant === 'default'
+                            ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                            : 'border-slate-200 hover:border-indigo-300'
+                      }`}
+                    >
+                      {p.cta} {p.highlight && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                  </Link>
                 </div>
-                <ul className="space-y-3 mb-8">
-                  {['Unlimited products', 'AI product generation', 'Basic themes', 'Order management', 'WhatsApp sharing', 'COD & UPI payments'].map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-slate-600">
-                      <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/auth" className="block">
-                  <Button variant="outline" className="w-full py-5 font-semibold border-slate-200 hover:border-indigo-300">
-                    Get Started Free
-                  </Button>
-                </Link>
-              </div>
-            </RevealSection>
-
-            {/* Premium */}
-            <RevealSection delay={150}>
-              <div className="rounded-3xl border-2 border-indigo-500 p-8 bg-gradient-to-b from-indigo-50/50 to-white relative hover:shadow-xl transition-shadow">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">
-                  Most Popular
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-1">Premium</h3>
-                <p className="text-slate-400 text-sm mb-6">For serious sellers who want to grow fast</p>
-                <div className="mb-8">
-                  <span className="text-5xl font-extrabold text-slate-900">₹499</span>
-                  <span className="text-slate-400 ml-2">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {['Everything in Free', 'Custom domain', 'Premium AI themes', 'Advanced analytics', 'Priority support', 'Blog & SEO tools', 'Shipping integration', 'Coupon management'].map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-slate-600">
-                      <Check className="h-4 w-4 text-indigo-500 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/auth" className="block">
-                  <Button className="w-full py-5 font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25">
-                    Start Premium Trial <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </RevealSection>
+              </RevealSection>
+            ))}
           </div>
+          <p className="text-center text-sm text-slate-500 mt-8">
+            Need more? <Link to="/billing" className="font-semibold text-indigo-600 hover:underline">See our Scale plan (₹4,999, 0% commission)</Link>
+          </p>
         </div>
       </section>
 

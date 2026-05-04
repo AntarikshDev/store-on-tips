@@ -8,6 +8,7 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import LandingPage from "@/pages/LandingPage";
+import HowItWorks from "@/pages/HowItWorks";
 import Dashboard from "@/pages/Dashboard";
 import ProductList from "@/pages/ProductList";
 import ProductForm from "@/pages/ProductForm";
@@ -99,6 +100,7 @@ const AppRoutes = () => {
   return (
     <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
