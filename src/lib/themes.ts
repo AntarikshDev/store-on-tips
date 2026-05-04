@@ -92,8 +92,8 @@ export const THEME_TEMPLATES: ThemeTemplate[] = [
     name: 'Dark Luxe',
     description: 'Sophisticated dark theme with gold accents. Ideal for premium products.',
     category: 'elegant',
-    isPremium: true,
-    price: 500,
+    isPremium: false,
+    price: 0,
     colors: {
       primary: '#D4A853',
       secondary: '#1F2937',
@@ -132,8 +132,8 @@ export const THEME_TEMPLATES: ThemeTemplate[] = [
     name: 'Neon Pop',
     description: 'Bold, vibrant, eye-catching. Built for streetwear, gadgets, and Gen-Z brands.',
     category: 'bold',
-    isPremium: true,
-    price: 500,
+    isPremium: false,
+    price: 0,
     colors: {
       primary: '#E11D48',
       secondary: '#18181B',
@@ -152,8 +152,8 @@ export const THEME_TEMPLATES: ThemeTemplate[] = [
     name: 'Pastel Dream',
     description: 'Soft, calming pastels. Perfect for beauty, skincare, and handmade products.',
     category: 'playful',
-    isPremium: true,
-    price: 500,
+    isPremium: false,
+    price: 0,
     colors: {
       primary: '#A855F7',
       secondary: '#FAF5FF',
@@ -172,8 +172,8 @@ export const THEME_TEMPLATES: ThemeTemplate[] = [
     name: 'Classic Serif',
     description: 'Timeless, editorial look. Great for artisan, book, and craft stores.',
     category: 'elegant',
-    isPremium: true,
-    price: 500,
+    isPremium: false,
+    price: 0,
     colors: {
       primary: '#B45309',
       secondary: '#FFFBEB',
