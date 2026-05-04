@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Check, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { THEME_TEMPLATES } from '@/lib/themes';
 
 interface ThemeMaster {
   id: string;
@@ -14,10 +15,18 @@ interface ThemeMaster {
   description: string | null;
   category: string | null;
   preview_image: string | null;
-  lovable_project_url: string | null;
   is_default: boolean;
   is_active: boolean;
 }
+
+const swatchFor = (theme_id: string) => {
+  const t = THEME_TEMPLATES.find((x) => x.id === theme_id);
+  if (t) return [t.colors.primary, t.colors.secondary, t.colors.accent, t.colors.background];
+  // Bazaar / Marketplace fallback swatches
+  if (theme_id === 'bazaar') return ['#8B3A1F', '#F5E9D7', '#D4A853', '#FFFBF5'];
+  if (theme_id === 'marketplace') return ['#0F172A', '#F1F5F9', '#F97316', '#FFFFFF'];
+  return ['#F97316', '#F3F4F6', '#FED7AA', '#FFFFFF'];
+};
 
 const Themes = () => {
   const { store, setStore } = useStore();
@@ -39,45 +48,28 @@ const Themes = () => {
   const installTheme = async (theme: ThemeMaster) => {
     if (!store) return;
     try {
-      // 1) Update active theme on the store immediately for UI feedback
       const newTheme = { theme_id: theme.theme_id, name: theme.theme_id };
-      const { error: upErr } = await supabase
+      const { error } = await supabase
         .from('stores')
         .update({ theme: newTheme as any })
         .eq('id', store.id);
-      if (upErr) throw upErr;
-      setStore({ ...store, theme: newTheme as any });
-
-      // 2) Enqueue a provisioning request via edge function
-      const { data, error } = await supabase.functions.invoke('provision-storefront', {
-        body: {
-          store_id: store.id,
-          theme_master_id: theme.id,
-          client_patch_payload: {
-            store_name: store.name,
-            slug: store.slug,
-            store_id: store.id,
-            logo_url: store.logo_url || '',
-            primary: (store.theme as any)?.primary_color || '#F97316',
-            accent: (store.theme as any)?.colors?.accent || '#0EA5E9',
-          },
-        },
-      });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-
-      toast.success(`"${theme.name}" installed. Re-provisioning your storefront…`);
+      setStore({ ...store, theme: newTheme as any });
+      toast.success(`"${theme.name}" is now your active theme.`);
     } catch (e: any) {
-      toast.error(e.message || 'Install failed');
+      toast.error(e.message || 'Could not switch theme');
     }
   };
+
+  const previewUrl = (theme: ThemeMaster) =>
+    store ? `/store/${store.slug}?preview_theme=${theme.theme_id}` : '#';
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Themes</h1>
         <p className="text-sm text-muted-foreground">
-          Browse fully-functional storefront themes. Preview opens the live theme in a new tab.
+          All themes are free for every Pic to Cart store. Switch any time — your products and content stay intact.
         </p>
       </div>
 
@@ -96,14 +88,20 @@ const Themes = () => {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {themes.map((theme) => {
             const isActive = activeThemeId === theme.theme_id;
+            const swatches = swatchFor(theme.theme_id);
             return (
               <Card key={theme.id} className="overflow-hidden flex flex-col">
-                <div className="relative aspect-[4/3] bg-muted">
+                <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                   {theme.preview_image ? (
                     <img src={theme.preview_image} alt={theme.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                      <Sparkles className="h-10 w-10" />
+                    <div className="h-full w-full flex flex-col items-center justify-center gap-3" style={{ background: `linear-gradient(135deg, ${swatches[0]}22, ${swatches[2]}22)` }}>
+                      <div className="flex gap-1.5">
+                        {swatches.map((c, i) => (
+                          <div key={i} className="h-7 w-7 rounded-lg border border-white shadow-sm" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">{theme.name}</span>
                     </div>
                   )}
                   {isActive && (
@@ -128,8 +126,7 @@ const Themes = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      disabled={!theme.lovable_project_url}
-                      onClick={() => theme.lovable_project_url && window.open(theme.lovable_project_url, '_blank')}
+                      onClick={() => window.open(previewUrl(theme), '_blank')}
                     >
                       <ExternalLink className="mr-1 h-3.5 w-3.5" /> Live Preview
                     </Button>
@@ -139,7 +136,7 @@ const Themes = () => {
                       disabled={isActive}
                       onClick={() => installTheme(theme)}
                     >
-                      {isActive ? 'Installed' : 'Install'}
+                      {isActive ? 'Active' : 'Install'}
                     </Button>
                   </div>
                 </CardContent>
