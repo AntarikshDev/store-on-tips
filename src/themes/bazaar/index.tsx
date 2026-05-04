@@ -1,12 +1,14 @@
 import { tokens } from './tokens';
 import { BazaarHero } from './Hero';
 import { BazaarUSPStrip } from './sections/USPStrip';
+import { BazaarBlogStrip, type BlogStripPost } from './sections/BlogStrip';
 import { BazaarProductCard } from './ProductCard';
 
 interface Bundle {
-  store: { name: string; description?: string | null; logo_url?: string | null };
+  store: { name: string; slug: string; description?: string | null; logo_url?: string | null };
   content: Record<string, unknown>;
   products: { featured: Array<{ id: string; title: string; price: number; compare_at_price?: number | null; images?: string[] }> };
+  blog_recent?: BlogStripPost[];
 }
 
 /**
@@ -49,7 +51,7 @@ const BazaarTheme = ({ bundle }: { bundle: Bundle }) => {
       <BazaarHero content={hero as never} />
       <BazaarUSPStrip />
 
-      <section id="shop" className="mx-auto max-w-6xl px-6 py-16">
+      <section id="shop" className="mx-auto max-w-6xl px-6 py-16" style={{ scrollMarginTop: 80 }}>
         <h2
           className="mb-8 text-3xl md:text-4xl"
           style={{ fontFamily: tokens.fonts.heading }}
@@ -62,6 +64,8 @@ const BazaarTheme = ({ bundle }: { bundle: Bundle }) => {
           ))}
         </div>
       </section>
+
+      <BazaarBlogStrip posts={bundle.blog_recent ?? []} storeSlug={bundle.store.slug} />
 
       <footer className="mt-16 border-t" style={{ borderColor: tokens.colors.border }}>
         <div className="mx-auto max-w-6xl px-6 py-10 text-sm" style={{ color: tokens.colors.muted }}>

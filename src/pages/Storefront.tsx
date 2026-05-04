@@ -3,6 +3,7 @@ import { generateDefaultSections } from '@/lib/defaultSections';
 import { useParams, Link } from 'react-router-dom';
 import { X, ArrowUp } from 'lucide-react';
 import { useStorefront } from '@/hooks/useStorefront';
+import { useStorefrontBundle } from '@/hooks/useStorefrontBundle';
 import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
@@ -13,6 +14,7 @@ import ProductShareButtons from '@/components/storefront/ProductShareButtons';
 import AnimatedSection from '@/components/storefront/AnimatedSection';
 import WishlistButton from '@/components/storefront/WishlistButton';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import { THEMES, ThemeRenderer } from '@/themes';
 
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
@@ -106,6 +108,12 @@ const Storefront = () => {
     : store.theme;
   const theme = resolveTheme(themeData);
   const { colors, fonts, borderRadius } = theme;
+
+  // If the resolved theme has a dedicated React theme component (bazaar, etc),
+  // render via ThemeRenderer using the storefront bundle. Falls back to the
+  // generic section renderer below when the theme_id isn't registered.
+  const resolvedThemeId = String((themeData as any)?.theme_id ?? (themeData as any)?.name ?? '');
+  const hasDedicatedTheme = resolvedThemeId in THEMES;
   const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = selectedCategory ? products.filter((p) => p.category === selectedCategory) : products;
   const settings = (store.settings || {}) as any;
@@ -372,6 +380,11 @@ const Storefront = () => {
     }
   };
 
+  // Dedicated React theme path (bazaar, etc) — short-circuit and render via ThemeRenderer.
+  if (hasDedicatedTheme) {
+    return <DedicatedThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} />;
+  }
+
   return (
     <StorefrontLayout store={store} products={products} footerConfig={footerConfig}>
       <SEOHead title={seo.meta_title || store.name} description={seo.meta_description || store.description || `Shop at ${store.name}`} ogImage={seo.og_image || store.banner_url || undefined} url={`${window.location.origin}/store/${slug}`} />
@@ -424,6 +437,28 @@ const Storefront = () => {
         )}
       </section>
     </StorefrontLayout>
+  );
+};
+
+/**
+ * Renders a registered React theme (e.g. bazaar) using the storefront bundle.
+ * Lives outside Storefront() because it needs its own React Query call (rules of hooks).
+ */
+const DedicatedThemeView = ({ slug, themeId, seo, store }: { slug: string; themeId: string; seo: any; store: any }) => {
+  const { data: bundle, isLoading } = useStorefrontBundle({ slug });
+  if (isLoading || !bundle) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+  return (
+    <>
+      <SEOHead
+        title={seo.meta_title || store.name}
+        description={seo.meta_description || store.description || `Shop at ${store.name}`}
+        ogImage={seo.og_image || store.banner_url || undefined}
+        url={`${window.location.origin}/store/${slug}`}
+      />
+      <ThemeRenderer themeId={themeId} bundle={bundle} />
+    </>
   );
 };
 
