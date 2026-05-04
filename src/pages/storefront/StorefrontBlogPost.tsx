@@ -1,4 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useBlogPost } from '@/hooks/useBlogPosts';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
