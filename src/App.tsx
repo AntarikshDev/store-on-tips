@@ -54,6 +54,7 @@ import ThemePreview from "@/pages/ThemePreview";
 import Themes from "@/pages/Themes";
 import EmailBrandingSettings from "@/pages/EmailBrandingSettings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Unsubscribe from "@/pages/Unsubscribe";
 import TermsOfService from "@/pages/TermsOfService";
 import RefundPolicy from "@/pages/RefundPolicy";
 import Billing from "@/pages/Billing";
