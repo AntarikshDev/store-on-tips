@@ -245,7 +245,7 @@ const StorefrontCheckout = () => {
               body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
             }).catch(() => {});
             clearCart();
-            track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: Number(order.total || totalPrice), metadata: { payment: 'razorpay' } });
+            track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'razorpay' } });
             setOrderPlaced(order.order_number);
           } else {
             toast.error('Payment verification failed. Contact support.');
@@ -287,7 +287,7 @@ const StorefrontCheckout = () => {
         body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
       }).catch(() => {});
       clearCart();
-      track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: Number(order.total || totalPrice), metadata: { payment: 'cod' } });
+      track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'cod' } });
       setOrderPlaced(order.order_number);
     } catch (err) {
       console.error(err);
