@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Sparkles, Loader2, X, Save, Plus, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAICredits } from '@/hooks/useAICredits';
+import RechargeSheet from '@/components/wallet/RechargeSheet';
 
 const ProductForm = () => {
   const { id } = useParams();
@@ -55,6 +57,8 @@ const ProductForm = () => {
   const [highlights, setHighlights] = useState<string[]>([]);
   const [highlightInput, setHighlightInput] = useState('');
   const [descriptionTab, setDescriptionTab] = useState('plain');
+  const [rechargeOpen, setRechargeOpen] = useState(false);
+  const aiCredits = useAICredits({ onInsufficient: () => setRechargeOpen(true) });
 
   // Populate form for edit
   useEffect(() => {
