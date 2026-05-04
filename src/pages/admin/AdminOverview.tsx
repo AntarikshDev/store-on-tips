@@ -61,7 +61,74 @@ const AdminOverview = () => {
           ))}
         </div>
       )}
+
+      <PlatformFunnel />
     </div>
+  );
+};
+
+const PlatformFunnel = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['platform-funnel'],
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 30);
+      const sinceISO = since.toISOString();
+
+      const [signupsRes, storesRes, publishedRes, ordersRes] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sinceISO),
+        supabase.from('stores').select('id', { count: 'exact', head: true }).gte('created_at', sinceISO),
+        supabase.from('stores').select('id', { count: 'exact', head: true }).eq('is_published', true).gte('created_at', sinceISO),
+        supabase.from('orders').select('store_id').gte('created_at', sinceISO),
+      ]);
+
+      const storesWithSale = new Set((ordersRes.data || []).map((o: any) => o.store_id));
+
+      return {
+        signups: signupsRes.count || 0,
+        stores: storesRes.count || 0,
+        published: publishedRes.count || 0,
+        firstSale: storesWithSale.size,
+      };
+    },
+  });
+
+  const stages = [
+    { label: 'Signed Up', value: data?.signups ?? 0 },
+    { label: 'Created Store', value: data?.stores ?? 0 },
+    { label: 'Published Store', value: data?.published ?? 0 },
+    { label: 'First Sale', value: data?.firstSale ?? 0 },
+  ];
+  const top = stages[0].value || 1;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Platform Activation Funnel — Last 30 days</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+        ) : stages.map((s, i) => {
+          const pct = Math.max(2, (s.value / top) * 100);
+          const conv = i > 0 ? ((s.value / Math.max(stages[i - 1].value, 1)) * 100).toFixed(1) : null;
+          return (
+            <div key={s.label} className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{s.label}</span>
+                <span className="tabular-nums">
+                  <strong>{s.value.toLocaleString('en-IN')}</strong>
+                  {conv && <span className="ml-2 text-xs text-muted-foreground">{conv}%</span>}
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 };
 
