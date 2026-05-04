@@ -1,4 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useBlogPost } from '@/hooks/useBlogPosts';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
@@ -42,8 +44,71 @@ const StorefrontBlogPost = () => {
           <ShareButton title={post.title} url={`${window.location.origin}/store/${slug}/blog/${postSlug}`} colors={colors} borderRadius={borderRadius} />
         </div>
 
-        <div className="prose prose-sm max-w-none" style={{ color: colors.text, fontFamily: fonts.body }}>
-          {post.body.split('\n').map((para, i) => para.trim() ? <p key={i}>{para}</p> : <br key={i} />)}
+        <div
+          className="max-w-none leading-[1.85] text-[1.0625rem]"
+          style={{ color: colors.text, fontFamily: fonts.body }}
+        >
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ children }) => (
+                <h1
+                  className="mt-10 mb-5 text-3xl md:text-4xl font-semibold leading-tight tracking-tight"
+                  style={{ fontFamily: fonts.heading, color: colors.text }}
+                >
+                  {children}
+                </h1>
+              ),
+              h2: ({ children }) => (
+                <h2
+                  className="mt-12 mb-4 text-2xl md:text-3xl font-semibold leading-snug tracking-tight"
+                  style={{ fontFamily: fonts.heading, color: colors.text }}
+                >
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => (
+                <h3
+                  className="mt-8 mb-3 text-xl md:text-2xl font-semibold"
+                  style={{ fontFamily: fonts.heading, color: colors.text }}
+                >
+                  {children}
+                </h3>
+              ),
+              p: ({ children }) => <p className="my-5">{children}</p>,
+              ul: ({ children }) => <ul className="my-5 ml-6 list-disc space-y-2">{children}</ul>,
+              ol: ({ children }) => <ol className="my-5 ml-6 list-decimal space-y-2">{children}</ol>,
+              li: ({ children }) => <li className="leading-[1.8]">{children}</li>,
+              strong: ({ children }) => (
+                <strong className="font-semibold" style={{ color: colors.text }}>{children}</strong>
+              ),
+              em: ({ children }) => <em className="italic opacity-90">{children}</em>,
+              blockquote: ({ children }) => (
+                <blockquote
+                  className="my-6 border-l-2 pl-5 italic opacity-80"
+                  style={{ borderColor: colors.primary, fontFamily: fonts.heading }}
+                >
+                  {children}
+                </blockquote>
+              ),
+              a: ({ children, href }) => (
+                <a href={href} className="underline underline-offset-4 hover:opacity-70" style={{ color: colors.primary }}>
+                  {children}
+                </a>
+              ),
+              hr: () => <hr className="my-10 opacity-20" />,
+              img: ({ src, alt }) => (
+                <img src={src} alt={alt || ''} className="w-full my-8" style={{ borderRadius: `${borderRadius}px` }} />
+              ),
+              code: ({ children }) => (
+                <code className="px-1.5 py-0.5 rounded text-sm" style={{ background: `${colors.primary}15` }}>
+                  {children}
+                </code>
+              ),
+            }}
+          >
+            {post.body}
+          </ReactMarkdown>
         </div>
       </article>
     </StorefrontLayout>
