@@ -13,7 +13,7 @@ declare global {
   interface Window { Razorpay: any; }
 }
 
-const RAZORPAY_KEY_ID = 'rzp_test_SlF6JsCqM0XzQJ';
+// Razorpay key ID is returned by the create-razorpay-subscription edge function (sourced from RAZORPAY_KEY_ID secret)
 
 const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
   { key: 'product_limit',      label: 'Products' },
