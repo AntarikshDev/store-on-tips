@@ -72,12 +72,58 @@ const BlogPostForm = () => {
       });
       if (error) throw error;
       if (data?.body) setBody(data.body);
+      if (data?.seo_title) setSeoTitle(data.seo_title);
       if (data?.seo_description) setSeoDescription(data.seo_description);
+      if (Array.isArray(data?.tags)) setTags(data.tags);
+      if (data?.image_prompt) setImagePromptHint(data.image_prompt);
       toast.success('Blog content generated!');
     } catch {
       toast.error('AI generation failed');
     }
     setAiLoading(false);
+  };
+
+  const handleAIGenerateImage = async (field: 'cover' | 'thumbnail') => {
+    if (!title) { toast.error('Enter a title first'); return; }
+    setAiImageField(field);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-blog-image', {
+        body: {
+          title,
+          body: imagePromptHint || body,
+          store_name: store?.name,
+          category: store?.category,
+          kind: field === 'cover' ? 'cover' : 'thumbnail',
+        },
+      });
+      if (error) throw error;
+      const dataUrl: string | undefined = data?.image;
+      if (!dataUrl) throw new Error('No image returned');
+
+      // Convert data URL → File → compress → upload to storage
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `ai-${field}.png`, { type: blob.type || 'image/png' });
+      const compressed = await compressImage(file, {
+        maxWidth: field === 'thumbnail' ? 800 : 1600,
+        maxHeight: field === 'thumbnail' ? 800 : 900,
+        maxSizeMB: field === 'thumbnail' ? 0.5 : 1.2,
+      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const path = `${user.id}/blog/${crypto.randomUUID()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from('store-assets')
+        .upload(path, compressed, { contentType: compressed.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('store-assets').getPublicUrl(path);
+      if (field === 'cover') setCoverImage(publicUrl); else setThumbnailImage(publicUrl);
+      toast.success(`AI ${field === 'cover' ? 'main image' : 'thumbnail'} generated!`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || 'AI image generation failed');
+    } finally {
+      setAiImageField(null);
+    }
   };
 
   const handleImageFile = async (
