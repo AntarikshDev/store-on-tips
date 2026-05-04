@@ -403,15 +403,19 @@ const LandingPage = () => {
       </section>
 
       {/* ─── HOW IT WORKS ─── */}
-      <section id="how-it-works" className="py-20 sm:py-28 bg-gradient-to-b from-white via-slate-50 to-white">
+      <section
+        id="how-it-works"
+        ref={howItWorksRef}
+        className="py-16 sm:py-24 lg:py-28 bg-gradient-to-b from-white via-slate-50 to-white"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <RevealSection>
-            <div className="text-center mb-16">
+            <div className="text-center mb-12 sm:mb-16">
               <span className="inline-block px-4 py-1 rounded-full bg-orange-50 text-orange-600 text-sm font-semibold mb-4">The Merchant Journey</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4">
                 From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">7 Steps</span>
               </h2>
-              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
                 Every screen you'll see, in the order you'll see them. No surprises, no setup calls, no developer needed.
               </p>
             </div>
@@ -419,47 +423,52 @@ const LandingPage = () => {
 
           {/* Vertical alternating timeline */}
           <div className="relative">
-            {/* Spine */}
+            {/* Spine — desktop only */}
             <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent -translate-x-1/2" aria-hidden />
 
-            <div className="space-y-16 lg:space-y-24">
+            <div className="space-y-12 sm:space-y-16 lg:space-y-24">
               {merchantJourney.map((item, i) => {
                 const reverse = i % 2 === 1;
                 return (
                   <RevealSection key={item.step} delay={i * 60}>
-                    <div className={`grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
-                      {/* Copy */}
-                      <div className={`text-center lg:text-left ${reverse ? 'lg:text-right' : ''}`}>
-                        <div className={`inline-flex items-center gap-3 mb-4 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
-                          <div className={`h-12 w-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
-                            <item.icon className={`h-6 w-6 text-transparent bg-clip-text bg-gradient-to-br ${item.accent}`} style={{ stroke: 'url(#g)' }} />
-                            <item.icon className={`h-6 w-6 absolute ${item.accent.includes('emerald') ? 'text-emerald-600' : item.accent.includes('orange') ? 'text-orange-600' : item.accent.includes('rose') ? 'text-rose-600' : item.accent.includes('violet') ? 'text-violet-600' : item.accent.includes('sky') ? 'text-sky-600' : item.accent.includes('fuchsia') ? 'text-fuchsia-600' : 'text-indigo-600'}`} />
+                    <Link
+                      to="/how-it-works"
+                      onClick={() => trackMarketing({ event: 'journey_step_click', section: 'how-it-works', label: item.title, value: item.step })}
+                      className={`block group rounded-3xl -mx-2 sm:mx-0 p-2 sm:p-0 active:bg-slate-50 sm:active:bg-transparent transition-colors`}
+                    >
+                      <div className={`grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                        {/* Copy */}
+                        <div className={`text-center lg:text-left ${reverse ? 'lg:text-right' : ''}`}>
+                          <div className={`inline-flex items-center gap-3 mb-3 sm:mb-4 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+                            <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
+                              <item.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${item.iconText}`} />
+                            </div>
+                            <span className="text-xs sm:text-sm font-mono font-semibold text-slate-400">STEP {item.step}</span>
                           </div>
-                          <span className="text-sm font-mono font-semibold text-slate-400">STEP {item.step}</span>
+                          <h3 className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-slate-900 mb-3 sm:mb-4 leading-tight">
+                            {item.title}
+                          </h3>
+                          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0">
+                            {item.desc}
+                          </p>
                         </div>
-                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
-                          {item.title}
-                        </h3>
-                        <p className="text-lg text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0">
-                          {item.desc}
-                        </p>
-                      </div>
 
-                      {/* Screenshot */}
-                      <div className="relative group">
-                        <div className={`absolute -inset-4 bg-gradient-to-br ${item.accent} rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500`} />
-                        <div className="relative rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-2xl shadow-slate-900/10 bg-white transform transition-transform duration-500 group-hover:-translate-y-1">
-                          <img
-                            src={item.image}
-                            alt={`Step ${item.step}: ${item.title}`}
-                            width={1024}
-                            height={768}
-                            loading="lazy"
-                            className="w-full h-auto"
-                          />
+                        {/* Screenshot */}
+                        <div className="relative">
+                          <div className={`absolute -inset-3 sm:-inset-4 bg-gradient-to-br ${item.accent} rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500`} />
+                          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-xl sm:shadow-2xl shadow-slate-900/10 bg-white transform transition-transform duration-500 group-hover:-translate-y-1">
+                            <img
+                              src={item.image}
+                              alt={`Step ${item.step}: ${item.title}`}
+                              width={1024}
+                              height={768}
+                              loading="lazy"
+                              className="w-full h-auto"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </RevealSection>
                 );
               })}
@@ -468,13 +477,63 @@ const LandingPage = () => {
 
           {/* CTA at end of journey */}
           <RevealSection>
-            <div className="mt-20 text-center">
+            <div className="mt-14 sm:mt-20 text-center px-4">
               <Link to="/auth">
-                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-10 py-6 shadow-2xl shadow-orange-500/30">
+                <Button
+                  size="lg"
+                  onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'journey-end' })}
+                  className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 shadow-2xl shadow-orange-500/30 min-h-[52px]"
+                >
                   Start Your Journey — It's Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <p className="mt-4 text-sm text-slate-500">No credit card · Free forever plan · 5-minute setup</p>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-slate-500">
+                <span>No credit card · Free forever plan · 5-minute setup</span>
+              </div>
+              <Link
+                to="/how-it-works"
+                onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-full-walkthrough' })}
+                className="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                See full walkthrough <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </RevealSection>
+
+          {/* FAQ */}
+          <RevealSection>
+            <div id="faq" className="mt-20 sm:mt-28 max-w-3xl mx-auto">
+              <div className="text-center mb-8 sm:mb-10">
+                <span className="inline-block px-4 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-4">FAQs</span>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-3">
+                  Common questions before you sign up
+                </h2>
+                <p className="text-base text-slate-500">Pricing, payments, setup time — answered.</p>
+              </div>
+              <Accordion type="single" collapsible className="bg-white rounded-2xl border border-slate-200 px-2 sm:px-4 shadow-sm">
+                {merchantFAQs.slice(0, 6).map((f, i) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border-slate-100">
+                    <AccordionTrigger
+                      className="text-left text-base font-semibold text-slate-900 py-4 sm:py-5 hover:no-underline min-h-[52px]"
+                      onClick={() => trackMarketing({ event: 'faq_open', section: 'how-it-works', label: f.q })}
+                    >
+                      {f.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm sm:text-base text-slate-600 leading-relaxed pb-4 sm:pb-5">
+                      {f.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+              <div className="text-center mt-6">
+                <Link
+                  to="/how-it-works#faq"
+                  onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-all-faqs' })}
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                >
+                  See all questions <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </RevealSection>
         </div>
