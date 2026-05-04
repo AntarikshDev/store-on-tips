@@ -34,6 +34,9 @@ const BlogPostForm = () => {
   const [seoDescription, setSeoDescription] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [uploadingField, setUploadingField] = useState<'cover' | 'thumbnail' | null>(null);
+  const [aiImageField, setAiImageField] = useState<'cover' | 'thumbnail' | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [imagePromptHint, setImagePromptHint] = useState<string>('');
   const coverGalleryRef = useRef<HTMLInputElement>(null);
   const coverCameraRef = useRef<HTMLInputElement>(null);
   const thumbGalleryRef = useRef<HTMLInputElement>(null);
