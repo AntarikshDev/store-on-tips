@@ -415,39 +415,80 @@ const LandingPage = () => {
       </section>
 
       {/* ─── HOW IT WORKS ─── */}
-      <section id="how-it-works" className="py-20 sm:py-28 bg-white">
+      <section id="how-it-works" className="py-20 sm:py-28 bg-gradient-to-b from-white via-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <RevealSection>
             <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-4">Simple as 1-2-3</span>
+              <span className="inline-block px-4 py-1 rounded-full bg-orange-50 text-orange-600 text-sm font-semibold mb-4">The Merchant Journey</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4">
-                How It Works
+                From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">7 Steps</span>
               </h2>
               <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-                From photo to online store in under 5 minutes. No technical skills needed.
+                Every screen you'll see, in the order you'll see them. No surprises, no setup calls, no developer needed.
               </p>
             </div>
           </RevealSection>
 
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              { icon: Camera, color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50', title: 'Snap a Photo', desc: 'Take a photo of your product. That\'s it. Our AI takes over from here.', step: '01' },
-              { icon: Sparkles, color: 'from-violet-500 to-indigo-600', bgColor: 'bg-violet-50', title: 'AI Creates Everything', desc: 'Product title, description, pricing suggestions, SEO tags — all generated instantly.', step: '02' },
-              { icon: Rocket, color: 'from-indigo-500 to-blue-600', bgColor: 'bg-indigo-50', title: 'Go Live Instantly', desc: 'Your store is live. Share the link on WhatsApp, Instagram, anywhere. Start selling!', step: '03' },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 150}>
-                <div className="group relative bg-white rounded-2xl p-8 border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all duration-300 text-center">
-                  <div className="text-6xl font-black text-slate-50 absolute top-4 right-6 group-hover:text-slate-100 transition-colors">{item.step}</div>
-                  <div className={`inline-flex h-16 w-16 rounded-2xl ${item.bgColor} items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <item.icon className={`h-8 w-8 bg-gradient-to-br ${item.color} bg-clip-text`} style={{ color: 'transparent', WebkitBackgroundClip: 'text', backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to))` }} />
-                    <item.icon className={`h-8 w-8 text-${item.color.includes('emerald') ? 'emerald' : item.color.includes('violet') ? 'violet' : 'indigo'}-600 absolute`} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
-                  <p className="text-slate-500 leading-relaxed">{item.desc}</p>
-                </div>
-              </RevealSection>
-            ))}
+          {/* Vertical alternating timeline */}
+          <div className="relative">
+            {/* Spine */}
+            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent -translate-x-1/2" aria-hidden />
+
+            <div className="space-y-16 lg:space-y-24">
+              {merchantJourney.map((item, i) => {
+                const reverse = i % 2 === 1;
+                return (
+                  <RevealSection key={item.step} delay={i * 60}>
+                    <div className={`grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                      {/* Copy */}
+                      <div className={`text-center lg:text-left ${reverse ? 'lg:text-right' : ''}`}>
+                        <div className={`inline-flex items-center gap-3 mb-4 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+                          <div className={`h-12 w-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
+                            <item.icon className={`h-6 w-6 text-transparent bg-clip-text bg-gradient-to-br ${item.accent}`} style={{ stroke: 'url(#g)' }} />
+                            <item.icon className={`h-6 w-6 absolute ${item.accent.includes('emerald') ? 'text-emerald-600' : item.accent.includes('orange') ? 'text-orange-600' : item.accent.includes('rose') ? 'text-rose-600' : item.accent.includes('violet') ? 'text-violet-600' : item.accent.includes('sky') ? 'text-sky-600' : item.accent.includes('fuchsia') ? 'text-fuchsia-600' : 'text-indigo-600'}`} />
+                          </div>
+                          <span className="text-sm font-mono font-semibold text-slate-400">STEP {item.step}</span>
+                        </div>
+                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
+                          {item.title}
+                        </h3>
+                        <p className="text-lg text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0">
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      {/* Screenshot */}
+                      <div className="relative group">
+                        <div className={`absolute -inset-4 bg-gradient-to-br ${item.accent} rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500`} />
+                        <div className="relative rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-2xl shadow-slate-900/10 bg-white transform transition-transform duration-500 group-hover:-translate-y-1">
+                          <img
+                            src={item.image}
+                            alt={`Step ${item.step}: ${item.title}`}
+                            width={1024}
+                            height={768}
+                            loading="lazy"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </RevealSection>
+                );
+              })}
+            </div>
           </div>
+
+          {/* CTA at end of journey */}
+          <RevealSection>
+            <div className="mt-20 text-center">
+              <Link to="/auth">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-10 py-6 shadow-2xl shadow-orange-500/30">
+                  Start Your Journey — It's Free <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <p className="mt-4 text-sm text-slate-500">No credit card · Free forever plan · 5-minute setup</p>
+            </div>
+          </RevealSection>
         </div>
       </section>
 
