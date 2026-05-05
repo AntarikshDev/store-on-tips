@@ -194,6 +194,33 @@ const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; 
         <Label className="text-xs">Client Patch Prompt (sent to provisioning worker)</Label>
         <Textarea value={form.client_patch_prompt || ''} onChange={(e) => setForm({ ...form, client_patch_prompt: e.target.value })} className="h-20 font-mono text-xs" />
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Price (₹) — set 0 for free</Label>
+          <Input
+            type="number"
+            min={0}
+            value={form.price ?? 0}
+            onChange={(e) => setForm({ ...form, price: e.target.value === '' ? 0 : Number(e.target.value) })}
+            placeholder="499"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Compare-at price (₹) — strikethrough for discount</Label>
+          <Input
+            type="number"
+            min={0}
+            value={form.compare_at_price ?? ''}
+            onChange={(e) => setForm({ ...form, compare_at_price: e.target.value === '' ? null : Number(e.target.value) as any })}
+            placeholder="999"
+          />
+        </div>
+      </div>
+      {form.compare_at_price && Number(form.compare_at_price) > Number(form.price ?? 0) && (
+        <p className="text-[11px] text-emerald-600">
+          Discount: {Math.round((1 - Number(form.price ?? 0) / Number(form.compare_at_price)) * 100)}% off
+        </p>
+      )}
       <div className="flex items-center gap-6 pt-2">
         <label className="flex items-center gap-2 text-xs">
           <Switch checked={form.is_active ?? true} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
