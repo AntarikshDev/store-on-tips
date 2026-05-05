@@ -20,6 +20,7 @@ import themeBooks from '@/assets/theme-books.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
 import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
+import { captureReferralFromUrl } from '@/lib/referralCookie';
 
 
 /* ─── Intersection Observer hook for scroll animations ─── */
@@ -220,6 +221,9 @@ const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showcaseIdx, setShowcaseIdx] = useState(0);
   const howItWorksRef = useRef<HTMLElement>(null);
+
+  // Capture ?ref=CODE referral on first landing
+  useEffect(() => { captureReferralFromUrl(); }, []);
 
   // Track scroll depth on the 7-step section
   useEffect(() => {
