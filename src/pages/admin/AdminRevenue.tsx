@@ -61,6 +61,12 @@ const AdminRevenue = () => {
       const themeRevenue = packs.reduce((s: number, p: any) => s + Number(p.price) * Number(p.sales_count || 0), 0);
       const aiCost = packs.reduce((s: number, p: any) => s + Number(p.ai_generation_cost || 0), 0);
 
+      // ---- AI credit pack recharges (pure platform revenue)
+      const creditTx = (creditTxRes.data || []) as any[];
+      const creditRevenue = creditTx
+        .filter((t) => t.type === 'credit')
+        .reduce((s, t) => s + Number(t.inr_value || 0), 0);
+
       // last 30d
       const since = Date.now() - 30 * 86400000;
       const ordersThisMonth = paidOrders.filter((o) => new Date(o.created_at).getTime() >= since);
@@ -77,10 +83,13 @@ const AdminRevenue = () => {
           const pk: any = packs.find((x: any) => x.id === p.theme_pack_id);
           return sum + (pk ? Number(pk.price) : 0);
         }, 0);
+      const creditRevMonth = creditTx
+        .filter((t) => t.type === 'credit' && new Date(t.created_at).getTime() >= since)
+        .reduce((s, t) => s + Number(t.inr_value || 0), 0);
 
-      const grossMonthly = mrr + commissionMonth + themeRevMonth;
-      const netMonthly = grossMonthly - aiCost; // AI cost is one-time, conservative
-      const grossLifetime = commission + themeRevenue + mrr; // mrr just snapshot
+      const grossMonthly = mrr + commissionMonth + themeRevMonth + creditRevMonth;
+      const netMonthly = grossMonthly - aiCost;
+      const grossLifetime = commission + themeRevenue + mrr + creditRevenue;
       const netLifetime = grossLifetime - aiCost;
 
       return {
