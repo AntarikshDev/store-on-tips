@@ -154,16 +154,11 @@ export default function AdminThemes() {
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
   }
 
-  async function ship(themeId: string) {
-    setBusy(themeId);
-    try {
-      const { data, error } = await supabase.functions.invoke("ship-theme", { body: { theme_id: themeId } });
-      if (error) throw error;
-      if (data?.ok) toast.success("Shipped to Pic To Cart");
-      else toast.error(`Ship failed: ${data?.response?.status ?? ""} ${data?.response?.body ?? data?.error ?? ""}`);
-      await loadAll();
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
+  async function ship(_themeId: string) {
+    // Themes are auto-published to the in-project marketplace at generation time.
+    toast.success("Already published — visible in Master Projects tab.");
   }
+
 
   async function skip(slotId: string) {
     setBusy(slotId);
