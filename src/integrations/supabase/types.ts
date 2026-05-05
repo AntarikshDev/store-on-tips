@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          email: string | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          requested_at: string
+          scheduled_for: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          email?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_settings: {
         Row: {
           alert_email: string | null
@@ -744,6 +783,57 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          amount_inr: number
+          created_at: string
+          id: string
+          order_id: string | null
+          phase: string | null
+          raw: Json | null
+          razorpay_dispute_id: string | null
+          razorpay_payment_id: string | null
+          reason_code: string | null
+          reason_description: string | null
+          respond_by: string | null
+          status: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_inr?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          phase?: string | null
+          raw?: Json | null
+          razorpay_dispute_id?: string | null
+          razorpay_payment_id?: string | null
+          reason_code?: string | null
+          reason_description?: string | null
+          respond_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_inr?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          phase?: string | null
+          raw?: Json | null
+          razorpay_dispute_id?: string | null
+          razorpay_payment_id?: string | null
+          reason_code?: string | null
+          reason_description?: string | null
+          respond_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       domain_connect_sessions: {
         Row: {
           callback_token: string
@@ -1253,6 +1343,69 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           welcome_grant_credits?: number
+        }
+        Relationships: []
+      }
+      platform_invoices: {
+        Row: {
+          amount_inr: number
+          created_at: string
+          customer_address: Json | null
+          customer_email: string | null
+          customer_gstin: string | null
+          customer_name: string | null
+          description: string
+          emailed_at: string | null
+          gst_amount_inr: number
+          gst_rate: number
+          id: string
+          invoice_number: string
+          pdf_url: string | null
+          razorpay_payment_id: string | null
+          store_id: string | null
+          total_inr: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_inr?: number
+          created_at?: string
+          customer_address?: Json | null
+          customer_email?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          description: string
+          emailed_at?: string | null
+          gst_amount_inr?: number
+          gst_rate?: number
+          id?: string
+          invoice_number: string
+          pdf_url?: string | null
+          razorpay_payment_id?: string | null
+          store_id?: string | null
+          total_inr?: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          created_at?: string
+          customer_address?: Json | null
+          customer_email?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          description?: string
+          emailed_at?: string | null
+          gst_amount_inr?: number
+          gst_rate?: number
+          id?: string
+          invoice_number?: string
+          pdf_url?: string | null
+          razorpay_payment_id?: string | null
+          store_id?: string | null
+          total_inr?: number
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
