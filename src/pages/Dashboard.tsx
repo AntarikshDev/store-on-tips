@@ -144,6 +144,9 @@ const Dashboard = () => {
         </Card>
       )}
 
+      {/* AI Credits Wallet */}
+      <WalletCard />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
