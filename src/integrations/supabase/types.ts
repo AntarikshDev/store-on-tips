@@ -122,6 +122,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_call_log: {
+        Row: {
+          completion_tokens: number | null
+          cost_inr: number
+          created_at: string
+          function_name: string
+          id: string
+          metadata: Json | null
+          model: string
+          prompt_tokens: number | null
+          reuse_hit: boolean
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_inr?: number
+          created_at?: string
+          function_name: string
+          id?: string
+          metadata?: Json | null
+          model: string
+          prompt_tokens?: number | null
+          reuse_hit?: boolean
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_inr?: number
+          created_at?: string
+          function_name?: string
+          id?: string
+          metadata?: Json | null
+          model?: string
+          prompt_tokens?: number | null
+          reuse_hit?: boolean
+        }
+        Relationships: []
+      }
       ai_credit_packs: {
         Row: {
           badge: string | null
@@ -1541,6 +1577,45 @@ export type Database = {
         }
         Relationships: []
       }
+      research_jobs: {
+        Row: {
+          completed: number
+          error: string | null
+          finished_at: string | null
+          found_urls: Json
+          id: string
+          query: string | null
+          results: Json
+          started_at: string
+          status: string
+          total: number
+        }
+        Insert: {
+          completed?: number
+          error?: string | null
+          finished_at?: string | null
+          found_urls?: Json
+          id?: string
+          query?: string | null
+          results?: Json
+          started_at?: string
+          status?: string
+          total?: number
+        }
+        Update: {
+          completed?: number
+          error?: string | null
+          finished_at?: string | null
+          found_urls?: Json
+          id?: string
+          query?: string | null
+          results?: Json
+          started_at?: string
+          status?: string
+          total?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           body: string | null
@@ -2189,6 +2264,54 @@ export type Database = {
           },
         ]
       }
+      theme_research_corpus: {
+        Row: {
+          category: string | null
+          copy_motifs: Json | null
+          created_at: string
+          fonts: Json | null
+          hero_style: string | null
+          id: string
+          insights: Json
+          palette: Json | null
+          reuse_count: number
+          scraped_at: string
+          section_order: Json | null
+          source_site: string
+          source_url: string
+        }
+        Insert: {
+          category?: string | null
+          copy_motifs?: Json | null
+          created_at?: string
+          fonts?: Json | null
+          hero_style?: string | null
+          id?: string
+          insights?: Json
+          palette?: Json | null
+          reuse_count?: number
+          scraped_at?: string
+          section_order?: Json | null
+          source_site: string
+          source_url: string
+        }
+        Update: {
+          category?: string | null
+          copy_motifs?: Json | null
+          created_at?: string
+          fonts?: Json | null
+          hero_style?: string | null
+          id?: string
+          insights?: Json
+          palette?: Json | null
+          reuse_count?: number
+          scraped_at?: string
+          section_order?: Json | null
+          source_site?: string
+          source_url?: string
+        }
+        Relationships: []
+      }
       theme_section_blueprints: {
         Row: {
           category_tags: string[]
@@ -2216,6 +2339,42 @@ export type Database = {
           layout?: string
           section_type?: string
           variant_name?: string
+        }
+        Relationships: []
+      }
+      theme_settings: {
+        Row: {
+          auto_generate: boolean
+          auto_research: boolean
+          cadence_days: number
+          id: number
+          last_generation_at: string | null
+          last_research_at: string | null
+          research_query: string
+          themes_per_batch: number
+          updated_at: string
+        }
+        Insert: {
+          auto_generate?: boolean
+          auto_research?: boolean
+          cadence_days?: number
+          id?: number
+          last_generation_at?: string | null
+          last_research_at?: string | null
+          research_query?: string
+          themes_per_batch?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_generate?: boolean
+          auto_research?: boolean
+          cadence_days?: number
+          id?: number
+          last_generation_at?: string | null
+          last_research_at?: string | null
+          research_query?: string
+          themes_per_batch?: number
+          updated_at?: string
         }
         Relationships: []
       }
