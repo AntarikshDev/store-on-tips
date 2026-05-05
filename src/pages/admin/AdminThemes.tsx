@@ -264,6 +264,18 @@ const MasterProjectsTab = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const togglePublish = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('theme_master_projects').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.is_active ? 'Theme published — visible to merchants' : 'Theme unpublished');
+      qc.invalidateQueries({ queryKey: ['admin-theme-masters'] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
