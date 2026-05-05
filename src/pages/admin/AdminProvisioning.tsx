@@ -187,11 +187,37 @@ const AdminProvisioning = () => {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{r.attempts ?? 0}</td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(r.queued_at).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right space-x-1">
+                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                     <Button variant="ghost" size="sm" onClick={() => setLogsId(r.id)} className="gap-1">
                       <ListTree className="h-3 w-3" /> Logs
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setOpenId(r.id)}>Open</Button>
+                    {r.status !== 'live' && r.status !== 'failed' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-amber-600 hover:text-amber-700"
+                        onClick={() => {
+                          if (confirm(`Cancel provisioning for "${store?.name ?? 'this store'}"?`)) {
+                            cancelRequest.mutate(r.id);
+                          }
+                        }}
+                      >
+                        <XCircle className="h-3 w-3" /> Cancel
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Delete provisioning request for "${store?.name ?? 'this store'}"? This cannot be undone.`)) {
+                          deleteRequest.mutate(r.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </Button>
                   </td>
                 </tr>
               );
