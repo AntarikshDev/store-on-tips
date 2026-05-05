@@ -13,13 +13,14 @@ const AdminRevenue = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-revenue-pnl'],
     queryFn: async () => {
-      const [plansRes, subsRes, ordersRes, storesRes, themePacksRes, themePurchasesRes] = await Promise.all([
+      const [plansRes, subsRes, ordersRes, storesRes, themePacksRes, themePurchasesRes, creditTxRes] = await Promise.all([
         supabase.from('plan_configs').select('plan, price_inr, commission_percent, display_name'),
         supabase.from('subscriptions').select('store_id, plan, status, current_period_end'),
         supabase.from('orders').select('store_id, total, payment_status, created_at'),
         supabase.from('stores').select('id'),
         supabase.from('theme_packs').select('id, name, category, price, sales_count, ai_generation_cost'),
         supabase.from('theme_purchases').select('id, theme_pack_id, purchased_at'),
+        supabase.from('ai_credit_transactions').select('inr_value, razorpay_payment_id, type, created_at').not('razorpay_payment_id', 'is', null),
       ]);
 
       const plans = (plansRes.data || []) as PlanRow[];
