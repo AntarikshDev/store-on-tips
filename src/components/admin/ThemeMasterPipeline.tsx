@@ -22,7 +22,7 @@ type Metric = { theme_id: string; total_cost_inr: number; image_count: number; r
 type ResearchJob = { id: string; status: string; query: string | null; total: number; completed: number; found_urls: string[]; results: any[]; error: string | null; started_at: string };
 type Settings = { auto_research: boolean; auto_generate: boolean; cadence_days: number; themes_per_batch: number; research_query: string; last_research_at: string | null; last_generation_at: string | null };
 
-export default function AdminThemes() {
+export default function ThemeMasterPipeline() {
   const [tab, setTab] = useState("library");
   const [calendar, setCalendar] = useState<Slot[]>([]);
   const [versions, setVersions] = useState<Version[]>([]);
