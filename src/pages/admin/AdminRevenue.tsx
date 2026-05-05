@@ -13,13 +13,14 @@ const AdminRevenue = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-revenue-pnl'],
     queryFn: async () => {
-      const [plansRes, subsRes, ordersRes, storesRes, themePacksRes, themePurchasesRes] = await Promise.all([
+      const [plansRes, subsRes, ordersRes, storesRes, themePacksRes, themePurchasesRes, creditTxRes] = await Promise.all([
         supabase.from('plan_configs').select('plan, price_inr, commission_percent, display_name'),
         supabase.from('subscriptions').select('store_id, plan, status, current_period_end'),
         supabase.from('orders').select('store_id, total, payment_status, created_at'),
         supabase.from('stores').select('id'),
         supabase.from('theme_packs').select('id, name, category, price, sales_count, ai_generation_cost'),
         supabase.from('theme_purchases').select('id, theme_pack_id, purchased_at'),
+        supabase.from('ai_credit_transactions').select('inr_value, razorpay_payment_id, type, created_at').not('razorpay_payment_id', 'is', null),
       ]);
 
       const plans = (plansRes.data || []) as PlanRow[];
@@ -60,6 +61,12 @@ const AdminRevenue = () => {
       const themeRevenue = packs.reduce((s: number, p: any) => s + Number(p.price) * Number(p.sales_count || 0), 0);
       const aiCost = packs.reduce((s: number, p: any) => s + Number(p.ai_generation_cost || 0), 0);
 
+      // ---- AI credit pack recharges (pure platform revenue)
+      const creditTx = (creditTxRes.data || []) as any[];
+      const creditRevenue = creditTx
+        .filter((t) => t.type === 'credit')
+        .reduce((s, t) => s + Number(t.inr_value || 0), 0);
+
       // last 30d
       const since = Date.now() - 30 * 86400000;
       const ordersThisMonth = paidOrders.filter((o) => new Date(o.created_at).getTime() >= since);
@@ -76,10 +83,13 @@ const AdminRevenue = () => {
           const pk: any = packs.find((x: any) => x.id === p.theme_pack_id);
           return sum + (pk ? Number(pk.price) : 0);
         }, 0);
+      const creditRevMonth = creditTx
+        .filter((t) => t.type === 'credit' && new Date(t.created_at).getTime() >= since)
+        .reduce((s, t) => s + Number(t.inr_value || 0), 0);
 
-      const grossMonthly = mrr + commissionMonth + themeRevMonth;
-      const netMonthly = grossMonthly - aiCost; // AI cost is one-time, conservative
-      const grossLifetime = commission + themeRevenue + mrr; // mrr just snapshot
+      const grossMonthly = mrr + commissionMonth + themeRevMonth + creditRevMonth;
+      const netMonthly = grossMonthly - aiCost;
+      const grossLifetime = commission + themeRevenue + mrr + creditRevenue;
       const netLifetime = grossLifetime - aiCost;
 
       return {
@@ -94,6 +104,8 @@ const AdminRevenue = () => {
         gmvMonth,
         themeRevenue,
         themeRevMonth,
+        creditRevenue,
+        creditRevMonth,
         aiCost,
         grossMonthly,
         netMonthly,
@@ -118,6 +130,7 @@ const AdminRevenue = () => {
   const headline = [
     { label: 'MRR', value: fmt(data.mrr), sub: `${data.payingCount} paying · ${data.trials} trial`, icon: IndianRupee, accent: 'text-emerald-600' },
     { label: 'Commission (30d)', value: fmt(data.commissionMonth), sub: `GMV ${fmt(data.gmvMonth)}`, icon: Receipt, accent: 'text-blue-600' },
+    { label: 'Credit Packs (30d)', value: fmt(data.creditRevMonth), sub: `Lifetime ${fmt(data.creditRevenue)}`, icon: Sparkles, accent: 'text-amber-600' },
     { label: 'Theme Sales (30d)', value: fmt(data.themeRevMonth), sub: `Lifetime ${fmt(data.themeRevenue)}`, icon: Sparkles, accent: 'text-violet-600' },
     { label: 'AI Cost (lifetime)', value: fmt(data.aiCost), sub: 'Theme generation spend', icon: TrendingDown, accent: 'text-destructive' },
   ];
@@ -126,10 +139,10 @@ const AdminRevenue = () => {
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Revenue P&amp;L</h1>
-        <p className="text-sm text-muted-foreground">Subscriptions, commissions, theme sales and AI cost across the entire platform.</p>
+        <p className="text-sm text-muted-foreground">Subscriptions, commissions, credit-pack recharges, theme sales and AI cost across the entire platform.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {headline.map((c) => (
           <Card key={c.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
