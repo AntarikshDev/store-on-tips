@@ -3,18 +3,17 @@ import { useStore } from '@/hooks/useStore';
 import { useProducts } from '@/hooks/useProducts';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   IndianRupee, ShoppingCart, TrendingUp, Package, ExternalLink, Copy, Check,
-  CheckCircle2, Circle, ArrowRight,
+  CheckCircle2, Circle, ArrowRight, Receipt,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import TopProducts from '@/components/dashboard/TopProducts';
 import RecentOrders from '@/components/dashboard/RecentOrders';
@@ -23,66 +22,48 @@ import WeeklyDigest from '@/components/dashboard/WeeklyDigest';
 import AbandonedCartBanner from '@/components/dashboard/AbandonedCartBanner';
 import { ThemeUpdateBanner } from '@/components/ThemeUpdateBanner';
 import WalletCard from '@/components/dashboard/WalletCard';
+import HeroGreeting from '@/components/dashboard/HeroGreeting';
+import SmartActions from '@/components/dashboard/SmartActions';
+import StoreHealthGauge from '@/components/dashboard/StoreHealthGauge';
+import StatCard from '@/components/ui/StatCard';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { store, loading } = useStore();
-  const { products, loading: productsLoading } = useProducts();
+  const { products } = useProducts();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   useOrderNotifications(store?.id);
 
-  // All-time + today stats
-  const { data: orderStats } = useQuery({
-    queryKey: ['dashboard-stats', store?.id],
-    queryFn: async () => {
-      if (!store?.id) return { todayCount: 0, todayRevenue: 0, totalCount: 0, totalRevenue: 0, pendingCount: 0 };
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('total, status, created_at')
-        .eq('store_id', store.id);
-
-      const orders = allOrders || [];
-      const todayOrders = orders.filter(o => new Date(o.created_at) >= today);
-
-      return {
-        todayCount: todayOrders.length,
-        todayRevenue: todayOrders.reduce((s, o) => s + (Number(o.total) || 0), 0),
-        totalCount: orders.length,
-        totalRevenue: orders.reduce((s, o) => s + (Number(o.total) || 0), 0),
-        pendingCount: orders.filter(o => o.status === 'pending').length,
-      };
-    },
-    enabled: !!store?.id,
-  });
+  const { stats } = useDashboardStats(store?.id);
 
   useEffect(() => {
     if (!loading && !store) {
       const isCustomer = user?.user_metadata?.is_customer === true;
-      if (!isCustomer) {
-        navigate('/onboarding', { replace: true });
-      }
+      if (!isCustomer) navigate('/onboarding', { replace: true });
     }
   }, [loading, store, navigate, user]);
 
+  const settings = (store?.settings as any) || {};
+
+  const lowStockCount = useMemo(
+    () => products.filter((p: any) => typeof p.inventory_count === 'number' && p.inventory_count > 0 && p.inventory_count <= 5).length,
+    [products]
+  );
+
   const checklist = useMemo(() => {
     if (!store) return [];
-    const settings = (store.settings as any) || {};
     return [
-      { label: 'Store name set', done: !!store.name, link: '/store-design' },
-      { label: 'Category selected', done: !!store.category, link: '/store-design' },
-      { label: 'Logo uploaded', done: !!store.logo_url, link: '/store-design' },
+      { label: 'Store name set', done: !!store.name, link: '/customise' },
+      { label: 'Category selected', done: !!store.category, link: '/customise' },
+      { label: 'Logo uploaded', done: !!store.logo_url, link: '/customise' },
       { label: 'First product added', done: products.length > 0, link: '/products/new' },
       { label: 'Set up shipping', done: !!settings.shipping_enabled, link: '/settings/shipping' },
       { label: 'Connect custom domain', done: !!settings.custom_domain, link: '/settings/domain' },
       { label: 'Configure SEO', done: !!settings.seo_title, link: '/settings/seo' },
       { label: 'Write a blog post', done: false, link: '/blog-posts/new' },
     ];
-  }, [store, products]);
+  }, [store, products, settings]);
 
   const completedCount = checklist.filter((c) => c.done).length;
   const completionPct = checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0;
@@ -95,15 +76,7 @@ const Dashboard = () => {
     );
   }
 
-  const stats = [
-    { label: "Today's Revenue", value: `₹${(orderStats?.todayRevenue ?? 0).toLocaleString('en-IN')}`, icon: IndianRupee },
-    { label: "Today's Orders", value: String(orderStats?.todayCount ?? 0), icon: ShoppingCart },
-    { label: 'Total Revenue', value: `₹${(orderStats?.totalRevenue ?? 0).toLocaleString('en-IN')}`, icon: TrendingUp },
-    { label: 'Pending Orders', value: String(orderStats?.pendingCount ?? 0), icon: Package },
-  ];
-
   const storeUrl = store?.slug ? `${window.location.origin}/store/${store.slug}` : '';
-
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(storeUrl);
     setCopied(true);
@@ -112,61 +85,103 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0">
-      <ProvisioningStatus />
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
-          </p>
-        </div>
-        {store?.is_published && (
-          <Button onClick={() => window.open(`/store/${store.slug}`, '_blank')} className="gap-2">
-            <ExternalLink className="h-4 w-4" /> View Store
-          </Button>
-        )}
-      </div>
+    <div className="relative space-y-6 pb-20 md:pb-0">
+      {/* Soft mesh background */}
+      <div className="pointer-events-none fixed inset-0 -z-10 opacity-50 dark:opacity-30"
+        style={{
+          background:
+            'radial-gradient(60% 40% at 10% 0%, hsl(var(--primary) / 0.08), transparent 60%), radial-gradient(40% 30% at 90% 10%, hsl(220 90% 60% / 0.06), transparent 60%)',
+        }}
+      />
 
-      {/* Store URL Banner */}
+      <ProvisioningStatus />
+
+      {/* Hero greeting */}
+      <HeroGreeting
+        todayRevenue={stats.todayRevenue}
+        todayOrders={stats.todayCount}
+        pendingOrders={stats.pendingCount}
+        storeName={store?.name}
+      />
+
+      {/* View store / copy url ribbon */}
       {store?.is_published && storeUrl && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Your store is live at</p>
-              <p className="text-sm font-mono font-semibold truncate text-primary">{storeUrl}</p>
+        <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-background">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3.5 px-4">
+            <div className="min-w-0 flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-muted-foreground">Your store is live at</p>
+                <p className="text-sm font-mono font-semibold truncate text-emerald-700 dark:text-emerald-400">{storeUrl}</p>
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleCopyUrl} className="shrink-0 gap-1.5">
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? 'Copied!' : 'Copy URL'}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={handleCopyUrl} className="gap-1.5">
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+              <Button size="sm" onClick={() => window.open(`/store/${store.slug}`, '_blank')} className="gap-1.5">
+                <ExternalLink className="h-3.5 w-3.5" /> View
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* AI Credits Wallet */}
+      {/* Smart contextual actions */}
+      <SmartActions
+        pendingOrders={stats.pendingCount}
+        productCount={products.length}
+        lowStockCount={lowStockCount}
+        hasCustomDomain={!!settings.custom_domain}
+        hasShipping={!!settings.shipping_enabled}
+        isPublished={!!store?.is_published}
+      />
+
+      {/* AI Wallet */}
       <WalletCard />
 
-      {/* Stats Grid */}
+      {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard
+          label="Today's Revenue"
+          value={stats.todayRevenue}
+          prefix="₹"
+          format="inr"
+          icon={IndianRupee}
+          tone="emerald"
+          deltaPct={stats.revenueDeltaPct}
+          series={stats.last7Revenue}
+        />
+        <StatCard
+          label="Today's Orders"
+          value={stats.todayCount}
+          icon={ShoppingCart}
+          tone="indigo"
+          deltaPct={stats.ordersDeltaPct}
+          series={stats.last7Orders}
+        />
+        <StatCard
+          label="Avg Order Value"
+          value={stats.aov}
+          prefix="₹"
+          format="inr"
+          icon={Receipt}
+          tone="amber"
+        />
+        <StatCard
+          label="Pending Orders"
+          value={stats.pendingCount}
+          icon={Package}
+          tone={stats.pendingCount > 0 ? 'rose' : 'primary'}
+        />
       </div>
 
-      {/* Charts Row */}
+      {/* Charts row */}
       {store?.id && (
         <div className="grid gap-6 lg:grid-cols-5">
           <div className="lg:col-span-3">
-            <RevenueChart storeId={store.id} />
+            <RevenueChart storeId={store.id} data={stats.last30Days} />
           </div>
           <div className="lg:col-span-2">
             <TopProducts storeId={store.id} />
@@ -174,46 +189,55 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Theme update notification */}
+      {/* Health gauge */}
+      <StoreHealthGauge
+        store={store}
+        productCount={products.length}
+        totalRevenue={stats.totalRevenue}
+        hasShipping={!!settings.shipping_enabled}
+        hasDomain={!!settings.custom_domain}
+        hasSeo={!!settings.seo_title}
+        hasLogo={!!store?.logo_url}
+        hasBlog={false}
+      />
+
       <ThemeUpdateBanner />
-
-      {/* Abandoned Cart Insight */}
       {store?.id && <AbandonedCartBanner storeId={store.id} />}
-
-      {/* Weekly Digest */}
       {store?.id && <WeeklyDigest storeId={store.id} />}
-
-      {/* Recent Orders */}
       {store?.id && <RecentOrders storeId={store.id} />}
 
-      {/* Completion Checklist */}
+      {/* Setup checklist */}
       {completionPct < 100 && (
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Store Setup Progress</CardTitle>
-              <span className="text-sm font-semibold text-primary">{completionPct}%</span>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" /> Store Setup Progress
+              </CardTitle>
+              <span className="text-sm font-semibold text-primary tabular-nums">{completionPct}%</span>
             </div>
             <Progress value={completionPct} className="h-2 mt-2" />
           </CardHeader>
-          <CardContent className="grid gap-2">
+          <CardContent className="grid gap-1.5 sm:grid-cols-2">
             {checklist.map((item) => (
               <button
                 key={item.label}
                 onClick={() => !item.done && navigate(item.link)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors text-sm',
-                  item.done ? 'text-muted-foreground' : 'hover:bg-accent cursor-pointer'
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors text-sm border border-transparent',
+                  item.done
+                    ? 'text-muted-foreground'
+                    : 'hover:bg-accent hover:border-border cursor-pointer'
                 )}
                 disabled={item.done}
               >
                 {item.done ? (
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                 )}
-                <span className={cn(item.done && 'line-through')}>{item.label}</span>
-                {!item.done && <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground" />}
+                <span className={cn('truncate', item.done && 'line-through')}>{item.label}</span>
+                {!item.done && <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground shrink-0" />}
               </button>
             ))}
           </CardContent>
@@ -230,9 +254,7 @@ const Dashboard = () => {
             <p className="mt-1 text-sm text-muted-foreground max-w-sm">
               Upload a product image and let AI generate all the details automatically.
             </p>
-            <Button className="mt-4" onClick={() => navigate('/products/new')}>
-              Add Product
-            </Button>
+            <Button className="mt-4" onClick={() => navigate('/products/new')}>Add Product</Button>
           </CardContent>
         </Card>
       )}
