@@ -1,28 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Plus, TrendingUp, Clock, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useWallet, useCreditSettings } from '@/hooks/useWallet';
+import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
-
-const useCountUp = (target: number, duration = 900) => {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const from = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setVal(Math.round(from + (target - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return val;
-};
 
 const WalletCard = () => {
   const { wallet, loading } = useWallet();
@@ -80,7 +62,7 @@ const WalletCard = () => {
                       : 'from-primary to-amber-500'
                 )}
               >
-                {animBalance.toLocaleString('en-IN')}
+                {Math.round(animBalance).toLocaleString('en-IN')}
               </span>
               <span className="text-xs font-medium text-muted-foreground">credits</span>
             </div>
@@ -107,7 +89,7 @@ const WalletCard = () => {
               <TrendingUp className="h-3 w-3" /> Saved
             </div>
             <div className="text-lg font-bold text-emerald-600 tabular-nums">
-              ₹{animInr.toLocaleString('en-IN')}
+              ₹{Math.round(animInr).toLocaleString('en-IN')}
             </div>
           </div>
           <div>

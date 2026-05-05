@@ -5,33 +5,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import type { DayBucket } from '@/hooks/useDashboardStats';
 
 interface Props {
   storeId: string;
+  /** Preloaded buckets from useDashboardStats — avoids a duplicate query. */
+  data?: DayBucket[];
 }
 
-const RevenueChart = ({ storeId }: Props) => {
+const RevenueChart = ({ storeId, data: preloaded }: Props) => {
   const { data: orders = [] } = useQuery({
     queryKey: ['revenue-chart', storeId],
+    enabled: !preloaded && !!storeId,
+    staleTime: 60_000,
     queryFn: async () => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
       const { data } = await supabase
         .from('orders')
         .select('total, created_at')
         .eq('store_id', storeId)
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
-
       return data || [];
     },
   });
 
   const chartData = useMemo(() => {
+    if (preloaded) return preloaded.map((d) => ({ date: d.label, revenue: d.revenue, orders: d.orders }));
     const days: Record<string, { date: string; revenue: number; orders: number }> = {};
-
-    // Fill last 30 days
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -42,7 +44,6 @@ const RevenueChart = ({ storeId }: Props) => {
         orders: 0,
       };
     }
-
     orders.forEach((o) => {
       const key = new Date(o.created_at).toISOString().slice(0, 10);
       if (days[key]) {
@@ -50,9 +51,8 @@ const RevenueChart = ({ storeId }: Props) => {
         days[key].orders += 1;
       }
     });
-
     return Object.values(days);
-  }, [orders]);
+  }, [orders, preloaded]);
 
   return (
     <Card>
