@@ -21,6 +21,7 @@ import StorefrontCheckout from "@/pages/StorefrontCheckout";
 import AdminRoute from "@/components/AdminRoute";
 import AdminLayout from "@/components/AdminLayout";
 import CustomerRoute from "@/components/storefront/CustomerRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "./pages/NotFound.tsx";
 import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 
@@ -71,6 +72,8 @@ const AdminPlans = lazy(() => import("@/pages/admin/AdminPlans"));
 const AdminLaunchChecklist = lazy(() => import("@/pages/admin/AdminLaunchChecklist"));
 const AdminCreditsEconomy = lazy(() => import("@/pages/admin/AdminCreditsEconomy"));
 const AdminAgent = lazy(() => import("@/pages/admin/AdminAgent"));
+const AdminHealth = lazy(() => import("@/pages/admin/AdminHealth"));
+const Help = lazy(() => import("@/pages/Help"));
 
 
 const queryClient = new QueryClient();
