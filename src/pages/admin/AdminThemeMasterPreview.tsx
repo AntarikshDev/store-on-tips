@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import ThemeRenderer from "@/admin/themePreview/ThemeRenderer";
+import ThemeRenderer from "@/components/admin/ThemeRenderer";
 
 export default function AdminThemePreview() {
   const { themeId } = useParams();
@@ -14,7 +14,7 @@ export default function AdminThemePreview() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("theme_versions").select("files_manifest").eq("theme_id", themeId).order("version", { ascending: false }).limit(1).maybeSingle();
+      const { data } = await supabase.from("theme_master_versions").select("files_manifest").eq("theme_id", themeId).order("version", { ascending: false }).limit(1).maybeSingle();
       setManifest(data?.files_manifest ?? null);
       setLoading(false);
     })();

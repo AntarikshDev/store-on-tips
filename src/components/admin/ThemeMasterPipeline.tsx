@@ -42,8 +42,8 @@ export default function AdminThemes() {
   async function loadAll() {
     const [c, v, m, s, jh] = await Promise.all([
       supabase.from("theme_release_calendar").select("*").order("slot_date"),
-      supabase.from("theme_versions").select("*").order("created_at", { ascending: false }),
-      supabase.from("theme_generation_metrics").select("theme_id, total_cost_inr, image_count, reuse_hits, shipped_to_pictocart, pictocart_response"),
+      supabase.from("theme_master_versions").select("*").order("created_at", { ascending: false }),
+      supabase.from("theme_master_metrics").select("theme_id, total_cost_inr, image_count, reuse_hits, shipped_to_pictocart, pictocart_response"),
       supabase.from("theme_settings").select("*").eq("id", 1).maybeSingle(),
       supabase.from("research_jobs").select("*").order("started_at", { ascending: false }).limit(25),
     ]);
