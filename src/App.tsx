@@ -274,6 +274,10 @@ const AppRoutes = () => {
             <Route path="/admin/provisioning" element={<AdminRoute><AdminLayout><AdminProvisioning /></AdminLayout></AdminRoute>} />
             <Route path="/admin/plans" element={<AdminRoute><AdminLayout><AdminPlans /></AdminLayout></AdminRoute>} />
             <Route path="/admin/launch" element={<AdminRoute><AdminLayout><AdminLaunchChecklist /></AdminLayout></AdminRoute>} />
+            <Route path="/admin/health" element={<AdminRoute><AdminLayout><AdminHealth /></AdminLayout></AdminRoute>} />
+            {/* Help Center */}
+            <Route path="/help" element={<Help />} />
+            <Route path="/help/:slug" element={<Help />} />
             {/* Platform Legal Pages */}
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -305,7 +309,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <StoreProvider>
-            <AppRoutes />
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
           </StoreProvider>
         </AuthProvider>
       </BrowserRouter>
