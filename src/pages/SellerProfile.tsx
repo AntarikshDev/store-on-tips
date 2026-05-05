@@ -18,6 +18,7 @@ import {
   Store,
   MapPin,
   Calendar,
+  Camera,
   Lock,
   Eye,
   EyeOff,
