@@ -101,6 +101,36 @@ const AdminProvisioning = () => {
     onError: (e: any) => toast.error(e?.message ?? 'Update failed'),
   });
 
+  const cancelRequest = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('provision_requests').update({
+        status: 'failed',
+        error: 'Cancelled by admin',
+        completed_at: new Date().toISOString(),
+      }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['provision-requests'] });
+      toast.success('Request cancelled');
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Cancel failed'),
+  });
+
+  const deleteRequest = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('provision_job_logs').delete().eq('request_id', id);
+      const { error } = await supabase.from('provision_requests').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['provision-requests'] });
+      toast.success('Request deleted');
+      setOpenId(null);
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Delete failed'),
+  });
+
   const open = openId ? requestsQuery.data?.find((r) => r.id === openId) ?? null : null;
   const openTheme = open ? themesQuery.data?.find((t) => t.id === open.theme_master_id) ?? null : null;
   const openStore = open ? storesQuery.data?.find((s) => s.id === open.store_id) : null;
