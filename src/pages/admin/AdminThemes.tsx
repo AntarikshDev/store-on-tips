@@ -109,6 +109,8 @@ const emptyTheme: Partial<ThemeMaster> = {
   client_patch_prompt: '',
   is_active: true,
   is_default: false,
+  price: 0,
+  compare_at_price: null,
 };
 
 const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; onClose: () => void }) => {
