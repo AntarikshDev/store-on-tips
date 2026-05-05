@@ -139,10 +139,10 @@ const AdminRevenue = () => {
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Revenue P&amp;L</h1>
-        <p className="text-sm text-muted-foreground">Subscriptions, commissions, theme sales and AI cost across the entire platform.</p>
+        <p className="text-sm text-muted-foreground">Subscriptions, commissions, credit-pack recharges, theme sales and AI cost across the entire platform.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {headline.map((c) => (
           <Card key={c.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
