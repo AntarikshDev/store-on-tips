@@ -222,6 +222,9 @@ const LandingPage = () => {
   const [showcaseIdx, setShowcaseIdx] = useState(0);
   const howItWorksRef = useRef<HTMLElement>(null);
 
+  // Capture ?ref=CODE referral on first landing
+  useEffect(() => { captureReferralFromUrl(); }, []);
+
   // Track scroll depth on the 7-step section
   useEffect(() => {
     if (!howItWorksRef.current) return;
