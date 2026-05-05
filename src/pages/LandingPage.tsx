@@ -20,6 +20,7 @@ import themeBooks from '@/assets/theme-books.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
 import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
+import { captureReferralFromUrl } from '@/lib/referralCookie';
 
 
 /* ─── Intersection Observer hook for scroll animations ─── */
