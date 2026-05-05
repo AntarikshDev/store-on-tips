@@ -162,7 +162,14 @@ serve(async (req) => {
           await log(job.id, "domain_pending", "ok", "Patch applied, awaiting domain connection");
         }
 
+        spentThisTick += perJob;
         results.push({ id: job.id, ok: true });
+
+        // Stop early if budget exhausted mid-tick
+        if (budget && (
+          Number(budget.current_hour_spent_inr) + spentThisTick >= Number(budget.hourly_inr_cap) ||
+          Number(budget.current_day_spent_inr) + spentThisTick >= Number(budget.daily_inr_cap)
+        )) break;
       } catch (stepErr) {
         const msg = stepErr instanceof Error ? stepErr.message : "Unknown";
         const failed = attempts >= MAX_ATTEMPTS;
@@ -178,7 +185,15 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ processed: results.length, results }), {
+    if (budget && spentThisTick > 0) {
+      await admin.from("provisioning_budget").update({
+        current_hour_spent_inr: Number(budget.current_hour_spent_inr) + spentThisTick,
+        current_day_spent_inr: Number(budget.current_day_spent_inr) + spentThisTick,
+        updated_at: now.toISOString(),
+      }).eq("id", 1);
+    }
+
+    return new Response(JSON.stringify({ processed: results.length, spent_inr: spentThisTick, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
