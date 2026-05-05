@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Copy, ExternalLink, Plus, Rocket, ListTree, Pencil, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Plus, Rocket, ListTree, Pencil, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ThemeMaster {
@@ -101,6 +101,36 @@ const AdminProvisioning = () => {
     onError: (e: any) => toast.error(e?.message ?? 'Update failed'),
   });
 
+  const cancelRequest = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('provision_requests').update({
+        status: 'failed',
+        error: 'Cancelled by admin',
+        completed_at: new Date().toISOString(),
+      }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['provision-requests'] });
+      toast.success('Request cancelled');
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Cancel failed'),
+  });
+
+  const deleteRequest = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('provision_job_logs').delete().eq('request_id', id);
+      const { error } = await supabase.from('provision_requests').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['provision-requests'] });
+      toast.success('Request deleted');
+      setOpenId(null);
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Delete failed'),
+  });
+
   const open = openId ? requestsQuery.data?.find((r) => r.id === openId) ?? null : null;
   const openTheme = open ? themesQuery.data?.find((t) => t.id === open.theme_master_id) ?? null : null;
   const openStore = open ? storesQuery.data?.find((s) => s.id === open.store_id) : null;
@@ -157,11 +187,37 @@ const AdminProvisioning = () => {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{r.attempts ?? 0}</td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(r.queued_at).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right space-x-1">
+                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                     <Button variant="ghost" size="sm" onClick={() => setLogsId(r.id)} className="gap-1">
                       <ListTree className="h-3 w-3" /> Logs
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setOpenId(r.id)}>Open</Button>
+                    {r.status !== 'live' && r.status !== 'failed' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-amber-600 hover:text-amber-700"
+                        onClick={() => {
+                          if (confirm(`Cancel provisioning for "${store?.name ?? 'this store'}"?`)) {
+                            cancelRequest.mutate(r.id);
+                          }
+                        }}
+                      >
+                        <XCircle className="h-3 w-3" /> Cancel
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Delete provisioning request for "${store?.name ?? 'this store'}"? This cannot be undone.`)) {
+                          deleteRequest.mutate(r.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </Button>
                   </td>
                 </tr>
               );
@@ -246,14 +302,36 @@ const AdminProvisioning = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 gap-2" onClick={() => setLogsId(open.id)}>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="flex-1 gap-2 min-w-[140px]" onClick={() => setLogsId(open.id)}>
                   <ListTree className="h-4 w-4" /> View Logs
                 </Button>
-                <Button className="flex-1 gap-2" onClick={() => updateStatus.mutate({
+                <Button className="flex-1 gap-2 min-w-[140px]" onClick={() => updateStatus.mutate({
                   id: open.id, patch: { status: 'live', completed_at: new Date().toISOString() },
                 })}>
                   <Rocket className="h-4 w-4" /> Mark Live
+                </Button>
+                {open.status !== 'live' && open.status !== 'failed' && (
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2 min-w-[140px] text-amber-600 hover:text-amber-700"
+                    onClick={() => {
+                      if (confirm('Cancel this provisioning request?')) cancelRequest.mutate(open.id);
+                    }}
+                  >
+                    <XCircle className="h-4 w-4" /> Cancel
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  className="flex-1 gap-2 min-w-[140px]"
+                  onClick={() => {
+                    if (confirm('Permanently delete this provisioning request and its logs?')) {
+                      deleteRequest.mutate(open.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
             </div>
