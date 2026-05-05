@@ -104,6 +104,8 @@ const AdminRevenue = () => {
         gmvMonth,
         themeRevenue,
         themeRevMonth,
+        creditRevenue,
+        creditRevMonth,
         aiCost,
         grossMonthly,
         netMonthly,
@@ -128,6 +130,7 @@ const AdminRevenue = () => {
   const headline = [
     { label: 'MRR', value: fmt(data.mrr), sub: `${data.payingCount} paying · ${data.trials} trial`, icon: IndianRupee, accent: 'text-emerald-600' },
     { label: 'Commission (30d)', value: fmt(data.commissionMonth), sub: `GMV ${fmt(data.gmvMonth)}`, icon: Receipt, accent: 'text-blue-600' },
+    { label: 'Credit Packs (30d)', value: fmt(data.creditRevMonth), sub: `Lifetime ${fmt(data.creditRevenue)}`, icon: Sparkles, accent: 'text-amber-600' },
     { label: 'Theme Sales (30d)', value: fmt(data.themeRevMonth), sub: `Lifetime ${fmt(data.themeRevenue)}`, icon: Sparkles, accent: 'text-violet-600' },
     { label: 'AI Cost (lifetime)', value: fmt(data.aiCost), sub: 'Theme generation spend', icon: TrendingDown, accent: 'text-destructive' },
   ];
