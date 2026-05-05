@@ -27,7 +27,7 @@ export default function AdminThemePreview() {
     <div>
       {!embed && (
         <div className="bg-background border-b px-4 py-2 flex items-center justify-between gap-4 text-sm">
-          <Link to="/store" className="text-primary">← Back to Theme Store</Link>
+          <Link to="/admin/themes" className="text-primary">← Back to Themes</Link>
           <div className="flex gap-2">
             {["home","shop","product","about","contact"].map(p => (
               <Link key={p} to={`?page=${p}`} className={`px-3 py-1 rounded ${page === p ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{p}</Link>

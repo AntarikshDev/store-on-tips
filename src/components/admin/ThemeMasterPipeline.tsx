@@ -237,7 +237,7 @@ export default function AdminThemes() {
                   <Card key={t.id} className="overflow-hidden">
                     <div className="relative bg-muted aspect-[4/3] overflow-hidden">
                       {isV2 ? (
-                        <iframe src={`/themes/preview/${t.theme_id}?embed=1`} title={dna.name} className="border-0 origin-top-left pointer-events-none" style={{ width: "1280px", height: "960px", transform: "scale(0.4)" }} loading="lazy" />
+                        <iframe src={`/admin/themes/preview/${t.theme_id}?embed=1`} title={dna.name} className="border-0 origin-top-left pointer-events-none" style={{ width: "1280px", height: "960px", transform: "scale(0.4)" }} loading="lazy" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold">{dna.name || t.theme_id}</div>
                       )}
@@ -245,7 +245,7 @@ export default function AdminThemes() {
                         <Badge variant="outline">v{t.version}</Badge>
                         <Badge variant={m?.shipped_to_pictocart ? "default" : "outline"}>{m?.shipped_to_pictocart ? "Shipped" : "Local"}</Badge>
                       </div>
-                      <Link to={`/themes/preview/${t.theme_id}`} className="absolute inset-0" aria-label="Open preview" />
+                      <Link to={`/admin/themes/preview/${t.theme_id}`} className="absolute inset-0" aria-label="Open preview" />
                     </div>
                     <CardHeader className="pb-2"><CardTitle className="text-lg flex items-center justify-between">
                       <span className="truncate">{dna.name || t.theme_id}</span>
@@ -260,7 +260,7 @@ export default function AdminThemes() {
                         </div>
                       )}
                       <div className="flex flex-wrap gap-2">
-                        <Button asChild size="sm" variant="outline"><Link to={`/themes/preview/${t.theme_id}`}><ExternalLink className="h-3 w-3 mr-1" />Preview</Link></Button>
+                        <Button asChild size="sm" variant="outline"><Link to={`/admin/themes/preview/${t.theme_id}`}><ExternalLink className="h-3 w-3 mr-1" />Preview</Link></Button>
                         <Button size="sm" variant="outline" onClick={() => regenerate(t.theme_id)} disabled={busy === t.theme_id}>
                           {busy === t.theme_id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}Regenerate
                         </Button>
