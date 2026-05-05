@@ -290,6 +290,7 @@ const AppRoutes = () => {
             <Route path="/store/:slug/:policyType" element={<StorefrontPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+    </Suspense>
   );
 };
 
