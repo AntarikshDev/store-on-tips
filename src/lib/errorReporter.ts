@@ -8,7 +8,7 @@ const flush = async () => {
   if (!queue.length) return;
   const batch = queue.splice(0, queue.length);
   try {
-    await supabase.from('client_error_logs').insert(batch);
+    await supabase.from('client_error_logs').insert(batch as any);
   } catch {
     // swallow — never let error reporting cause more errors
   }
