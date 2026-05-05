@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Copy, ExternalLink, Plus, Rocket, ListTree, Pencil, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProvisioningBudgetPanel } from '@/components/admin/ProvisioningBudgetPanel';
 
 interface ThemeMaster {
   id: string;
