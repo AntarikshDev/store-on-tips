@@ -129,6 +129,10 @@ const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; 
         client_patch_prompt: form.client_patch_prompt || '',
         is_active: form.is_active ?? true,
         is_default: form.is_default ?? false,
+        price: Number(form.price ?? 0) || 0,
+        compare_at_price: form.compare_at_price != null && form.compare_at_price !== ('' as any)
+          ? Number(form.compare_at_price)
+          : null,
       };
       if (!payload.theme_id || !payload.name) throw new Error('theme_id and name are required');
       if (isEdit) {
