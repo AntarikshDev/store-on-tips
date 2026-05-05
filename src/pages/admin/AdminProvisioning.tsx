@@ -302,14 +302,36 @@ const AdminProvisioning = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 gap-2" onClick={() => setLogsId(open.id)}>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="flex-1 gap-2 min-w-[140px]" onClick={() => setLogsId(open.id)}>
                   <ListTree className="h-4 w-4" /> View Logs
                 </Button>
-                <Button className="flex-1 gap-2" onClick={() => updateStatus.mutate({
+                <Button className="flex-1 gap-2 min-w-[140px]" onClick={() => updateStatus.mutate({
                   id: open.id, patch: { status: 'live', completed_at: new Date().toISOString() },
                 })}>
                   <Rocket className="h-4 w-4" /> Mark Live
+                </Button>
+                {open.status !== 'live' && open.status !== 'failed' && (
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2 min-w-[140px] text-amber-600 hover:text-amber-700"
+                    onClick={() => {
+                      if (confirm('Cancel this provisioning request?')) cancelRequest.mutate(open.id);
+                    }}
+                  >
+                    <XCircle className="h-4 w-4" /> Cancel
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  className="flex-1 gap-2 min-w-[140px]"
+                  onClick={() => {
+                    if (confirm('Permanently delete this provisioning request and its logs?')) {
+                      deleteRequest.mutate(open.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
             </div>
