@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Truck, Loader2, CheckCircle2, XCircle, MapPin } from 'lucide-react';
+import { Truck, Loader2, CheckCircle2, XCircle, MapPin, ExternalLink, KeyRound } from 'lucide-react';
 
 interface PickupAddress {
   name: string;
@@ -151,6 +151,66 @@ const ShippingSettings = () => {
             </Badge>
           </div>
         </CardHeader>
+      </Card>
+
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-4 w-4 text-primary" /> Don't have a Delhivery API token?
+          </CardTitle>
+          <CardDescription>
+            Sign up as a Delhivery business shipper and generate your API key in 4 steps.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ol className="space-y-3 text-sm">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">1</span>
+              <div>
+                <p className="font-medium">Create a Delhivery One business account</p>
+                <p className="text-muted-foreground text-xs">Sign up with your business name, GSTIN and pickup address. Approval is usually same-day.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">2</span>
+              <div>
+                <p className="font-medium">Complete KYC & add a pickup location</p>
+                <p className="text-muted-foreground text-xs">Upload PAN, GST and a cancelled cheque. Add the warehouse address you'll dispatch from.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">3</span>
+              <div>
+                <p className="font-medium">Open Settings → API in the Delhivery One panel</p>
+                <p className="text-muted-foreground text-xs">Once approved, go to <span className="font-mono">one.delhivery.com</span> → Settings → API & click <strong>Generate API Token</strong>.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">4</span>
+              <div>
+                <p className="font-medium">Copy the token and paste it below</p>
+                <p className="text-muted-foreground text-xs">Use the staging token first with Test Mode ON, then switch to the live token before going live.</p>
+              </div>
+            </li>
+          </ol>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button asChild size="sm">
+              <a href="https://www.delhivery.com/partner-with-us/" target="_blank" rel="noopener noreferrer">
+                Sign up on Delhivery <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a href="https://one.delhivery.com/" target="_blank" rel="noopener noreferrer">
+                Open Delhivery One <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a href="https://track.delhivery.com/api-portal/" target="_blank" rel="noopener noreferrer">
+                API docs <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
       <Card>
