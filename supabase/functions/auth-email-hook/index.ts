@@ -40,6 +40,7 @@ const SITE_NAME = "store-on-tips"
 const SENDER_DOMAIN = "notify.pictocart.in"
 const ROOT_DOMAIN = "pictocart.in"
 const FROM_DOMAIN = "pictocart.in" // Domain shown in From address (may be root or sender subdomain)
+const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend'
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -78,6 +79,85 @@ const SAMPLE_DATA: Record<string, object> = {
   reauthentication: {
     token: '123456',
   },
+}
+
+function getStoreSlugFromAuthUrl(authUrl?: string) {
+  const candidates: string[] = []
+  try {
+    if (authUrl) {
+      const url = new URL(authUrl)
+      candidates.push(url.searchParams.get('redirect_to') || '')
+      candidates.push(url.searchParams.get('redirectTo') || '')
+      candidates.push(url.searchParams.get('redirect_url') || '')
+      candidates.push(authUrl)
+    }
+  } catch {
+    if (authUrl) candidates.push(authUrl)
+  }
+
+  for (const candidate of candidates.filter(Boolean)) {
+    try {
+      const decoded = decodeURIComponent(candidate)
+      const path = decoded.includes('://') ? new URL(decoded).pathname : decoded
+      const match = path.match(/\/store\/([^/?#]+)/)
+      if (match?.[1]) return match[1]
+    } catch (_) {
+      const match = candidate.match(/\/store\/([^/?#]+)/)
+      if (match?.[1]) return match[1]
+    }
+  }
+
+  return null
+}
+
+async function getVerifiedStoreSender(supabase: any, authUrl?: string) {
+  const slug = getStoreSlugFromAuthUrl(authUrl)
+  if (!slug) return null
+
+  const { data: store } = await supabase
+    .from('stores')
+    .select('id, name')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (!store?.id) return null
+
+  const { data: emailDomain } = await supabase
+    .from('store_email_domains')
+    .select('domain, sender_prefix, status')
+    .eq('store_id', store.id)
+    .eq('status', 'verified')
+    .maybeSingle()
+
+  if (!emailDomain?.domain) return null
+
+  return {
+    from: `${store.name || SITE_NAME} <${emailDomain.sender_prefix || 'notifications'}@${emailDomain.domain}>`,
+    storeName: store.name || SITE_NAME,
+  }
+}
+
+async function sendViaStoreDomain(to: string, from: string, subject: string, html: string, text: string) {
+  const apiKey = Deno.env.get('LOVABLE_API_KEY')
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!apiKey || !resendKey) return false
+
+  const res = await fetch(`${GATEWAY_URL}/emails`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'X-Connection-Api-Key': resendKey,
+    },
+    body: JSON.stringify({ from, to: [to], subject, html, text }),
+  })
+
+  if (!res.ok) {
+    console.error('Store auth email send failed', { status: res.status, body: await res.text() })
+    return false
+  }
+
+  return true
 }
 
 // Preview endpoint handler - returns rendered HTML without sending email
@@ -243,6 +323,38 @@ async function handleWebhook(req: Request): Promise<Response> {
   )
 
   const messageId = crypto.randomUUID()
+  const storeSender = await getVerifiedStoreSender(supabase, payload.data.url)
+
+  if (storeSender) {
+    const sent = await sendViaStoreDomain(
+      payload.data.email,
+      storeSender.from,
+      EMAIL_SUBJECTS[emailType] || 'Notification',
+      html,
+      text
+    )
+
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: emailType,
+      recipient_email: payload.data.email,
+      status: sent ? 'sent' : 'failed',
+      error_message: sent ? null : 'Failed to send through store sender domain',
+    })
+
+    if (!sent) {
+      return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    console.log('Auth email sent via store domain', { emailType, email: payload.data.email, run_id })
+    return new Response(JSON.stringify({ success: true, sent: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({

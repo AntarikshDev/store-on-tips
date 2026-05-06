@@ -31,6 +31,47 @@ const RemoveSchema = z.object({
 
 const RequestSchema = z.discriminatedUnion('action', [AddSchema, VerifySchema, RemoveSchema]);
 
+function normalizeDnsValue(value: string) {
+  return value
+    .replace(/^\d+\s+/, '')
+    .replace(/\.$/, '')
+    .replace(/"/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+function recordHost(recordName: string | null | undefined, domain: string) {
+  const cleanName = (recordName || '@').replace(/\.$/, '');
+  if (cleanName === '@' || cleanName === domain) return domain;
+  if (cleanName.endsWith(`.${domain}`)) return cleanName;
+  return `${cleanName}.${domain}`;
+}
+
+async function checkDnsRecords(domain: string, records: any[]) {
+  const checks = await Promise.all((records || []).map(async (record: any) => {
+    const host = recordHost(record.name, domain);
+    const type = String(record.type || '').toUpperCase();
+    const expected = normalizeDnsValue(String(record.value || ''));
+
+    try {
+      const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=${type}`);
+      const data = await res.json();
+      const answers = Array.isArray(data.Answer) ? data.Answer : [];
+      const matched = answers.some((answer: any) => normalizeDnsValue(String(answer.data || '')).includes(expected));
+
+      return { ...record, status: matched ? 'verified' : (record.status || 'pending'), dns_host: host, dns_verified: matched };
+    } catch (error) {
+      console.error('DNS lookup failed:', host, type, error);
+      return { ...record, status: record.status || 'pending', dns_host: host, dns_verified: false };
+    }
+  }));
+
+  return {
+    records: checks,
+    verified: checks.length > 0 && checks.every((record: any) => record.dns_verified),
+  };
+}
+
 function getResendHeaders() {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -127,7 +168,9 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     throw new Error(`Resend status check failed [${statusRes.status}]: ${JSON.stringify(statusData)}`);
   }
 
-  const isVerified = statusData.status === 'verified';
+  const providerRecords = statusData.records || domainConfig.dns_records || [];
+  const dnsCheck = await checkDnsRecords(domainConfig.domain, providerRecords);
+  const isVerified = statusData.status === 'verified' || dnsCheck.verified;
   const newStatus = isVerified ? 'verified' : 'pending';
 
   // Update DB
@@ -135,7 +178,7 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     .from('store_email_domains')
     .update({
       status: newStatus,
-      dns_records: statusData.records || domainConfig.dns_records,
+      dns_records: dnsCheck.records,
       ...(isVerified ? { verified_at: new Date().toISOString() } : {}),
     })
     .eq('store_id', data.store_id);
@@ -146,7 +189,9 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     success: true,
     status: newStatus,
     verified: isVerified,
-    dns_records: statusData.records || domainConfig.dns_records,
+    provider_status: statusData.status,
+    dns_verified: dnsCheck.verified,
+    dns_records: dnsCheck.records,
   };
 }
 
