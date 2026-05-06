@@ -25,19 +25,28 @@ export const useCustomerAuth = (storeSlug: string) => {
     return `${localPart}@${storeSlug}.${TENANT_DOMAIN}`;
   };
 
+  const isStoreCustomer = (candidate: User | null) => {
+    if (!candidate?.user_metadata?.is_customer || !storeSlug) return false;
+    const metaSlug = candidate.user_metadata.store_slug;
+    const email = candidate.email || '';
+    return metaSlug === storeSlug || email.endsWith(`@${storeSlug}.${TENANT_DOMAIN}`);
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const sessionUser = session?.user ?? null;
+      setUser(isStoreCustomer(sessionUser) ? sessionUser : null);
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const sessionUser = session?.user ?? null;
+      setUser(isStoreCustomer(sessionUser) ? sessionUser : null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [storeSlug]);
 
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
