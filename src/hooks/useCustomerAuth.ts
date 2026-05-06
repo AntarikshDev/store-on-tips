@@ -6,6 +6,15 @@ export const useCustomerAuth = (storeSlug: string) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const getTenantEmail = (value: string) => {
+    const normalized = normalizeEmail(value);
+    const [localPart, domain] = normalized.split('@');
+    if (!localPart || !domain || !storeSlug) return normalized;
+    return `${localPart}+${storeSlug}@${domain}`;
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -21,20 +30,21 @@ export const useCustomerAuth = (storeSlug: string) => {
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const { data, error } = await supabase.auth.signInWithPassword({ email: getTenantEmail(email), password });
+    return { data, error };
   };
 
   const signUpWithEmail = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
+    const realEmail = normalizeEmail(email);
+    const { data, error } = await supabase.auth.signUp({
+      email: getTenantEmail(realEmail),
       password,
       options: {
-        data: { full_name: fullName, is_customer: true },
+        data: { full_name: fullName, is_customer: true, store_slug: storeSlug, customer_email: realEmail },
         emailRedirectTo: `${window.location.origin}/store/${storeSlug}/account`,
       },
     });
-    return { error };
+    return { data, error };
   };
 
   const signInWithOtp = async (phone: string) => {

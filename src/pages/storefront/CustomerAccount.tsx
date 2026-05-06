@@ -48,6 +48,8 @@ const CustomerAccount = () => {
     setProfilePhone(user.phone || user.user_metadata?.phone || '');
   }, [user]);
 
+  const displayEmail = user.user_metadata?.customer_email || user.email;
+
   useEffect(() => {
     if (!user || !store) return;
     supabase
@@ -171,13 +173,13 @@ const CustomerAccount = () => {
         <div className="p-5 md:p-6 mb-6" style={{ background: `linear-gradient(135deg, ${colors.primary}18, ${colors.primary}08)`, borderRadius: br, border: `1px solid ${colors.secondary}` }}>
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 md:h-20 md:w-20 rounded-full flex items-center justify-center text-2xl font-bold shrink-0" style={{ backgroundColor: colors.primary + '25', color: colors.primary }}>
-              {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
+              {(user.user_metadata?.full_name || displayEmail || 'U')[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl md:text-2xl font-bold truncate" style={{ fontFamily: fonts.heading }}>
                 {user.user_metadata?.full_name || 'Welcome!'}
               </h1>
-              <p className="text-sm opacity-60 truncate">{user.email || user.phone}</p>
+              <p className="text-sm opacity-60 truncate">{displayEmail || user.phone}</p>
               {user.phone && user.email && <p className="text-xs opacity-40 mt-0.5">{user.phone}</p>}
             </div>
             <button onClick={signOut} className="hidden md:flex items-center gap-2 px-4 py-2 text-sm border opacity-70 hover:opacity-100 transition-opacity" style={{ borderColor: colors.secondary, borderRadius: brHalf }}>
@@ -273,8 +275,8 @@ const CustomerAccount = () => {
                 <div>
                   <label className="text-xs font-medium opacity-60 mb-1.5 block">Email</label>
                   <p className="text-sm py-2.5 px-3 border flex items-center gap-2" style={{ borderColor: colors.secondary + '60', borderRadius: brHalf, backgroundColor: colors.secondary + '30' }}>
-                    {user.email || <span className="opacity-40">Not set</span>}
-                    {user.email && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#16a34a20', color: '#16a34a' }}>Verified</span>}
+                    {displayEmail || <span className="opacity-40">Not set</span>}
+                    {displayEmail && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#16a34a20', color: '#16a34a' }}>Verified</span>}
                   </p>
                 </div>
                 <div>
