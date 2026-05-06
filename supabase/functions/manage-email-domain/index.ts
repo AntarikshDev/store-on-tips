@@ -46,11 +46,12 @@ function getResendHeaders() {
 async function handleAdd(data: z.infer<typeof AddSchema>) {
   const headers = getResendHeaders();
 
-  // Register domain with Resend
+  // Register domain with Resend in Tokyo region (ap-northeast-1)
+  // — closest Resend region to India for best deliverability to .in inboxes
   const res = await fetch(`${GATEWAY_URL}/domains`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ name: data.domain }),
+    body: JSON.stringify({ name: data.domain, region: 'ap-northeast-1' }),
   });
 
   const resendData = await res.json();
