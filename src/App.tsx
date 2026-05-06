@@ -92,9 +92,10 @@ const CustomDomainRedirect = ({ slug }: { slug: string }) => {
   const { pathname, search, hash } = useLocation();
   // Strip any leading slash; map "/" to ""
   const sub = pathname === "/" ? "" : pathname.replace(/^\//, "");
-  // Account paths preserved as-is (e.g. /account, /account/auth, /account/wishlist)
-  // Policy/blog/product/cart/checkout pass through too.
-  const target = `/store/${slug}${sub ? `/${sub}` : ""}${search}${hash}`;
+  const accountPath = sub === "auth" ? "account/auth" : sub === "wishlist" ? "account/wishlist" : sub;
+  // On custom domains, /auth must be the merchant storefront customer auth,
+  // not the platform seller signup page.
+  const target = `/store/${slug}${accountPath ? `/${accountPath}` : ""}${search}${hash}`;
   return <Navigate to={target} replace />;
 };
 

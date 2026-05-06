@@ -25,19 +25,61 @@ export const useCustomerAuth = (storeSlug: string) => {
     return `${localPart}@${storeSlug}.${TENANT_DOMAIN}`;
   };
 
+  const isStoreCustomer = (candidate: User | null) => {
+    if (!candidate?.user_metadata?.is_customer || !storeSlug) return false;
+    const metaSlug = candidate.user_metadata.store_slug;
+    const email = candidate.email || '';
+    return metaSlug === storeSlug || email.endsWith(`@${storeSlug}.${TENANT_DOMAIN}`);
+  };
+
   useEffect(() => {
+    let active = true;
+
+    const setScopedUser = async (sessionUser: User | null) => {
+      if (!active) return;
+      if (!sessionUser?.user_metadata?.is_customer || !storeSlug) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      if (isStoreCustomer(sessionUser)) {
+        setUser(sessionUser);
+        setLoading(false);
+        return;
+      }
+      const { data: store } = await supabase.from('stores').select('id').eq('slug', storeSlug).maybeSingle();
+      if (!active || !store?.id) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('user_id')
+        .eq('user_id', sessionUser.id)
+        .eq('store_id', store.id)
+        .maybeSingle();
+      if (active) {
+        setUser(customer ? sessionUser : null);
+        setLoading(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      const sessionUser = session?.user ?? null;
+      void setScopedUser(sessionUser);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      const sessionUser = session?.user ?? null;
+      void setScopedUser(sessionUser);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [storeSlug]);
 
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
