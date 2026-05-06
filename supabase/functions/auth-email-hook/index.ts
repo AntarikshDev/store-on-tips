@@ -110,8 +110,26 @@ function getStoreSlugFromAuthUrl(authUrl?: string) {
   return null
 }
 
-async function getVerifiedStoreSender(supabase: any, authUrl?: string) {
-  const slug = getStoreSlugFromAuthUrl(authUrl)
+function getAuthMetadata(data: any) {
+  return data?.user?.user_metadata || data?.user_metadata || data?.raw_user_meta_data || data?.raw_user_metadata || {}
+}
+
+function getCustomerRecipientEmail(data: any) {
+  const metadata = getAuthMetadata(data)
+  return typeof metadata.customer_email === 'string' && metadata.customer_email.includes('@')
+    ? metadata.customer_email
+    : data.email
+}
+
+function getStoreSlugFromPayload(data: any) {
+  const metadata = getAuthMetadata(data)
+  return typeof metadata.store_slug === 'string' && metadata.store_slug
+    ? metadata.store_slug
+    : getStoreSlugFromAuthUrl(data.url)
+}
+
+async function getVerifiedStoreSender(supabase: any, authUrl?: string, storeSlug?: string) {
+  const slug = storeSlug || getStoreSlugFromAuthUrl(authUrl)
   if (!slug) return null
 
   const { data: store } = await supabase
