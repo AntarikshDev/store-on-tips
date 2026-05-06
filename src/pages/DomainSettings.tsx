@@ -56,6 +56,7 @@ function EmailDomainSection({ store }: { store: any }) {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [loadingConfig, setLoadingConfig] = useState(true);
+  const [planLimitError, setPlanLimitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!store?.id) return;
