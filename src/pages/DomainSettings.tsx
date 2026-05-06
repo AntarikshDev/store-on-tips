@@ -184,6 +184,14 @@ function EmailDomainSection({ store }: { store: any }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {planLimitError && (
+            <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900">
+              <p className="font-medium mb-1">⏳ Awaiting platform email upgrade</p>
+              <p className="text-xs">
+                Your domain details are saved below. The moment our team upgrades the email service, click <strong>Set Up Email Domain</strong> again and verification will work instantly — no other action needed from you.
+              </p>
+            </div>
+          )}
           {!emailConfig ? (
             <>
               <div className="space-y-2">
