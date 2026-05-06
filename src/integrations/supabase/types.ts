@@ -708,7 +708,10 @@ export type Database = {
       customers: {
         Row: {
           created_at: string | null
+          email: string | null
           id: string
+          name: string | null
+          phone: string | null
           saved_addresses: Json | null
           store_id: string
           updated_at: string | null
@@ -716,7 +719,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          name?: string | null
+          phone?: string | null
           saved_addresses?: Json | null
           store_id: string
           updated_at?: string | null
@@ -724,7 +730,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          name?: string | null
+          phone?: string | null
           saved_addresses?: Json | null
           store_id?: string
           updated_at?: string | null
