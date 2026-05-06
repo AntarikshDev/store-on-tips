@@ -168,7 +168,9 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     throw new Error(`Resend status check failed [${statusRes.status}]: ${JSON.stringify(statusData)}`);
   }
 
-  const isVerified = statusData.status === 'verified';
+  const providerRecords = statusData.records || domainConfig.dns_records || [];
+  const dnsCheck = await checkDnsRecords(domainConfig.domain, providerRecords);
+  const isVerified = statusData.status === 'verified' || dnsCheck.verified;
   const newStatus = isVerified ? 'verified' : 'pending';
 
   // Update DB
@@ -176,7 +178,7 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     .from('store_email_domains')
     .update({
       status: newStatus,
-      dns_records: statusData.records || domainConfig.dns_records,
+      dns_records: dnsCheck.records,
       ...(isVerified ? { verified_at: new Date().toISOString() } : {}),
     })
     .eq('store_id', data.store_id);
@@ -187,7 +189,9 @@ async function handleVerify(data: z.infer<typeof VerifySchema>) {
     success: true,
     status: newStatus,
     verified: isVerified,
-    dns_records: statusData.records || domainConfig.dns_records,
+    provider_status: statusData.status,
+    dns_verified: dnsCheck.verified,
+    dns_records: dnsCheck.records,
   };
 }
 
