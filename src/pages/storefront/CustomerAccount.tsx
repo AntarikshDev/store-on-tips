@@ -48,6 +48,8 @@ const CustomerAccount = () => {
     setProfilePhone(user.phone || user.user_metadata?.phone || '');
   }, [user]);
 
+  const displayEmail = user.user_metadata?.customer_email || user.email;
+
   useEffect(() => {
     if (!user || !store) return;
     supabase
@@ -177,7 +179,7 @@ const CustomerAccount = () => {
               <h1 className="text-xl md:text-2xl font-bold truncate" style={{ fontFamily: fonts.heading }}>
                 {user.user_metadata?.full_name || 'Welcome!'}
               </h1>
-              <p className="text-sm opacity-60 truncate">{user.email || user.phone}</p>
+              <p className="text-sm opacity-60 truncate">{displayEmail || user.phone}</p>
               {user.phone && user.email && <p className="text-xs opacity-40 mt-0.5">{user.phone}</p>}
             </div>
             <button onClick={signOut} className="hidden md:flex items-center gap-2 px-4 py-2 text-sm border opacity-70 hover:opacity-100 transition-opacity" style={{ borderColor: colors.secondary, borderRadius: brHalf }}>
