@@ -18,6 +18,7 @@ import {
   Shield,
   Sparkles,
   Clock,
+  RefreshCw,
 } from 'lucide-react';
 
 // ── Types ──
@@ -122,8 +123,8 @@ function EmailDomainSection({ store }: { store: any }) {
         body: { action: 'verify', store_id: store.id },
       });
       if (error) throw new Error((data as any)?.error || error.message || 'Verification failed');
-      if ((data as any)?.verified) toast.success('Email domain verified!');
-      else toast.error('DNS records not yet propagated. Please wait and try again.');
+      if ((data as any)?.verified) toast.success('Email domain verified and ready for customer emails!');
+      else toast.error(`Provider status: ${(data as any)?.provider_status || 'pending'}. DNS records not yet propagated.`);
       const { data: updated } = await supabase
         .from('store_email_domains').select('*').eq('store_id', store.id).single();
       if (updated) setEmailConfig(updated as EmailDomainConfig);
@@ -221,6 +222,10 @@ function EmailDomainSection({ store }: { store: any }) {
               <Button variant="destructive" size="sm" onClick={handleRemoveEmailDomain} disabled={loading}>
                 Remove Email Domain
               </Button>
+              <Button variant="outline" size="sm" onClick={handleVerifyEmail} disabled={verifying}>
+                {verifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Refresh Status
+              </Button>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -253,10 +258,17 @@ function EmailDomainSection({ store }: { store: any }) {
                       <Copy className="h-3 w-3" />
                     </Button>
                   </div>
+                  <Badge variant="outline" className="mt-2 text-[10px] capitalize">
+                    {record.status || 'pending'}
+                  </Badge>
                 </div>
               </div>
             ))}
             <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={handleVerifyEmail} disabled={verifying}>
+                {verifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Refresh Status
+              </Button>
               <Button onClick={handleVerifyEmail} disabled={verifying}>
                 {verifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Verify Email Domain
