@@ -9,6 +9,7 @@ import { Loader2, Mail, Phone, ShoppingBag, IndianRupee, Crown, Search } from 'l
 import { useState } from 'react';
 
 type CustomerRow = {
+  userId: string | null;
   email: string;
   name: string;
   phone: string;
@@ -16,32 +17,57 @@ type CustomerRow = {
   totalSpend: number;
   lastOrderAt: string | null;
   firstOrderAt: string | null;
+  registeredAt: string | null;
 };
 
 const Customers = () => {
   const { store } = useStore();
   const [query, setQuery] = useState('');
 
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['store-customers-orders', store?.id],
+  const { data, isLoading } = useQuery({
+    queryKey: ['store-customers', store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const [ordersRes, customersRes] = await Promise.all([
+        supabase
         .from('orders')
-        .select('id, customer_email, customer_name, customer_phone, total, created_at')
+        .select('id, customer_user_id, customer_email, customer_name, customer_phone, total, created_at')
         .eq('store_id', store!.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+        .order('created_at', { ascending: false }),
+        (supabase as any)
+          .from('customers')
+          .select('user_id, name, email, phone, created_at')
+          .eq('store_id', store!.id)
+          .order('created_at', { ascending: false }),
+      ]);
+      if (ordersRes.error) throw ordersRes.error;
+      if (customersRes.error) throw customersRes.error;
+      return { orders: ordersRes.data || [], registered: customersRes.data || [] };
     },
   });
 
   const customers = useMemo<CustomerRow[]>(() => {
     const map = new Map<string, CustomerRow>();
-    for (const o of orders as any[]) {
+    for (const c of (data?.registered || []) as any[]) {
+      const key = (c.email || c.phone || c.user_id || '').toLowerCase().trim();
+      if (!key) continue;
+      map.set(key, {
+        userId: c.user_id || null,
+        email: c.email || '',
+        name: c.name || '',
+        phone: c.phone || '',
+        ordersCount: 0,
+        totalSpend: 0,
+        lastOrderAt: null,
+        firstOrderAt: null,
+        registeredAt: c.created_at || null,
+      });
+    }
+    for (const o of (data?.orders || []) as any[]) {
       const key = (o.customer_email || o.customer_phone || '').toLowerCase().trim();
       if (!key) continue;
       const existing = map.get(key) || {
+        userId: o.customer_user_id || null,
         email: o.customer_email || '',
         name: o.customer_name || '',
         phone: o.customer_phone || '',
@@ -49,6 +75,7 @@ const Customers = () => {
         totalSpend: 0,
         lastOrderAt: null,
         firstOrderAt: null,
+        registeredAt: null,
       };
       existing.ordersCount += 1;
       existing.totalSpend += Number(o.total || 0);
@@ -59,7 +86,7 @@ const Customers = () => {
       map.set(key, existing);
     }
     return Array.from(map.values()).sort((a, b) => b.totalSpend - a.totalSpend);
-  }, [orders]);
+  }, [data]);
 
   const filtered = customers.filter((c) => {
     const q = query.toLowerCase();
