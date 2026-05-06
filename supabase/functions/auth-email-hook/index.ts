@@ -323,6 +323,38 @@ async function handleWebhook(req: Request): Promise<Response> {
   )
 
   const messageId = crypto.randomUUID()
+  const storeSender = await getVerifiedStoreSender(supabase, payload.data.url)
+
+  if (storeSender) {
+    const sent = await sendViaStoreDomain(
+      payload.data.email,
+      storeSender.from,
+      EMAIL_SUBJECTS[emailType] || 'Notification',
+      html,
+      text
+    )
+
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: emailType,
+      recipient_email: payload.data.email,
+      status: sent ? 'sent' : 'failed',
+      error_message: sent ? null : 'Failed to send through store sender domain',
+    })
+
+    if (!sent) {
+      return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    console.log('Auth email sent via store domain', { emailType, email: payload.data.email, run_id })
+    return new Response(JSON.stringify({ success: true, sent: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
