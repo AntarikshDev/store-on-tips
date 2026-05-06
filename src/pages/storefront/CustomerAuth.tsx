@@ -107,27 +107,9 @@ const CustomerAuth = () => {
     setSubmitting(false);
   };
 
-  const handleGoogleSignIn = async () => {
-    setSubmitting(true);
-    // Clear any seller (or other-store customer) session in this browser so the
-    // OAuth callback doesn't reuse it as a customer of this store.
-    const { data: { session } } = await supabase.auth.getSession();
-    const u = session?.user;
-    if (u && (!u.user_metadata?.is_customer || u.user_metadata?.store_slug !== slug)) {
-      await supabase.auth.signOut();
-    }
-    const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: `${window.location.origin}/store/${slug}`,
-    });
-    if (result.error) {
-      toast.error('Google sign-in failed');
-      setSubmitting(false);
-      return;
-    }
-    if (result.redirected) return;
-    navigate(`/store/${slug}`);
-    setSubmitting(false);
-  };
+  // Google sign-in is intentionally disabled on storefronts: it would create a
+  // single global Supabase user keyed by the user's real gmail address, which
+  // breaks per-store tenancy. Customers must use email + password (or phone OTP).
 
   return (
     <StorefrontLayout store={store}>
