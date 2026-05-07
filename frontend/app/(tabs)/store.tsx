@@ -9,8 +9,21 @@ import {
   View,
   Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ExternalLink, Eye, Globe, Sparkles } from 'lucide-react-native';
+import {
+  ChevronRight,
+  ExternalLink,
+  Globe,
+  Image as ImageIcon,
+  Mail,
+  Palette,
+  Search,
+  Sparkles,
+  Wand2,
+  FileText,
+  BookOpen,
+} from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 
 import { useStoreContext } from '../../src/contexts/StoreContext';
@@ -19,6 +32,7 @@ import { Button, Card } from '../../src/components/ui';
 import { lightTheme as t, typography } from '../../src/theme/tokens';
 
 export default function StoreScreen() {
+  const router = useRouter();
   const { store, refetchStore } = useStoreContext();
   const [publishing, setPublishing] = React.useState(false);
 
@@ -49,6 +63,95 @@ export default function StoreScreen() {
     }
   };
 
+  const openWeb = (path: string, title: string) =>
+    router.push({
+      pathname: '/store/webview',
+      params: { url: `https://pictocart.in${path}`, title },
+    });
+
+  const sections: {
+    title: string;
+    items: {
+      icon: React.ReactNode;
+      label: string;
+      sub?: string;
+      onPress: () => void;
+      testID: string;
+    }[];
+  }[] = [
+    {
+      title: 'Design',
+      items: [
+        {
+          icon: <Palette size={18} color={t.primary} />,
+          label: 'Themes',
+          sub: 'Browse and apply themes',
+          onPress: () => router.push('/store/themes'),
+          testID: 'store-link-themes',
+        },
+        {
+          icon: <Wand2 size={18} color={t.primary} />,
+          label: 'Customise',
+          sub: 'Visual builder (opens on web)',
+          onPress: () => openWeb('/customise', 'Customise'),
+          testID: 'store-link-customise',
+        },
+        {
+          icon: <ImageIcon size={18} color={t.primary} />,
+          label: 'Logo',
+          sub: 'Upload a square logo',
+          onPress: () => router.push('/store/logo'),
+          testID: 'store-link-logo',
+        },
+      ],
+    },
+    {
+      title: 'Settings',
+      items: [
+        {
+          icon: <Globe size={18} color={t.primary} />,
+          label: 'Domain',
+          sub: store.custom_domain ?? `pictocart.in/${store.slug}`,
+          onPress: () => openWeb('/settings/domain', 'Domain'),
+          testID: 'store-link-domain',
+        },
+        {
+          icon: <Search size={18} color={t.primary} />,
+          label: 'SEO',
+          sub: 'Title, description, keywords',
+          onPress: () => openWeb('/settings/seo', 'SEO'),
+          testID: 'store-link-seo',
+        },
+        {
+          icon: <Mail size={18} color={t.primary} />,
+          label: 'Email branding',
+          sub: 'Sender name, header, footer',
+          onPress: () => openWeb('/settings/email-branding', 'Email branding'),
+          testID: 'store-link-email',
+        },
+      ],
+    },
+    {
+      title: 'Content',
+      items: [
+        {
+          icon: <FileText size={18} color={t.primary} />,
+          label: 'Pages',
+          sub: 'About, Contact, Policies',
+          onPress: () => openWeb('/pages', 'Pages'),
+          testID: 'store-link-pages',
+        },
+        {
+          icon: <BookOpen size={18} color={t.primary} />,
+          label: 'Blog',
+          sub: 'Posts, drafts, SEO',
+          onPress: () => openWeb('/blog', 'Blog'),
+          testID: 'store-link-blog',
+        },
+      ],
+    },
+  ];
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
@@ -58,7 +161,7 @@ export default function StoreScreen() {
         </View>
 
         <View style={{ paddingHorizontal: 16 }}>
-          {/* Store hero card */}
+          {/* Hero card */}
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <View style={styles.banner}>
               {store.banner_url ? (
@@ -123,35 +226,43 @@ export default function StoreScreen() {
             </View>
           </Card>
 
-          {/* Edit on web hint */}
-          <View style={styles.hint}>
-            <Sparkles size={16} color={t.primary} />
-            <Text style={styles.hintText}>
-              Use the web dashboard to redesign your storefront with the visual
-              builder. Most other tasks (products, orders, settings) can be done
-              right here.
-            </Text>
-          </View>
+          {/* Storefront sections */}
+          {sections.map((section) => (
+            <View key={section.title} style={{ marginTop: 20 }}>
+              <Text style={styles.sectionLabel}>{section.title}</Text>
+              {section.items.map((item) => (
+                <TouchableOpacity
+                  key={item.testID}
+                  style={styles.item}
+                  onPress={item.onPress}
+                  activeOpacity={0.85}
+                  testID={item.testID}
+                >
+                  <View style={styles.itemIcon}>{item.icon}</View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemLabel}>{item.label}</Text>
+                    {item.sub ? (
+                      <Text style={styles.itemSub} numberOfLines={1}>
+                        {item.sub}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <ChevronRight size={16} color={t.mutedForeground} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
 
-          {/* Quick stats */}
-          <View style={styles.statsRow}>
-            <Stat label="Status" value={store.is_published ? 'Live' : 'Draft'} />
-            <Stat label="Slug" value={store.slug} />
+          <View style={styles.hint}>
+            <Sparkles size={16} color={t.primaryStrong} />
+            <Text style={styles.hintText}>
+              Heavy editors (visual builder, advanced settings) open in an
+              in-app browser. Your seller session persists.
+            </Text>
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
   );
 }
 
@@ -213,11 +324,38 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   url: { color: t.mutedForeground, fontSize: 13 },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
+  actionsRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  sectionLabel: {
+    fontSize: 12,
+    color: t.mutedForeground,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '700',
+    marginBottom: 8,
+    marginLeft: 4,
   },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: t.card,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: t.border,
+    marginBottom: 8,
+    gap: 12,
+  },
+  itemIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: t.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemLabel: { color: t.foreground, fontSize: 15, fontWeight: '600' },
+  itemSub: { color: t.mutedForeground, fontSize: 12, marginTop: 2 },
   hint: {
     marginTop: 16,
     flexDirection: 'row',
@@ -228,15 +366,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   hintText: { color: t.primaryStrong, fontSize: 13, flex: 1, lineHeight: 19 },
-  statsRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  stat: {
-    flex: 1,
-    padding: 14,
-    backgroundColor: t.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.border,
-  },
-  statLabel: { color: t.mutedForeground, fontSize: 12 },
-  statValue: { color: t.foreground, fontWeight: '700', marginTop: 4 },
 });

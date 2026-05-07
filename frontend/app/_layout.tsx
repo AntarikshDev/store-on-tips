@@ -134,6 +134,8 @@ export default function RootLayout() {
                       title: 'Edit Product',
                     }}
                   />
+                  <Stack.Screen name="store" />
+                  <Stack.Screen name="more" />
                 </Stack>
               </NavigationGate>
             </StoreProvider>
