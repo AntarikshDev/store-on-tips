@@ -109,6 +109,10 @@ const ProductForm = () => {
       if (p.seoTitle) setSeoTitle(p.seoTitle);
       if (p.seoDescription) setSeoDescription(p.seoDescription);
       if (p.highlights) setHighlights(p.highlights);
+      if (p.product_type) setProductType(p.product_type as ProductType);
+      if (p.metadata && typeof p.metadata === 'object') {
+        setTypeMetadata((prev) => ({ ...prev, ...p.metadata }));
+      }
       toast.success('AI generated product details!');
     } catch (err: any) {
       toast.error(err.message || 'AI generation failed');
