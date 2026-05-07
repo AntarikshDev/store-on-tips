@@ -71,6 +71,55 @@ const StorefrontCheckout = () => {
     }
   }, [store]);
 
+  // Load COD rules + customer order history (for risk checks)
+  useEffect(() => {
+    if (!store?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('cod_rules' as any)
+        .select('*')
+        .eq('store_id', store.id)
+        .maybeSingle();
+      setCodRules(data ?? null);
+
+      if (user?.id) {
+        const { count } = await supabase
+          .from('orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('store_id', store.id)
+          .eq('customer_user_id', user.id)
+          .in('status', ['delivered', 'shipped', 'confirmed']);
+        setPriorOrders(count ?? 0);
+      } else {
+        setPriorOrders(0);
+      }
+    })();
+  }, [store?.id, user?.id]);
+
+  // Determine if COD is allowed for this cart + form
+  const codBlockedReason: string | null = (() => {
+    if (!codRules) return null; // no rules configured = allow
+    if (codRules.enabled === false) return 'Cash on Delivery is disabled by the seller';
+    if (codRules.max_order_value && finalTotalForCheck() > Number(codRules.max_order_value))
+      return `COD only available for orders up to ₹${Number(codRules.max_order_value).toLocaleString('en-IN')}`;
+    if (codRules.min_order_value && finalTotalForCheck() < Number(codRules.min_order_value))
+      return `Minimum order for COD is ₹${Number(codRules.min_order_value).toLocaleString('en-IN')}`;
+    if (codRules.require_phone_verification && !user) return 'Please sign in to use Cash on Delivery';
+    if (codRules.min_prior_orders > 0 && priorOrders < codRules.min_prior_orders)
+      return `COD available only after ${codRules.min_prior_orders} successful order(s)`;
+    if (form.pincode) {
+      const pin = form.pincode.trim();
+      if (codRules.pincode_blocklist?.includes(pin)) return 'COD not available for this pincode';
+      if (codRules.pincode_allowlist?.length > 0 && !codRules.pincode_allowlist.includes(pin))
+        return 'COD not available for this pincode';
+    }
+    if (form.phone && codRules.blocked_phones?.includes(form.phone.trim()))
+      return 'COD is not available for this phone number';
+    return null;
+  })();
+  function finalTotalForCheck() { return Math.max(0, totalPrice - (appliedCoupon?.discount || 0)); }
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
