@@ -107,6 +107,23 @@ const CustomerAuth = () => {
     setSubmitting(false);
   };
 
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Enter your email first');
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await requestPasswordReset(email);
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message || 'Could not send reset email');
+      return;
+    }
+    toast.success("If an account exists, we've emailed you a reset link.");
+    setMode('login');
+  };
+
   // Google sign-in is intentionally disabled on storefronts: it would create a
   // single global Supabase user keyed by the user's real gmail address, which
   // breaks per-store tenancy. Customers must use email + password (or phone OTP).
