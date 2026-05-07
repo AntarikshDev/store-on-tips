@@ -12,6 +12,7 @@ import {
   Menu,
   Shield,
   CreditCard,
+  Banknote,
   Truck,
   Globe,
   Ticket,
