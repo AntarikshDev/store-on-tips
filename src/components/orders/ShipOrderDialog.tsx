@@ -26,6 +26,7 @@ interface CustomerAddress {
 const ShipOrderDialog = ({ open, onOpenChange, order, store, onShipped }: ShipOrderDialogProps) => {
   const [weight, setWeight] = useState('500');
   const [shipping, setShipping] = useState(false);
+  const [provider, setProvider] = useState<'delhivery' | 'shiprocket'>('delhivery');
 
   const settings = store.settings as any;
   const shippingConfig = settings?.shipping;
@@ -49,8 +50,9 @@ const ShipOrderDialog = ({ open, onOpenChange, order, store, onShipped }: ShipOr
       const accessToken = sessionData.session?.access_token;
 
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const fnName = provider === 'shiprocket' ? 'shiprocket-proxy' : 'delhivery-proxy';
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/delhivery-proxy`,
+        `https://${projectId}.supabase.co/functions/v1/${fnName}`,
         {
           method: 'POST',
           headers: {
