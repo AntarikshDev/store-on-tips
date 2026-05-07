@@ -514,7 +514,7 @@ const StorefrontCheckout = () => {
             </h2>
             <div className="space-y-2">
               {paymentMethods.map((pm) => {
-                const disabled = !pm.always && !razorpayAvailable;
+                const disabled = (!pm.always && !razorpayAvailable) || !!pm.disabledReason;
                 return (
                   <label
                     key={pm.id}
@@ -524,9 +524,7 @@ const StorefrontCheckout = () => {
                       borderRadius: `${borderRadius / 2}px`,
                       backgroundColor: form.paymentMethod === pm.id ? colors.primary + '10' : 'transparent',
                     }}
-                    onClick={(e) => {
-                      if (disabled) e.preventDefault();
-                    }}
+                    onClick={(e) => { if (disabled) e.preventDefault(); }}
                   >
                     <input
                       type="radio"
@@ -542,15 +540,14 @@ const StorefrontCheckout = () => {
                       style={{ borderColor: form.paymentMethod === pm.id ? colors.primary : colors.secondary }}
                     >
                       {form.paymentMethod === pm.id && (
-                        <div
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: colors.primary }}
-                        />
+                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors.primary }} />
                       )}
                     </div>
                     <pm.icon className="h-4 w-4 shrink-0 opacity-60" />
                     <span className="text-sm">{pm.label}</span>
-                    {disabled && (
+                    {pm.disabledReason ? (
+                      <span className="ml-auto text-[10px] opacity-70">{pm.disabledReason}</span>
+                    ) : disabled && (
                       <span className="ml-auto text-[10px] opacity-60">Not available</span>
                     )}
                   </label>
