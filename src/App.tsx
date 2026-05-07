@@ -27,6 +27,7 @@ import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 
 // Lazy-load heavy / less-frequent pages to shrink initial bundle.
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
+const Investors = lazy(() => import("@/pages/Investors"));
 const ProductForm = lazy(() => import("@/pages/ProductForm"));
 const Customise = lazy(() => import("@/pages/Customise"));
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
@@ -123,6 +124,7 @@ const AppRoutes = () => {
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>}>
     <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/investors" element={<Investors />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
