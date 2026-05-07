@@ -168,22 +168,8 @@ Deno.serve(async (req) => {
     if (action === "request_password_reset") {
       const redirectTo = String(payload?.redirectTo || "");
 
-      // Look up the aliased user to recover the customer's REAL email address.
-      // (auth.users only has the synthetic alias.)
-      const { data: userList } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
-      });
-      // Use getUserByEmail-style lookup via admin API (filtering not exposed; use RPC fallback).
-      // Easiest: query auth.users via service role through SQL.
-      const { data: rows } = await admin
-        .from("auth_users_view" as any)
-        .select("id, email, raw_user_meta_data")
-        .eq("email", alias)
-        .maybeSingle()
-        .then((r) => r, () => ({ data: null }));
-
-      // Fallback: derive real email from request payload (we already have it).
+      // The customer's REAL inbox is the email they signed up with — we
+      // already have it in the request payload.
       const realEmail = email;
 
       // Generate the recovery link WITHOUT sending Supabase's default email.
