@@ -523,6 +523,51 @@ export type Database = {
         }
         Relationships: []
       }
+      cod_rules: {
+        Row: {
+          blocked_phones: string[]
+          created_at: string
+          enabled: boolean
+          max_order_value: number
+          min_order_value: number
+          min_prior_orders: number
+          notes: string | null
+          pincode_allowlist: string[]
+          pincode_blocklist: string[]
+          require_phone_verification: boolean
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_phones?: string[]
+          created_at?: string
+          enabled?: boolean
+          max_order_value?: number
+          min_order_value?: number
+          min_prior_orders?: number
+          notes?: string | null
+          pincode_allowlist?: string[]
+          pincode_blocklist?: string[]
+          require_phone_verification?: boolean
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_phones?: string[]
+          created_at?: string
+          enabled?: boolean
+          max_order_value?: number
+          min_order_value?: number
+          min_prior_orders?: number
+          notes?: string | null
+          pincode_allowlist?: string[]
+          pincode_blocklist?: string[]
+          require_phone_verification?: boolean
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -964,6 +1009,30 @@ export type Database = {
           sort?: number
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      low_balance_alerts: {
+        Row: {
+          balance_at_alert: number
+          id: string
+          sent_at: string
+          store_id: string
+          threshold_type: string
+        }
+        Insert: {
+          balance_at_alert: number
+          id?: string
+          sent_at?: string
+          store_id: string
+          threshold_type: string
+        }
+        Update: {
+          balance_at_alert?: number
+          id?: string
+          sent_at?: string
+          store_id?: string
+          threshold_type?: string
         }
         Relationships: []
       }
