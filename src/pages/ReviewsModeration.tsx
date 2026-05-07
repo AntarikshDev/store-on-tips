@@ -37,11 +37,12 @@ const ReviewsModeration = () => {
   const load = async () => {
     if (!store?.id) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('reviews' as any)
+    const sb = supabase as any;
+    const { data, error } = await sb
+      .from('reviews')
       .select('*')
       .eq('store_id', store.id)
-      .eq('moderation_status' as any, tab)
+      .eq('moderation_status', tab)
       .order('created_at', { ascending: false });
     if (error) toast.error(error.message);
     setRows(((data || []) as unknown as ReviewRow[]));
