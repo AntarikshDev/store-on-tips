@@ -422,9 +422,7 @@ const Investors = () => {
       <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-white">
-            <div className="h-7 w-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-              <Store className="h-4 w-4" />
-            </div>
+            <PicToCartLogo size={28} />
             <span className="font-bold">Pic to Cart</span>
             <Badge className="bg-violet-500/20 text-violet-200 border-violet-400/30 ml-2 hidden sm:inline-flex">Investor Deck</Badge>
           </Link>
