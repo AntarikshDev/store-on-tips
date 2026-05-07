@@ -141,6 +141,9 @@ const OrderDetail = () => {
             <h1 className="text-xl font-bold tracking-tight">Order #{order.order_number}</h1>
             <p className="text-sm text-muted-foreground">
               {format(new Date(order.created_at), 'dd MMM yyyy, hh:mm a')}
+              {(order as any).invoice_number && (
+                <span className="ml-2 font-mono text-xs">· {(order as any).invoice_number}</span>
+              )}
             </p>
           </div>
         </div>
