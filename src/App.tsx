@@ -30,6 +30,7 @@ const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const ProductForm = lazy(() => import("@/pages/ProductForm"));
 const Customise = lazy(() => import("@/pages/Customise"));
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
+const CodSettings = lazy(() => import("@/pages/CodSettings"));
 const ShippingSettings = lazy(() => import("@/pages/ShippingSettings"));
 const DomainSettings = lazy(() => import("@/pages/DomainSettings"));
 const CouponList = lazy(() => import("@/pages/CouponList"));
@@ -211,6 +212,16 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <PaymentSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/cod"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <CodSettings />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

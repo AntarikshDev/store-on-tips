@@ -12,6 +12,7 @@ import {
   Menu,
   Shield,
   CreditCard,
+  Banknote,
   Truck,
   Globe,
   Ticket,
@@ -87,6 +88,7 @@ const navTree: NavEntry[] = [
     key: 'settings',
     children: [
       { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
+      { label: 'COD Rules', icon: Banknote, path: '/settings/cod' },
       { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
       { label: 'Domain', icon: Globe, path: '/settings/domain' },
       { label: 'Email Branding', icon: Mail, path: '/settings/email' },

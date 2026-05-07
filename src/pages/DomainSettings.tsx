@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -287,6 +288,8 @@ function EmailDomainSection({ store }: { store: any }) {
 const DomainSettings = () => {
   const { store, refetchStore } = useStore();
   const { user } = useAuth();
+  const { canUse } = useSubscription();
+  const canUseCustomDomain = canUse('customDomain');
   const [domain, setDomain] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [request, setRequest] = useState<ProvisionRequestRow | null>(null);
@@ -459,6 +462,19 @@ const DomainSettings = () => {
                 Our team is creating your dedicated storefront. You'll receive an email within 24 hours when it's ready.
                 Status: <span className="font-mono">{request?.status}</span>
               </p>
+            </div>
+          ) : !canUseCustomDomain ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
+              <div className="flex items-center gap-2 text-amber-900">
+                <Sparkles className="h-5 w-5" />
+                <p className="text-sm font-medium">Custom domain is a paid plan feature</p>
+              </div>
+              <p className="text-xs text-amber-800">
+                Upgrade to a plan that includes custom domains to connect your own brand URL.
+              </p>
+              <Button size="sm" onClick={() => (window.location.href = '/billing')}>
+                View Plans
+              </Button>
             </div>
           ) : (
             <>
