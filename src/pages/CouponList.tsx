@@ -253,8 +253,12 @@ const CouponList = () => {
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {c.type === 'percentage' ? `${c.value}% off` : `₹${c.value} off`}
+                        {c.type === 'percentage' && `${c.value}% off`}
+                        {c.type === 'flat' && `₹${c.value} off`}
+                        {c.type === 'bogo' && `Buy ${c.bogo_buy_qty} Get ${c.bogo_get_qty} (${c.bogo_get_discount_pct}% off)`}
+                        {c.type === 'tiered' && `Tiered • ${(c.tiers?.length ?? 0)} tier${(c.tiers?.length ?? 0) === 1 ? '' : 's'}`}
                         {c.min_order_amount > 0 && ` • Min ₹${c.min_order_amount}`}
+                        {c.auto_apply && ' • Auto-apply'}
                       </p>
                     </div>
                   </div>
