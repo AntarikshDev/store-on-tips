@@ -409,9 +409,9 @@ const StorefrontCheckout = () => {
   };
 
   const paymentMethods = [
-    { id: 'cod', label: 'Cash on Delivery', icon: Banknote, always: true },
-    { id: 'upi', label: 'UPI (GPay, PhonePe, Paytm)', icon: Smartphone, always: false },
-    { id: 'online', label: 'Cards & Net Banking', icon: CreditCard, always: false },
+    { id: 'cod', label: 'Cash on Delivery', icon: Banknote, always: true, disabledReason: codBlockedReason },
+    { id: 'upi', label: 'UPI (GPay, PhonePe, Paytm)', icon: Smartphone, always: false, disabledReason: null as string | null },
+    { id: 'online', label: 'Cards & Net Banking', icon: CreditCard, always: false, disabledReason: null as string | null },
   ];
 
   return (
