@@ -282,17 +282,35 @@ const SlideAsk = () => (
   </Slide>
 );
 
-const SlideRoadmap = () => (
+const SlideRoadmap = () => {
+  const handleDownload = async () => {
+    try {
+      toast.loading("Generating your Business Plan PDF…", { id: "biz-plan" });
+      await downloadBusinessPlanPDF();
+      toast.success("Business Plan downloaded!", { id: "biz-plan" });
+    } catch (e) {
+      toast.error("Could not generate PDF. Please retry.", { id: "biz-plan" });
+    }
+  };
+  return (
   <Slide bg="bg-gradient-to-br from-slate-950 via-indigo-950 to-blue-950">
     <Badge className="bg-blue-500/20 text-blue-200 border-blue-400/30 mb-4">07 · 24-MONTH ROADMAP</Badge>
     <h2 className="text-4xl md:text-6xl font-black mb-4">India today. <span className="text-blue-300">Global tomorrow.</span></h2>
-    <p className="text-xl text-white/70 mb-10">From Tier-2 India to MENA, SEA, and LATAM in 24 months.</p>
+    <p className="text-xl text-white/70 mb-6">From Tier-2 India to MENA (Middle East & North Africa), SEA (South-East Asia), and LATAM (Latin America) in 24 months.</p>
+    <button
+      onClick={handleDownload}
+      className="group inline-flex items-center gap-3 mb-8 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 px-6 py-3 text-white font-semibold shadow-2xl shadow-fuchsia-500/30 transition-all hover:scale-[1.02]"
+    >
+      <FileText className="h-5 w-5" />
+      <span>Download Full Business Plan & 24-Month Roadmap (PDF)</span>
+      <Download className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
+    </button>
     <div className="space-y-4">
       {[
-        { q: "Q1-Q2 2026", t: "Bharat Push", p: "Vernacular UI (Hindi, Tamil, Telugu, Marathi). 10K active sellers. Launch ONDC bridge.", c: "from-orange-500 to-amber-500" },
-        { q: "Q3-Q4 2026", t: "Scale & Polish", p: "WhatsApp Commerce. Mobile app (PWA → native). Loyalty + abandoned cart. 50K sellers, ₹65L MRR.", c: "from-emerald-500 to-teal-500" },
-        { q: "Q1-Q2 2027", t: "MENA & SEA", p: "Multi-currency, multi-language storefront. UAE, Saudi, Singapore, Indonesia launch. Stripe + local PG.", c: "from-violet-500 to-fuchsia-500" },
-        { q: "Q3-Q4 2027", t: "Global SaaS", p: "LATAM + Africa. Series A. 250K sellers globally. ₹6 Cr+ MRR. Path to IPO.", c: "from-indigo-500 to-blue-500" },
+        { q: "Q1-Q2 2026", t: "Bharat Push", p: "Vernacular UI (User Interface) in Hindi, Tamil, Telugu, Marathi. 10K active sellers. Launch ONDC (Open Network for Digital Commerce) bridge.", c: "from-orange-500 to-amber-500" },
+        { q: "Q3-Q4 2026", t: "Scale & Polish", p: "WhatsApp Commerce. Mobile app (PWA – Progressive Web App – → native). Loyalty + abandoned cart. 50K sellers, ₹65L MRR (Monthly Recurring Revenue).", c: "from-emerald-500 to-teal-500" },
+        { q: "Q1-Q2 2027", t: "MENA & SEA", p: "Multi-currency, multi-language storefront. UAE, KSA (Kingdom of Saudi Arabia), Singapore, Indonesia launch. Stripe + local PG (Payment Gateway).", c: "from-violet-500 to-fuchsia-500" },
+        { q: "Q3-Q4 2027", t: "Global SaaS (Software-as-a-Service)", p: "LATAM + Africa. Series A. 250K sellers globally. ₹6 Cr+ MRR. Path to IPO (Initial Public Offering).", c: "from-indigo-500 to-blue-500" },
       ].map((x, i) => (
         <div key={i} className="flex items-start gap-4 rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors"
              style={{ animation: `slide-in-left 0.6s ease-out ${0.2 + i*0.15}s both` }}>
@@ -308,7 +326,8 @@ const SlideRoadmap = () => (
       ))}
     </div>
   </Slide>
-);
+  );
+};
 
 const SlideCustomer = () => (
   <Slide bg="bg-gradient-to-br from-pink-950 via-slate-950 to-rose-950">
@@ -318,8 +337,8 @@ const SlideCustomer = () => (
       {[
         { i: Clock, t: "5x Faster Setup", p: "Setup in minutes, not weeks. AI fills every field." },
         { i: Coins, t: "10x Cheaper", p: "₹499/mo vs ₹2,500+ on Shopify. 0% commission on Scale plan." },
-        { i: Brain, t: "AI Co-Pilot", p: "Descriptions, blog, marketing copy, SEO — written for you." },
-        { i: Shield, t: "Made for Bharat", p: "GST invoices, FSSAI fields, COD, Delhivery — out of the box." },
+        { i: Brain, t: "AI Co-Pilot", p: "Descriptions, blog, marketing copy, SEO (Search Engine Optimization) — written for you." },
+        { i: Shield, t: "Made for Bharat", p: "GST (Goods & Services Tax) invoices, COD (Cash on Delivery), Delhivery — out of the box." },
         { i: Crown, t: "Own Your Brand", p: "Custom domain. Branded emails. Full customer data." },
         { i: TrendingUp, t: "Built to Convert", p: "30+ themes, abandoned cart, coupons, reviews, loyalty." },
       ].map((x, i) => (
