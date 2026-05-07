@@ -11,8 +11,8 @@ const CustomerAuth = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { store, loading: storeLoading } = useStorefront(slug || '');
-  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp } = useCustomerAuth(slug || '');
-  const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp'>('login');
+  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset } = useCustomerAuth(slug || '');
+  const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
