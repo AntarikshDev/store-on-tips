@@ -167,16 +167,43 @@ Deno.serve(async (req) => {
 
     if (action === "request_password_reset") {
       const redirectTo = String(payload?.redirectTo || "");
-      const { error } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email: alias,
-        options: redirectTo ? { redirectTo } : undefined,
-      });
-      if (error) {
-        console.error("generateLink (recovery) failed", error);
-        // Don't leak which addresses exist.
+
+      // The customer's REAL inbox is the email they signed up with — we
+      // already have it in the request payload.
+      const realEmail = email;
+
+      // Generate the recovery link WITHOUT sending Supabase's default email.
+      const { data: linkData, error: linkErr } = await admin.auth.admin
+        .generateLink({
+          type: "recovery",
+          email: alias,
+          options: redirectTo ? { redirectTo } : undefined,
+        });
+
+      if (linkErr || !linkData?.properties?.action_link) {
+        console.warn("generateLink (recovery) failed", linkErr);
+        // Don't leak whether the email exists.
         return json({ ok: true });
       }
+
+      // Send branded reset email to the customer's REAL inbox via the
+      // transactional email pipeline.
+      const sendRes = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "customer-password-reset",
+          recipientEmail: realEmail,
+          idempotencyKey: `customer-pw-reset-${storeSlug}-${realEmail}-${Date.now()}`,
+          senderName: store.name,
+          templateData: {
+            storeName: store.name,
+            resetUrl: linkData.properties.action_link,
+          },
+        },
+      });
+      if (sendRes.error) {
+        console.error("send reset email failed", sendRes.error);
+      }
+
       return json({ ok: true });
     }
 

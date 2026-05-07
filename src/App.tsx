@@ -53,6 +53,7 @@ const RefundPolicy = lazy(() => import("@/pages/RefundPolicy"));
 const Billing = lazy(() => import("@/pages/Billing"));
 const Wallet = lazy(() => import("@/pages/Wallet"));
 const CustomerAuth = lazy(() => import("@/pages/storefront/CustomerAuth"));
+const CustomerResetPassword = lazy(() => import("@/pages/storefront/CustomerResetPassword"));
 const CustomerAccount = lazy(() => import("@/pages/storefront/CustomerAccount"));
 const CustomerWishlist = lazy(() => import("@/pages/storefront/CustomerWishlist"));
 const StorefrontBlog = lazy(() => import("@/pages/storefront/StorefrontBlog"));
@@ -307,6 +308,7 @@ const AppRoutes = () => {
             <Route path="/store/:slug/blog" element={<StorefrontBlog />} />
             <Route path="/store/:slug/blog/:postSlug" element={<StorefrontBlogPost />} />
             <Route path="/store/:slug/account/auth" element={<CustomerAuth />} />
+            <Route path="/store/:slug/reset-password" element={<CustomerResetPassword />} />
             <Route path="/store/:slug/account" element={<CustomerRoute><CustomerAccount /></CustomerRoute>} />
             <Route path="/store/:slug/account/wishlist" element={<CustomerRoute><CustomerWishlist /></CustomerRoute>} />
             <Route path="/store/:slug/:policyType" element={<StorefrontPolicy />} />
