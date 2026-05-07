@@ -2110,6 +2110,10 @@ export type Database = {
           id: string
           images: string[] | null
           is_verified_purchase: boolean | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          moderation_status: string
           product_id: string
           rating: number
           store_id: string
@@ -2122,6 +2126,10 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_verified_purchase?: boolean | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string
           product_id: string
           rating: number
           store_id: string
@@ -2134,6 +2142,10 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_verified_purchase?: boolean | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string
           product_id?: string
           rating?: number
           store_id?: string
