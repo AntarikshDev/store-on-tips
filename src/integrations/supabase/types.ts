@@ -2330,9 +2330,14 @@ export type Database = {
           created_at: string
           delhivery_api_token: string | null
           delhivery_test_mode: boolean | null
+          preferred_courier: string | null
           razorpay_key_id: string | null
           razorpay_key_secret: string | null
           razorpay_test_mode: boolean | null
+          shiprocket_email: string | null
+          shiprocket_password: string | null
+          shiprocket_token: string | null
+          shiprocket_token_expires_at: string | null
           store_id: string
           updated_at: string
         }
@@ -2340,9 +2345,14 @@ export type Database = {
           created_at?: string
           delhivery_api_token?: string | null
           delhivery_test_mode?: boolean | null
+          preferred_courier?: string | null
           razorpay_key_id?: string | null
           razorpay_key_secret?: string | null
           razorpay_test_mode?: boolean | null
+          shiprocket_email?: string | null
+          shiprocket_password?: string | null
+          shiprocket_token?: string | null
+          shiprocket_token_expires_at?: string | null
           store_id: string
           updated_at?: string
         }
@@ -2350,9 +2360,14 @@ export type Database = {
           created_at?: string
           delhivery_api_token?: string | null
           delhivery_test_mode?: boolean | null
+          preferred_courier?: string | null
           razorpay_key_id?: string | null
           razorpay_key_secret?: string | null
           razorpay_test_mode?: boolean | null
+          shiprocket_email?: string | null
+          shiprocket_password?: string | null
+          shiprocket_token?: string | null
+          shiprocket_token_expires_at?: string | null
           store_id?: string
           updated_at?: string
         }
