@@ -107,18 +107,82 @@ const CouponList = () => {
                     <SelectContent>
                       <SelectItem value="percentage">Percentage (%)</SelectItem>
                       <SelectItem value="flat">Flat Amount (₹)</SelectItem>
+                      <SelectItem value="bogo">BOGO (Buy X Get Y)</SelectItem>
+                      <SelectItem value="tiered">Tiered (spend more, save more)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Value</Label>
-                  <Input
-                    type="number"
-                    value={form.value}
-                    onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-                  />
-                </div>
+                {(form.type === 'percentage' || form.type === 'flat') && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Value</Label>
+                    <Input
+                      type="number"
+                      value={form.value}
+                      onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
               </div>
+
+              {form.type === 'bogo' && (
+                <div className="grid grid-cols-3 gap-3 p-3 rounded-md bg-muted/40">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Buy Qty</Label>
+                    <Input type="number" min={1} value={form.bogo_buy_qty}
+                      onChange={(e) => setForm({ ...form, bogo_buy_qty: Number(e.target.value) })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Get Qty</Label>
+                    <Input type="number" min={1} value={form.bogo_get_qty}
+                      onChange={(e) => setForm({ ...form, bogo_get_qty: Number(e.target.value) })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Get % off</Label>
+                    <Input type="number" min={1} max={100} value={form.bogo_get_discount_pct}
+                      onChange={(e) => setForm({ ...form, bogo_get_discount_pct: Number(e.target.value) })} />
+                  </div>
+                </div>
+              )}
+
+              {form.type === 'tiered' && (
+                <div className="space-y-2 p-3 rounded-md bg-muted/40">
+                  <Label className="text-xs">Tiers (cheapest qualifying tier wins)</Label>
+                  {form.tiers.map((t, idx) => (
+                    <div key={idx} className="grid grid-cols-3 gap-2">
+                      <Input type="number" placeholder="Min ₹" value={t.min_subtotal}
+                        onChange={(e) => {
+                          const tiers = [...form.tiers]; tiers[idx] = { ...tiers[idx], min_subtotal: Number(e.target.value) }; setForm({ ...form, tiers });
+                        }} />
+                      <Select value={t.type} onValueChange={(v: any) => {
+                        const tiers = [...form.tiers]; tiers[idx] = { ...tiers[idx], type: v }; setForm({ ...form, tiers });
+                      }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="flat">Flat ₹</SelectItem>
+                          <SelectItem value="percentage">%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input type="number" placeholder="Value" value={t.value}
+                        onChange={(e) => {
+                          const tiers = [...form.tiers]; tiers[idx] = { ...tiers[idx], value: Number(e.target.value) }; setForm({ ...form, tiers });
+                        }} />
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" size="sm"
+                      onClick={() => setForm({ ...form, tiers: [...form.tiers, { min_subtotal: 0, type: 'flat', value: 0 }] })}>
+                      + Add tier
+                    </Button>
+                    {form.tiers.length > 1 && (
+                      <Button type="button" variant="ghost" size="sm"
+                        onClick={() => setForm({ ...form, tiers: form.tiers.slice(0, -1) })}>
+                        Remove last
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Min Order Amount (₹)</Label>
@@ -145,6 +209,11 @@ const CouponList = () => {
                   onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
                 />
               </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Switch checked={form.auto_apply}
+                  onCheckedChange={(v) => setForm({ ...form, auto_apply: v })} />
+                Auto-apply at checkout if cart qualifies (best coupon wins)
+              </label>
               <Button onClick={handleCreate} disabled={createCoupon.isPending} className="w-full">
                 {createCoupon.isPending ? 'Creating...' : 'Create Coupon'}
               </Button>
