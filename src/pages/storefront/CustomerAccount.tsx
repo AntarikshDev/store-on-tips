@@ -344,7 +344,10 @@ const CustomerAccount = () => {
                   </div>
                   <div className="flex items-center justify-between mt-3 pt-3 border-t" style={{ borderColor: colors.secondary + '50' }}>
                     <span className="text-sm font-bold" style={{ color: colors.primary }}>₹{Number(order.total).toLocaleString('en-IN')}</span>
-                    {order.tracking_number && <span className="text-xs opacity-50">Tracking: <span className="font-mono">{order.tracking_number}</span></span>}
+                    <div className="flex items-center gap-3">
+                      {order.tracking_number && <span className="text-xs opacity-50">Tracking: <span className="font-mono">{order.tracking_number}</span></span>}
+                      <RequestReturnButton order={order} primaryColor={colors.primary} />
+                    </div>
                   </div>
                 </div>
               ))
