@@ -82,23 +82,37 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const prompt = `You are an e-commerce product analyst for an Indian online store${storeName ? ` called "${storeName}"` : ""}.
-Analyze this product image and generate comprehensive product details.
+    const prompt = `You are an expert e-commerce product analyst for an Indian online store${storeName ? ` called "${storeName}"` : ""}.
+Analyze this product image and generate COMPREHENSIVE product details. Fill EVERY field — never leave one blank. Make educated, realistic guesses from the image when not certain.
 ${category ? `The store category is: ${category}` : ""}
 ${productType ? `Product type: ${productType}` : ""}
 ${productHint ? `Hint from seller: ${productHint}` : ""}
 
-Return a JSON object with these fields:
+Return a single JSON object with these fields:
 - title: Catchy product title (2-6 words)
-- description: Detailed product description (50-100 words), highlighting features and benefits
+- description: Detailed description (60-120 words), features + benefits
 - shortDescription: One-line summary (under 20 words)
-- tags: Array of 4-6 relevant tags for search
-- category: Product category
-- suggestedPrice: Suggested price in INR (Indian Rupees) as a number
-- seoTitle: SEO optimized title (under 60 chars)
+- tags: Array of 5-8 search tags
+- category: Best-fit product category
+- suggestedPrice: Suggested INR price (number, realistic for Indian market)
+- seoTitle: SEO title (under 60 chars)
 - seoDescription: SEO meta description (under 160 chars)
+- highlights: Array of 4-6 short bullet selling points (each under 12 words)
+- product_type: ONE of: physical, digital, food, fashion, electronics, beauty, handmade, service
+- metadata: Object with type-specific fields. Fill ALL applicable keys for the chosen product_type. Use these exact keys:
+   • food: ingredients, nutritional_info, shelf_life, allergens, fssai_license
+   • fashion: material, care_instructions, fit_type (Slim Fit | Regular Fit | Loose Fit | Oversized), gender (Men | Women | Unisex | Kids | Boys | Girls)
+   • electronics: warranty_period, model_number, power_rating, connectivity
+   • beauty: ingredients, skin_type (All Skin Types | Oily | Dry | Combination | Sensitive | Normal), usage_instructions, expiry_date
+   • handmade: making_time, material, customization_available (boolean)
+   • digital: file_format, license_type (Personal Use | Commercial Use | Extended License | Open Source)
+   • service: duration, delivery_method, booking_required (boolean)
+   • physical: (no extra metadata required, return {})
 
-Respond ONLY with the JSON object, no markdown or extra text.`;
+Rules:
+- For fssai_license / model_number / download_link / expiry_date that you cannot determine from an image, write "To be added" (so the seller knows to fill it).
+- Never write "N/A" or empty strings.
+- Respond ONLY with the JSON object, no markdown fences, no commentary.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
