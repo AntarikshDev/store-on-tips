@@ -82,7 +82,7 @@ const ProductRatingBadge = ({ productId }: { productId: string }) => {
   );
 };
 
-const Storefront = () => {
+const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useState(() => new URLSearchParams(window.location.search));
   const isOwnerPreview = searchParams.get('preview') === 'owner';
@@ -385,7 +385,7 @@ const Storefront = () => {
 
   // Master theme (AI-generated) — render manifest with Customise overrides applied.
   if (isMasterTheme) {
-    return <MasterThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} products={products} />;
+    return <MasterThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} products={products} page={page} />;
   }
 
   // Dedicated React theme path (bazaar, etc) — short-circuit and render via ThemeRenderer.
@@ -475,7 +475,7 @@ const DedicatedThemeView = ({ slug, themeId, seo, store }: { slug: string; theme
  * theme_master_versions and overlays per-section edits from
  * store.settings.theme_overrides.
  */
-const MasterThemeView = ({ slug, themeId, seo, store, products }: { slug: string; themeId: string; seo: any; store: any; products: any[] }) => {
+const MasterThemeView = ({ slug, themeId, seo, store, products, page = 'home' }: { slug: string; themeId: string; seo: any; store: any; products: any[]; page?: string }) => {
   const { data: manifest, isLoading } = useThemeManifest(themeId);
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -495,10 +495,11 @@ const MasterThemeView = ({ slug, themeId, seo, store, products }: { slug: string
         title={seo.meta_title || store.name}
         description={seo.meta_description || store.description || `Shop at ${store.name}`}
         ogImage={seo.og_image || store.banner_url || undefined}
-        url={`${window.location.origin}/store/${slug}`}
+        url={`${window.location.origin}/store/${slug}${page !== 'home' ? '/' + page : ''}`}
       />
       <MasterThemeRenderer
         manifest={manifest}
+        page={page}
         overrides={{ ...overrides, brand_name: overrides?.brand_name || store.name }}
         storeSlug={slug}
         products={products}

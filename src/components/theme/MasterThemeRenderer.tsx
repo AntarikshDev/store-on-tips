@@ -116,11 +116,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
 function Header({ dna, brandName, variant = "classic", storeSlug }: any) {
   const base = storeSlug ? `/store/${storeSlug}` : "";
   const links: Array<{ label: string; to: string }> = [
-    { label: "Shop", to: `${base}#products` },
-    { label: "Collections", to: `${base}#categories` },
-    { label: "About", to: `${base}#about` },
+    { label: "Shop", to: `${base}/shop` },
+    { label: "Collections", to: `${base}/collections` },
+    { label: "About", to: `${base}/about` },
     { label: "Journal", to: `${base}/blog` },
-    { label: "Contact", to: `${base}#contact` },
+    { label: "Contact", to: `${base}/contact` },
   ];
   const { totalItems } = useCart(storeSlug || "");
   const wrap = "sticky top-0 z-10 border-b backdrop-blur";
@@ -247,7 +247,7 @@ function Section({ s, dna, storeSlug }: any) {
 function Hero({ p, dna, storeSlug }: any) {
   const v = p.style ?? "centered";
   const headingFont = { fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 } as React.CSSProperties;
-  const shopHref = storeSlug ? `/store/${storeSlug}#products` : "#products";
+  const shopHref = storeSlug ? `/store/${storeSlug}/shop` : "#products";
   const Btns = (
     <div className="mt-8 flex gap-3 flex-wrap">
       <a href={shopHref} className="px-7 py-3 text-sm font-medium inline-block" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>{p.cta}</a>
