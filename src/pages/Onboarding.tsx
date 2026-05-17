@@ -115,10 +115,13 @@ const Onboarding = () => {
     if (!user) return;
     setSaving(true);
     try {
-      const selectedTheme = THEME_TEMPLATES.find((t) => t.id === data.selectedThemeId);
-      const themeData = selectedTheme
-        ? { name: selectedTheme.id, primary_color: selectedTheme.colors.primary, ...selectedTheme.colors, fonts: selectedTheme.fonts }
-        : { name: 'minimal-light', primary_color: '#F97316' };
+      const selectedTemplate = THEME_TEMPLATES.find((t) => t.id === data.selectedThemeId);
+      const isMaster = data.selectedThemeId?.startsWith('theme-');
+      const themeData: any = isMaster
+        ? { theme_id: data.selectedThemeId, name: data.selectedThemeId, manifest_ref: data.selectedThemeId }
+        : selectedTemplate
+        ? { theme_id: selectedTemplate.id, name: selectedTemplate.id, primary_color: selectedTemplate.colors.primary, ...selectedTemplate.colors, fonts: selectedTemplate.fonts }
+        : { theme_id: 'minimal-light', name: 'minimal-light', primary_color: '#F97316' };
 
       if (!store) {
         const refCode = getReferralCode();
