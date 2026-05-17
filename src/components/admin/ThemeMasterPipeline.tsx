@@ -214,6 +214,8 @@ export default function ThemeMasterPipeline() {
           </div>
         </CardContent>
       </Card>
+
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="library">Library ({versions.length})</TabsTrigger>
           <TabsTrigger value="calendar">Calendar ({calendar.length})</TabsTrigger>
