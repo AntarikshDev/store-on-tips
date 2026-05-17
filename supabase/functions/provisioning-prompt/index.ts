@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       : `After publishing, optionally attach a custom domain in project settings.`;
 
     const publicSite = Deno.env.get("PUBLIC_SITE_URL") || "https://pictocart.in";
-    const storefrontUrl = `${publicSite}/s/${store.slug}`;
+    const storefrontUrl = `${publicSite}/store/${store.slug}`;
 
     const prompt = `You are building the live storefront shell for "${store.name}" (slug: ${store.slug}).
 
