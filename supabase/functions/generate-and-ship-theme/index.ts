@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { costInr, IMAGE_COST_INR } from "../_shared/theme-pricing.ts";
+import { validateManifest } from "../_shared/manifestSchema.ts";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -153,22 +154,73 @@ Design a theme called "${briefName}" with vibe "${brief.vibe ?? category}". Fill
       : ["hero","usp_strip","category_grid","trending","story","testimonials","newsletter"];
     const homeSections = order.map((k: string) => sectionMap[k]).filter(Boolean);
 
+    // Inject required marketplace sections so the manifest passes validation.
+    const homeWithJournal = [
+      ...homeSections,
+      { type: "journal_strip", props: { title: "From the journal", limit: 3 } },
+    ];
+
     const manifest = {
       version: 2,
       dna,
       layout,
       hero_image: heroUrl,
       pages: {
-        home: { sections: homeSections },
-        shop: { sections: [{ type: "page_title", props: { title: "Shop all" } }, { type: "product_grid", props: { items: dna.products, style: layout.product_style } }] },
-        product: { sections: [{ type: "product_detail", props: { product: dna.products[0], image: heroUrl } }, { type: "trending", props: { title: "You may also like", items: dna.products.slice(1, 5) } }] },
-        about: { sections: [{ type: "page_title", props: { title: dna.about.title } }, { type: "story", props: { title: dna.about.title, body: dna.about.mission, image: heroUrl } }, { type: "values", props: { items: dna.about.values } }] },
-        contact: { sections: [{ type: "page_title", props: { title: "Contact us" } }, { type: "contact_form", props: { email: "hello@store.in", phone: "+91 98xxx xxxxx" } }] },
+        auth: { sections: [
+          { type: "signup",           props: { title: `Create your ${dna.name} account`, cta: "Sign up" } },
+          { type: "signin",           props: { title: `Welcome back to ${dna.name}`, cta: "Sign in" } },
+          { type: "forgot_password",  props: { title: "Reset your password", cta: "Send reset link" } },
+          { type: "reset_password",   props: { title: "Choose a new password", cta: "Update password" } },
+        ] },
+        home: { sections: homeWithJournal },
+        shop: { sections: [
+          { type: "page_title",  props: { title: "Shop all" } },
+          { type: "product_grid", props: { items: dna.products, style: layout.product_style } },
+        ] },
+        product: { sections: [
+          { type: "product_detail", props: { product: dna.products[0], image: heroUrl } },
+          { type: "trending",       props: { title: "You may also like", items: dna.products.slice(1, 5) } },
+        ] },
+        cart: { sections: [
+          { type: "line_items",   props: {} },
+          { type: "cart_summary", props: { cta: "Checkout" } },
+        ] },
+        checkout: { sections: [
+          { type: "checkout_stepper", props: { steps: ["address", "shipping", "payment", "review"] } },
+        ] },
+        journal: { sections: [
+          { type: "page_title",   props: { title: "Journal" } },
+          { type: "journal_list", props: { limit: 12 } },
+        ] },
+        about: { sections: [
+          { type: "page_title", props: { title: dna.about.title } },
+          { type: "story",      props: { title: dna.about.title, body: dna.about.mission, image: heroUrl } },
+          { type: "values",     props: { items: dna.about.values } },
+        ] },
+        contact: { sections: [
+          { type: "page_title",   props: { title: "Contact us" } },
+          { type: "contact_form", props: { email: "hello@store.in", phone: "+91 98xxx xxxxx" } },
+        ] },
+        account: { sections: [
+          { type: "account_panel", props: { tabs: ["orders", "addresses", "wishlist", "profile"] } },
+        ] },
       },
+      navigation: [
+        { label: "Shop",    to: "/shop" },
+        { label: "Journal", to: "/journal" },
+        { label: "About",   to: "/about" },
+        { label: "Contact", to: "/contact" },
+      ],
       footer: dna.footer,
       header_style: layout.header_style ?? "classic",
       density: layout.density ?? "balanced",
     };
+
+    const validation = validateManifest(manifest);
+    if (!validation.ok) {
+      console.error("manifest validation failed", validation.missing);
+      return json({ ok: false, error: "Manifest incomplete", missing: validation.missing }, 422);
+    }
 
     const { count } = await supabase.from("theme_master_versions").select("id", { count: "exact", head: true }).eq("theme_id", themeId);
     await supabase.from("theme_master_versions").insert({ theme_id: themeId, version: (count ?? 0) + 1, files_manifest: manifest });
