@@ -318,6 +318,8 @@ const AppRoutes = () => {
             <Route path="/admin/themes/preview-live/:themeId" element={<AdminThemeLivePreview />} />
             <Route path="/customise/legacy" element={<ProtectedRoute><DashboardLayout><CustomiseLegacy /></DashboardLayout></ProtectedRoute>} />
             <Route path="/policies" element={<ProtectedRoute><DashboardLayout><Policies /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/testimonials" element={<ProtectedRoute><DashboardLayout><Testimonials /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/google-reviews" element={<ProtectedRoute><DashboardLayout><GoogleReviewsConnect /></DashboardLayout></ProtectedRoute>} />
             
             <Route path="/admin/revenue" element={<AdminRoute><AdminLayout><AdminRevenue /></AdminLayout></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
