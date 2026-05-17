@@ -253,19 +253,8 @@ function Section({ s, dna, storeSlug }: any) {
         </div>
       </section>
     );
-    case "testimonials": return (
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-3 gap-6">
-          {(p.items ?? []).map((t: any, i: number) => (
-            <div key={i} className="p-6" style={{ background: dna.palette?.surface, borderRadius: "var(--r)", border: `1px solid ${dna.palette?.border}` }}>
-              <div className="flex gap-1 mb-3">{[...Array(5)].map((_, k) => <Star key={k} className="h-4 w-4 fill-current" style={{ color: dna.palette?.accent }} />)}</div>
-              <p className="text-sm mb-4 leading-relaxed">"{t.quote}"</p>
-              <div className="text-xs" style={{ color: dna.palette?.muted }}>— {t.author}, {t.location}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
+    case "testimonials": return <TestimonialsBlock p={p} dna={dna} storeSlug={storeSlug} />;
+    case "google_reviews": return <GoogleReviewsBlock p={p} dna={dna} storeSlug={storeSlug} />
     case "newsletter": return (
       <section className="py-20 text-center" style={{ background: dna.palette?.primary, color: dna.palette?.primary_fg }}>
         <div className="max-w-xl mx-auto px-6">
