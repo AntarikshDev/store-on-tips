@@ -246,6 +246,16 @@ const Onboarding = () => {
       case 4: return <StepGoLive data={data} store={store} onFinish={async () => {
         await saveStep(TOTAL_STEPS);
         if (store) {
+          // If a master theme (theme-xxxx) was chosen, seed its manifest into
+          // store.theme + theme_overrides so the customiser has defaults to edit.
+          if (data.selectedThemeId?.startsWith('theme-')) {
+            try {
+              const { applyMasterTheme } = await import('@/lib/applyMasterTheme');
+              await applyMasterTheme(store.id, data.selectedThemeId, (store.settings as any) || {});
+            } catch (e) {
+              console.error('Failed to apply master theme on finish:', e);
+            }
+          }
           if (data.aiProduct && data.aiProduct.title) {
             try {
               await supabase.from('products').insert({
