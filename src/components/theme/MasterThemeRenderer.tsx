@@ -116,11 +116,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
 function Header({ dna, brandName, variant = "classic", storeSlug }: any) {
   const base = storeSlug ? `/store/${storeSlug}` : "";
   const links: Array<{ label: string; to: string }> = [
-    { label: "Shop", to: `${base}#products` },
-    { label: "Collections", to: `${base}#categories` },
-    { label: "About", to: `${base}#about` },
+    { label: "Shop", to: `${base}/shop` },
+    { label: "Collections", to: `${base}/collections` },
+    { label: "About", to: `${base}/about` },
     { label: "Journal", to: `${base}/blog` },
-    { label: "Contact", to: `${base}#contact` },
+    { label: "Contact", to: `${base}/contact` },
   ];
   const { totalItems } = useCart(storeSlug || "");
   const wrap = "sticky top-0 z-10 border-b backdrop-blur";
