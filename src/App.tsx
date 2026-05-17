@@ -29,7 +29,9 @@ import { useStoreByHost, isPlatformHost } from "@/hooks/useStoreByHost";
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Investors = lazy(() => import("@/pages/Investors"));
 const ProductForm = lazy(() => import("@/pages/ProductForm"));
-const Customise = lazy(() => import("@/pages/Customise"));
+const Customise = lazy(() => import("@/pages/CustomiserV2"));
+const CustomiseLegacy = lazy(() => import("@/pages/Customise"));
+const AdminThemeLivePreview = lazy(() => import("@/pages/admin/AdminThemeLivePreview"));
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
 const CodSettings = lazy(() => import("@/pages/CodSettings"));
 const ShippingSettings = lazy(() => import("@/pages/ShippingSettings"));
@@ -310,6 +312,8 @@ const AppRoutes = () => {
             <Route path="/admin/users" element={<AdminRoute><AdminLayout><AdminUsers /></AdminLayout></AdminRoute>} />
             <Route path="/admin/themes" element={<AdminRoute><AdminLayout><AdminThemes /></AdminLayout></AdminRoute>} />
             <Route path="/admin/themes/preview/:themeId" element={<AdminRoute><AdminThemeMasterPreview /></AdminRoute>} />
+            <Route path="/admin/themes/preview-live/:themeId" element={<AdminThemeLivePreview />} />
+            <Route path="/customise/legacy" element={<ProtectedRoute><DashboardLayout><CustomiseLegacy /></DashboardLayout></ProtectedRoute>} />
             
             <Route path="/admin/revenue" element={<AdminRoute><AdminLayout><AdminRevenue /></AdminLayout></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
