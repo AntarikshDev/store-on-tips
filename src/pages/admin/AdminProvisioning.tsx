@@ -15,6 +15,7 @@ import {
 import { Copy, ExternalLink, Plus, Rocket, ListTree, Pencil, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProvisioningBudgetPanel } from '@/components/admin/ProvisioningBudgetPanel';
+import CopyProvisioningPromptCard from '@/components/admin/CopyProvisioningPromptCard';
 
 interface ThemeMaster {
   id: string;
@@ -152,6 +153,8 @@ const AdminProvisioning = () => {
           <Plus className="h-4 w-4" /> New request
         </Button>
       </div>
+
+      <CopyProvisioningPromptCard />
 
       <ProvisioningBudgetPanel />
 

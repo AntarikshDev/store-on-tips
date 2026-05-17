@@ -19,6 +19,14 @@ export async function applyMasterTheme(storeId: string, themeId: string, current
   if (verErr) throw verErr;
   if (!ver?.files_manifest) throw new Error('Theme has no published version yet');
 
+  // Need the store's name + logo to seed branding overrides so this theme
+  // immediately looks like THIS merchant, not the theme's stock brand.
+  const { data: store } = await supabase
+    .from('stores')
+    .select('name, logo_url')
+    .eq('id', storeId)
+    .maybeSingle();
+
   const manifest: any = ver.files_manifest;
   const dna = manifest?.dna ?? {};
   const palette = dna.palette ?? {};
@@ -34,8 +42,11 @@ export async function applyMasterTheme(storeId: string, themeId: string, current
   const newSettings = {
     ...currentSettings,
     theme_overrides: {
-      brand_name: dna.name,
-      sections: seedSections,
+      brand_name: store?.name ?? dna.name,
+      logo_url:   store?.logo_url ?? null,
+      palette:    { ...palette },
+      fonts:      { ...fonts },
+      sections:   seedSections,
     },
   };
 
