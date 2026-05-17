@@ -35,7 +35,7 @@ export default function AdminThemePreview() {
           </div>
         </div>
       )}
-      <ThemeRenderer manifest={manifest} page={page} />
+      <MasterThemeRenderer manifest={manifest} page={page} />
     </div>
   );
 }
