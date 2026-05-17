@@ -13,7 +13,8 @@ export interface StorefrontBundle {
     category?: string | null;
     settings?: Record<string, unknown>;
   };
-  theme: { theme_id: string; [k: string]: unknown };
+  theme: { theme_id: string; manifest_ref?: string; [k: string]: unknown };
+  theme_manifest?: Record<string, unknown> | null;
   content: Record<string, unknown>;
   content_version: number;
   products: {
