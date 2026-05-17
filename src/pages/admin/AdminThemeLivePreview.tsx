@@ -103,7 +103,7 @@ export default function AdminThemeLivePreview() {
           </div>
         </div>
       )}
-      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} />
+      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} onNavigate={setActive} />
     </div>
   );
 }
