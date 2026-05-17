@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
         settings: store.settings,
       },
       theme: { theme_id: themeId, ...theme },
+      theme_manifest: themeManifest,
       content: contentMap,
       content_version: contentVersion,
       products: {
