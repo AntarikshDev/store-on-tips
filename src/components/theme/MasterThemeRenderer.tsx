@@ -118,33 +118,45 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
   );
 }
 
-function Header({ dna, brandName, variant = "classic", storeSlug }: any) {
+function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate }: any) {
   const base = storeSlug ? `/store/${storeSlug}` : "";
-  const links: Array<{ label: string; to: string }> = [
-    { label: "Shop", to: `${base}/shop` },
-    { label: "Collections", to: `${base}/collections` },
-    { label: "About", to: `${base}/about` },
-    { label: "Journal", to: `${base}/blog` },
-    { label: "Contact", to: `${base}/contact` },
+  const links: Array<{ label: string; to: string; page: string }> = [
+    { label: "Shop", to: `${base}/shop`, page: "shop" },
+    { label: "Collections", to: `${base}/shop`, page: "shop" },
+    { label: "About", to: `${base}/about`, page: "about" },
+    { label: "Journal", to: `${base}/blog`, page: "journal" },
+    { label: "Contact", to: `${base}/contact`, page: "contact" },
   ];
   const { totalItems } = useCart(storeSlug || "");
   const wrap = "sticky top-0 z-10 border-b backdrop-blur";
   const bg = { background: `${dna.palette?.bg}ee`, borderColor: dna.palette?.border };
   const brandSize = variant === "bold_serif" ? 32 : variant === "minimal_thin" ? 16 : 22;
+  const brandStyle: React.CSSProperties = { fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700, fontSize: brandSize, color: dna.palette?.fg, cursor: (storeSlug || onNavigate) ? "pointer" : "default" };
   const Brand = storeSlug
-    ? <Link to={`/store/${storeSlug}`} style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700, fontSize: brandSize, color: dna.palette?.fg }}>{brandName}</Link>
-    : <div style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700, fontSize: brandSize }}>{brandName}</div>;
+    ? <Link to={`/store/${storeSlug}`} style={brandStyle}>{brandName}</Link>
+    : onNavigate
+      ? <button onClick={() => onNavigate("home")} style={brandStyle}>{brandName}</button>
+      : <div style={brandStyle}>{brandName}</div>;
   const CartBtn = storeSlug ? (
     <Link to={`/store/${storeSlug}/cart`} className="text-sm px-4 py-2 inline-flex items-center gap-2" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>
       <ShoppingBag className="h-4 w-4" /> Cart · {totalItems}
     </Link>
   ) : (
-    <button className="text-sm px-4 py-2" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>Cart · 0</button>
+    <button
+      onClick={() => onNavigate?.("cart")}
+      className="text-sm px-4 py-2 inline-flex items-center gap-2"
+      style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}
+    >
+      <ShoppingBag className="h-4 w-4" /> Cart · 0
+    </button>
   );
-  const renderLink = (l: { label: string; to: string }, cls: string) =>
+  const renderLink = (l: { label: string; to: string; page: string }, cls: string) =>
     storeSlug
       ? <Link key={l.label} to={l.to} className={cls} style={{ opacity: 0.85 }}>{l.label}</Link>
-      : <span key={l.label} className={cls} style={{ opacity: 0.85 }}>{l.label}</span>;
+      : onNavigate
+        ? <button key={l.label} onClick={() => onNavigate(l.page)} className={cls} style={{ opacity: 0.85, background: "transparent", border: 0, cursor: "pointer", color: "inherit" }}>{l.label}</button>
+        : <span key={l.label} className={cls} style={{ opacity: 0.85 }}>{l.label}</span>;
+
 
   if (variant === "centered_logo") {
     return (
