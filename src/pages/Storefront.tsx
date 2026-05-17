@@ -82,7 +82,7 @@ const ProductRatingBadge = ({ productId }: { productId: string }) => {
   );
 };
 
-const Storefront = () => {
+const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useState(() => new URLSearchParams(window.location.search));
   const isOwnerPreview = searchParams.get('preview') === 'owner';
