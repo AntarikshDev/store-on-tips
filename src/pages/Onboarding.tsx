@@ -88,7 +88,13 @@ const Onboarding = () => {
     if (hasResumed.current || !store) return;
     hasResumed.current = true;
     if (store.onboarding_step !== null && store.onboarding_step < TOTAL_STEPS) {
-      setCurrentStep(store.onboarding_step + 1);
+      // Resume to saved step, but never skip past a step whose data is missing.
+      // Without this guard, a stale onboarding_step can land users on Theme
+      // even though they never picked a Category.
+      let resumeStep = store.onboarding_step + 1;
+      if (!store.category && resumeStep > 2) resumeStep = 2;
+      if (!store.name && resumeStep > 1) resumeStep = 1;
+      setCurrentStep(resumeStep);
       setData((d) => ({
         ...d,
         storeName: store.name || '',
@@ -96,7 +102,7 @@ const Onboarding = () => {
         category: store.category || '',
         description: store.description || '',
         logoUrl: store.logo_url || '',
-        selectedThemeId: (store.theme as any)?.name || 'minimal-light',
+        selectedThemeId: (store.theme as any)?.theme_id || (store.theme as any)?.name || '',
       }));
     } else if (store.onboarding_step !== null && store.onboarding_step >= TOTAL_STEPS) {
       navigate('/dashboard', { replace: true });
