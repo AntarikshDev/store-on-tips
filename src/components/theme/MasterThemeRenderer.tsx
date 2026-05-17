@@ -699,24 +699,113 @@ function ProductBlock({ p, dna, storeSlug }: any) {
   );
 }
 
-function Footer({ footer, dna, brandName }: any) {
-  if (!footer) return null;
+function Footer({ footer, dna, brandName, storeSlug, onNavigate, footerOv }: any) {
+  const ov: FooterOv = footerOv || {};
+  const base = storeSlug ? `/store/${storeSlug}` : "";
+  const pageToPath: Record<string, string> = {
+    home: "", shop: "/shop", collections: "/shop", about: "/about", contact: "/contact",
+    journal: "/blog", blog: "/blog", account: "/account", cart: "/cart",
+    privacy: "/privacy-policy", terms: "/terms", refund: "/refund-policy",
+    return: "/return-policy", shipping: "/shipping-policy",
+  };
+
+  // Build merged columns: footerOv.columns overrides; else manifest footer.columns (legacy
+  // shape: links as string[] — convert to {label, href}); else sensible defaults.
+  const defaultColumns: FooterOv["columns"] = [
+    { title: "Shop", links: [
+      { label: "All products", href: "", page: "shop" },
+      { label: "Cart",         href: "", page: "cart" },
+      { label: "My account",   href: "", page: "account" },
+    ]},
+    { title: "About", links: [
+      { label: "About us",     href: "", page: "about" },
+      { label: "Journal",      href: "", page: "blog" },
+      { label: "Contact",      href: "", page: "contact" },
+    ]},
+    { title: "Policies", links: [
+      { label: "Privacy Policy",  href: "", page: "privacy" },
+      { label: "Terms of Service", href: "", page: "terms" },
+      { label: "Refund Policy",   href: "", page: "refund" },
+      { label: "Shipping Policy", href: "", page: "shipping" },
+    ]},
+  ];
+
+  let columns = ov.columns;
+  if (!columns || columns.length === 0) {
+    if (footer?.columns?.length) {
+      columns = footer.columns.map((c: any) => ({
+        title: c.title,
+        links: (c.links ?? []).map((l: any) =>
+          typeof l === "string"
+            ? { label: l, href: "", page: guessPage(l) }
+            : { label: l.label ?? String(l), href: l.href ?? "", page: l.page ?? guessPage(l.label ?? "") }
+        ),
+      }));
+    } else {
+      columns = defaultColumns;
+    }
+  }
+
+  const tagline = ov.tagline ?? footer?.tagline ?? "";
+  const renderLink = (l: { label: string; href: string; page?: string }, idx: number) => {
+    const to = l.href || (l.page ? `${base}${pageToPath[l.page] ?? `/${l.page}`}` : "");
+    const cls = "hover:opacity-100 transition";
+    const style = { opacity: 0.75 } as React.CSSProperties;
+    if (storeSlug && to) return <Link key={idx} to={to} className={cls} style={style}>{l.label}</Link>;
+    if (onNavigate && l.page) return <button key={idx} onClick={() => onNavigate!(l.page!)} className={cls} style={{ ...style, background: "transparent", border: 0, padding: 0, cursor: "pointer", color: "inherit", textAlign: "left" }}>{l.label}</button>;
+    return <span key={idx} className={cls} style={style}>{l.label}</span>;
+  };
+
+  const social = ov.social || {};
+  const showPoweredBy = ov.show_powered_by !== false;
+
   return (
     <footer className="border-t mt-12" style={{ borderColor: dna.palette?.border, background: dna.palette?.surface }}>
       <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-4 gap-8 text-sm">
         <div>
           <div className="text-lg mb-2" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{brandName}</div>
-          <p style={{ color: dna.palette?.muted }}>{footer.tagline}</p>
+          {tagline && <p style={{ color: dna.palette?.muted }}>{tagline}</p>}
+          {(social.instagram || social.facebook || social.twitter || social.youtube) && (
+            <div className="mt-3 flex gap-3 text-xs" style={{ color: dna.palette?.muted }}>
+              {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a>}
+              {social.facebook  && <a href={social.facebook}  target="_blank" rel="noreferrer" className="hover:underline">Facebook</a>}
+              {social.twitter   && <a href={social.twitter}   target="_blank" rel="noreferrer" className="hover:underline">Twitter</a>}
+              {social.youtube   && <a href={social.youtube}   target="_blank" rel="noreferrer" className="hover:underline">YouTube</a>}
+            </div>
+          )}
         </div>
-        {(footer.columns ?? []).map((c: any, i: number) => (
+        {columns.map((c, i) => (
           <div key={i}>
             <div className="font-medium mb-3">{c.title}</div>
-            <ul className="space-y-2" style={{ color: dna.palette?.muted }}>
-              {(c.links ?? []).map((l: string, j: number) => <li key={j}>{l}</li>)}
+            <ul className="space-y-2 flex flex-col" style={{ color: dna.palette?.muted }}>
+              {(c.links ?? []).map((l, j) => <li key={j}>{renderLink(l, j)}</li>)}
             </ul>
           </div>
         ))}
       </div>
+      {showPoweredBy && (
+        <div className="border-t" style={{ borderColor: dna.palette?.border }}>
+          <div className="max-w-6xl mx-auto px-6 py-4 text-[11px] flex flex-wrap justify-between gap-2" style={{ color: dna.palette?.muted }}>
+            <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
+            <span>Powered by <a href="https://pictocart.in" target="_blank" rel="noreferrer" className="hover:underline">Pic to Cart</a></span>
+          </div>
+        </div>
+      )}
     </footer>
   );
+}
+
+function guessPage(label: string): string {
+  const l = label.toLowerCase();
+  if (l.includes("privacy"))  return "privacy";
+  if (l.includes("term"))     return "terms";
+  if (l.includes("refund") || l.includes("return")) return "refund";
+  if (l.includes("ship"))     return "shipping";
+  if (l.includes("about"))    return "about";
+  if (l.includes("contact"))  return "contact";
+  if (l.includes("blog") || l.includes("journal")) return "blog";
+  if (l.includes("shop") || l.includes("product")) return "shop";
+  if (l.includes("cart"))     return "cart";
+  if (l.includes("account"))  return "account";
+  return "home";
 }
