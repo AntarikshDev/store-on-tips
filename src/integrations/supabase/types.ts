@@ -2343,6 +2343,134 @@ export type Database = {
           },
         ]
       }
+      store_google_reviews_cache: {
+        Row: {
+          author_name: string | null
+          author_photo_url: string | null
+          connection_id: string
+          created_at: string
+          google_review_id: string | null
+          id: string
+          language: string | null
+          rating: number | null
+          relative_time: string | null
+          store_id: string
+          text: string | null
+          time_unix: number | null
+        }
+        Insert: {
+          author_name?: string | null
+          author_photo_url?: string | null
+          connection_id: string
+          created_at?: string
+          google_review_id?: string | null
+          id?: string
+          language?: string | null
+          rating?: number | null
+          relative_time?: string | null
+          store_id: string
+          text?: string | null
+          time_unix?: number | null
+        }
+        Update: {
+          author_name?: string | null
+          author_photo_url?: string | null
+          connection_id?: string
+          created_at?: string
+          google_review_id?: string | null
+          id?: string
+          language?: string | null
+          rating?: number | null
+          relative_time?: string | null
+          store_id?: string
+          text?: string | null
+          time_unix?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_google_reviews_cache_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "store_google_reviews_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_google_reviews_cache_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_google_reviews_connections: {
+        Row: {
+          amount_inr: number
+          average_rating: number | null
+          business_address: string | null
+          business_name: string | null
+          business_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_paid: boolean
+          last_synced_at: string | null
+          paid_at: string | null
+          payment_id: string | null
+          place_id: string
+          store_id: string
+          sync_error: string | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_inr?: number
+          average_rating?: number | null
+          business_address?: string | null
+          business_name?: string | null
+          business_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          last_synced_at?: string | null
+          paid_at?: string | null
+          payment_id?: string | null
+          place_id: string
+          store_id: string
+          sync_error?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_inr?: number
+          average_rating?: number | null
+          business_address?: string | null
+          business_name?: string | null
+          business_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          last_synced_at?: string | null
+          paid_at?: string | null
+          payment_id?: string | null
+          place_id?: string
+          store_id?: string
+          sync_error?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_google_reviews_connections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_secrets: {
         Row: {
           created_at: string
@@ -2394,6 +2522,56 @@ export type Database = {
             foreignKeyName: "store_secrets_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          customer_name: string
+          customer_role: string | null
+          display_order: number
+          id: string
+          is_featured: boolean
+          photo_url: string | null
+          rating: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          customer_name: string
+          customer_role?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          photo_url?: string | null
+          rating?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          customer_name?: string
+          customer_role?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          photo_url?: string | null
+          rating?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_testimonials_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
             referencedRelation: "stores"
             referencedColumns: ["id"]
           },
