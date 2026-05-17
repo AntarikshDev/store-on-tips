@@ -90,7 +90,7 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
 
   return (
     <div style={style} className="min-h-screen">
-      <Header dna={dna} brandName={brandName} variant={headerStyle} storeSlug={storeSlug} />
+      <Header dna={dna} brandName={brandName} variant={headerStyle} storeSlug={storeSlug} onNavigate={onNavigate} />
       {sections.map((s: any, i: number) => {
         // Merge overrides on top of manifest props.
         const ov = sectionOverrides[i] ?? sectionOverrides[String(i)] ?? {};
