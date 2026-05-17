@@ -206,6 +206,12 @@ export default function ThemeMasterPipeline() {
           <Button onClick={generateAdhoc} disabled={busy === "adhoc"}>
             {busy === "adhoc" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Generate
           </Button>
+          <div className="md:col-span-4 flex flex-wrap gap-1.5 pt-1">
+            <span className="text-[11px] text-muted-foreground self-center mr-1">Presets:</span>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Heritage"); setAdhocVibe("Indian heritage, handcrafted, earthy tones, premium editorial"); setAdhocCategory("indian/heritage"); }}>Heritage</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Saffron"); setAdhocVibe("festive Indian, ornate, warm"); setAdhocCategory("indian/heritage"); }}>Saffron</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Atelier"); setAdhocVibe("minimal luxury, monochrome, generous whitespace"); setAdhocCategory("luxury"); }}>Atelier</Button>
+          </div>
         </CardContent>
       </Card>
 
