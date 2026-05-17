@@ -98,19 +98,17 @@ const Section = ({ title, icon, children }: { title: string; icon: React.ReactNo
     <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
       {icon} {title}
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{children}</div>
   </div>
 );
 
 const ThemeCard = ({ theme, selected, onClick }: { theme: ThemeMaster; selected: boolean; onClick: () => void }) => (
-  <button
-    type="button"
-    onClick={onClick}
+  <div
     className={cn(
-      'relative rounded-2xl border-2 overflow-hidden text-left transition-all duration-300 hover:-translate-y-0.5 group',
+      'relative rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 group bg-card',
       selected
         ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/15'
-        : 'border-border hover:border-primary/40 hover:shadow-md bg-card'
+        : 'border-border hover:border-primary/40 hover:shadow-md'
     )}
   >
     <div className="aspect-[4/3] bg-muted overflow-hidden">
