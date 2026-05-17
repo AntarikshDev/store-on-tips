@@ -385,7 +385,7 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
 
   // Master theme (AI-generated) — render manifest with Customise overrides applied.
   if (isMasterTheme) {
-    return <MasterThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} products={products} />;
+    return <MasterThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} products={products} page={page} />;
   }
 
   // Dedicated React theme path (bazaar, etc) — short-circuit and render via ThemeRenderer.
