@@ -60,7 +60,7 @@ const defaultData: OnboardingData = {
   description: '',
   category: '',
   logoUrl: '',
-  selectedThemeId: 'minimal-light',
+  selectedThemeId: '',
   productImageUrl: '',
   productImageFile: null,
   aiProduct: null,
