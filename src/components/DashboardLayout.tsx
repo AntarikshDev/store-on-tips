@@ -70,6 +70,8 @@ const navTree: NavEntry[] = [
     key: 'marketing',
     children: [
       { label: 'Blog Posts', icon: FileText, path: '/blog-posts' },
+      { label: 'Testimonials', icon: Star, path: '/testimonials' },
+      { label: 'Google Reviews', icon: Star, path: '/google-reviews' },
       { label: 'Subscribers', icon: Mail, path: '/subscribers' },
       { label: 'SEO', icon: Search, path: '/settings/seo' },
     ],
