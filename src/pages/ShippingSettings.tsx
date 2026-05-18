@@ -164,6 +164,9 @@ const ShippingSettings = () => {
     setRegistering(false);
   };
 
+  const updatePickup = (key: keyof PickupAddress, value: string) =>
+    setPickup((c) => ({ ...c, [key]: value }));
+
   const isConfigured = !!apiToken && !!pickup.pincode;
 
   return (
