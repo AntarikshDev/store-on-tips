@@ -28,7 +28,6 @@ const CustomerAuth = () => {
   const [phone, setPhone] = useState('');
   const [otpToken, setOtpToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [sellerSessionWarned, setSellerSessionWarned] = useState(false);
   const [googleClientId, setGoogleClientId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,18 +36,6 @@ const CustomerAuth = () => {
       .then(({ data }) => { if (data?.googleClientId) setGoogleClientId(data.googleClientId); })
       .catch(() => {});
   }, [slug]);
-
-  // Detect existing SELLER session (no is_customer flag) and warn so the
-  // seller's dashboard session isn't silently overwritten by a customer login.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user;
-      if (u && !u.user_metadata?.is_customer && !sellerSessionWarned) {
-        toast.warning('You are signed in as a store owner. Signing in as a customer will replace that session in this browser.', { duration: 6000 });
-        setSellerSessionWarned(true);
-      }
-    });
-  }, [sellerSessionWarned]);
 
   if (storeLoading) {
     return (
