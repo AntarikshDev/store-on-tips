@@ -30,6 +30,7 @@ const ShippingSettings = () => {
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     const load = async () => {
