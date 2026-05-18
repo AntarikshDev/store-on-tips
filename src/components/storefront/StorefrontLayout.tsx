@@ -107,9 +107,28 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
             <button onClick={() => setSearchOpen(true)} className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm opacity-60 hover:opacity-100 border rounded-full" style={{ borderColor: colors.secondary }}>
               <Search className="h-4 w-4" /> Search
             </button>
-            <Link to={user ? `/store/${store.slug}/account` : `/store/${store.slug}/account/auth`} className="hidden md:block">
-              <User className="h-5 w-5" style={{ color: colors.text }} />
-            </Link>
+            {user ? (
+              <Link to={`/store/${store.slug}/account`} className="hidden md:block" aria-label="My account">
+                <User className="h-5 w-5" style={{ color: colors.text }} />
+              </Link>
+            ) : (
+              <Link
+                to={`/store/${store.slug}/account/auth`}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-colors hover:opacity-80"
+                style={{ borderColor: colors.primary, color: colors.primary }}
+              >
+                <User className="h-4 w-4" /> Sign in
+              </Link>
+            )}
+            {!user && (
+              <Link
+                to={`/store/${store.slug}/account/auth`}
+                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full"
+                style={{ backgroundColor: colors.primary, color: '#fff' }}
+              >
+                <User className="h-3.5 w-3.5" /> Sign in
+              </Link>
+            )}
             <Link to={`/store/${store.slug}/cart`} className="relative">
               <ShoppingBag className="h-5 w-5" style={{ color: colors.text }} />
               {totalItems > 0 && (
