@@ -839,3 +839,72 @@ function ItemsEditor({ label, items, renderRow, blank, onChange }: { label: stri
     </div>
   );
 }
+
+function PaletteInspector({ paletteOv, onChangeColor, onApplyPreset, onReset }: { paletteOv: Record<string, string>; onChangeColor: (k: string, v: string) => void; onApplyPreset: (p: Record<string, string>) => void; onReset: () => void }) {
+  return (
+    <div className="p-4 space-y-5">
+      <div>
+        <Label className="text-xs">Quick palette presets</Label>
+        <p className="text-[10px] text-muted-foreground mt-0.5">One click applies these colors across the whole storefront.</p>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {PALETTE_PRESETS.map((preset) => {
+            const swatchKeys = ["primary", "accent", "bg", "surface", "fg"];
+            return (
+              <button
+                key={preset.name}
+                onClick={() => onApplyPreset(preset.colors)}
+                className="border rounded-md p-2 text-left hover:border-primary transition-colors"
+              >
+                <div className="flex gap-0.5 mb-1.5">
+                  {swatchKeys.map((k) => (
+                    <div
+                      key={k}
+                      className="h-4 flex-1 rounded-sm border"
+                      style={{ background: preset.colors[k] || "#e5e5e5" }}
+                    />
+                  ))}
+                </div>
+                <div className="text-[11px] font-medium truncate">{preset.name}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-xs">Custom colors</Label>
+          {Object.keys(paletteOv).length > 0 && (
+            <button onClick={onReset} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5">
+              <RotateCcw className="h-3 w-3" /> reset
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {COLOR_KEYS.map(({ key, label }) => {
+            const val = paletteOv[key] ?? "";
+            return (
+              <div key={key} className="space-y-1">
+                <Label className="text-[10px]">{label}</Label>
+                <div className="flex gap-1 items-center">
+                  <input
+                    type="color"
+                    value={val || "#000000"}
+                    onChange={(e) => onChangeColor(key, e.target.value)}
+                    className="h-7 w-7 rounded border cursor-pointer shrink-0"
+                  />
+                  <Input
+                    value={val}
+                    onChange={(e) => onChangeColor(key, e.target.value)}
+                    placeholder="theme"
+                    className="h-7 text-[11px] font-mono"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
