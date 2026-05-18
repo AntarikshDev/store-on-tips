@@ -98,12 +98,6 @@ const CustomerAuth = () => {
 
   if (!store) return null;
 
-  const destinationAfterAuth = () => {
-    if (redirectParam === 'checkout') return `/store/${slug}/checkout`;
-    if (redirectParam === 'cart') return `/store/${slug}/cart`;
-    return `/store/${slug}/account`;
-  };
-
   // Redirect if already logged in
   if (user) {
     return <Navigate to={destinationAfterAuth()} replace />;
