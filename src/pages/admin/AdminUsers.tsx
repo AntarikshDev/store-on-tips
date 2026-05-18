@@ -196,7 +196,7 @@ const AdminUsers = () => {
       total: all.length,
       admins: all.filter((u) => u.roles.includes('admin')).length,
       sellers: all.filter((u) => u.roles.includes('seller')).length,
-      withStore: all.filter((u) => u.storeName).length,
+      customers: all.filter((u) => u.isCustomer || u.roles.includes('customer')).length,
     };
   }, [users]);
 
@@ -218,7 +218,7 @@ const AdminUsers = () => {
           { label: 'Total Users', value: stats.total, icon: Users },
           { label: 'Admins', value: stats.admins, icon: ShieldPlus },
           { label: 'Sellers', value: stats.sellers, icon: UserPlus },
-          { label: 'With Store', value: stats.withStore, icon: Eye },
+          { label: 'Customers', value: stats.customers, icon: Eye },
         ].map((s) => (
           <div key={s.label} className="rounded-lg border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
@@ -280,7 +280,12 @@ const AdminUsers = () => {
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</p>
+                          {(user.isCustomer || user.roles.includes('customer')) && (
+                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/40 text-primary shrink-0">Customer</Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground md:hidden">{user.email || 'No email'}</p>
                       </div>
                     </div>
@@ -299,7 +304,7 @@ const AdminUsers = () => {
                         <Badge
                           key={role}
                           variant={role === 'admin' ? 'destructive' : role === 'customer' ? 'outline' : 'secondary'}
-                          className="text-[10px]"
+                          className={role === 'customer' ? 'text-[10px] border-primary/40 text-primary' : 'text-[10px]'}
                         >
                           {role}
                         </Badge>
