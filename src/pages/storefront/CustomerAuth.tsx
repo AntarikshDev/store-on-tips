@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
@@ -7,11 +7,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
 const CustomerAuth = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const { store, loading: storeLoading } = useStorefront(slug || '');
-  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset } = useCustomerAuth(slug || '');
+  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset, signInWithGoogle } = useCustomerAuth(slug || '');
   const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
