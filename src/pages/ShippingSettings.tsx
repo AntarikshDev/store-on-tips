@@ -32,22 +32,33 @@ const ShippingSettings = () => {
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const [registering, setRegistering] = useState(false);
 
+  // Shiprocket
+  const [srEmail, setSrEmail] = useState('');
+  const [srPassword, setSrPassword] = useState('');
+  const [srPickupName, setSrPickupName] = useState('Primary');
+  const [srTesting, setSrTesting] = useState(false);
+  const [srTestResult, setSrTestResult] = useState<'success' | 'error' | null>(null);
+
+  const [preferredCourier, setPreferredCourier] = useState<'delhivery' | 'shiprocket'>('delhivery');
+
   useEffect(() => {
     const load = async () => {
       if (!store?.id) return;
       setLoading(true);
-      // Pickup address (non-secret) lives in stores.settings.shipping
       const s = (store.settings as any)?.shipping;
       if (s?.pickup) setPickup({ ...emptyPickup, ...s.pickup });
-      // Token (secret) lives in store_secrets
+      if (s?.shiprocket_pickup_name) setSrPickupName(s.shiprocket_pickup_name);
       const { data } = await supabase
         .from('store_secrets' as any)
-        .select('delhivery_api_token, delhivery_test_mode')
+        .select('delhivery_api_token, delhivery_test_mode, shiprocket_email, shiprocket_password, preferred_courier')
         .eq('store_id', store.id)
         .maybeSingle();
       if (data) {
         setApiToken((data as any).delhivery_api_token || '');
         setTestMode((data as any).delhivery_test_mode ?? true);
+        setSrEmail((data as any).shiprocket_email || '');
+        setSrPassword((data as any).shiprocket_password || '');
+        setPreferredCourier(((data as any).preferred_courier || 'delhivery') as any);
       }
       setLoading(false);
     };
