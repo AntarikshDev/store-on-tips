@@ -22,22 +22,27 @@ export const useCustomerAuth = (storeSlug: string) => {
 
   useEffect(() => {
     let active = true;
+    let restored = false;
 
-    const setScopedUser = (sessionUser: User | null) => {
+    const setScopedUser = (sessionUser: User | null, authReady = restored) => {
       if (!active) return;
       setUser(scopeCustomerUser(sessionUser));
-      setLoading(false);
+      if (authReady) setLoading(false);
     };
 
     const refreshSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setScopedUser(session?.user ?? null);
+      restored = true;
+      setScopedUser(session?.user ?? null, true);
     };
 
-    void refreshSession();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setScopedUser(session?.user ?? null);
+      const scopedUser = scopeCustomerUser(session?.user ?? null);
+      if (!active) return;
+      setUser(scopedUser);
+      if (restored || scopedUser) setLoading(false);
     });
+    void refreshSession();
     const handleCustomerAuthChanged = (event: Event) => {
       const changedStore = (event as CustomEvent<{ storeSlug?: string }>).detail?.storeSlug;
       if (!changedStore || changedStore === storeSlug) void refreshSession();
