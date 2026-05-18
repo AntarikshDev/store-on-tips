@@ -360,6 +360,11 @@ const StorefrontCheckout = () => {
   };
 
   const handlePlaceOrder = () => {
+    if (!user) {
+      toast.error('Please sign in or create an account to place your order');
+      navigate(`/store/${slug}/account/auth?redirect=checkout`);
+      return;
+    }
     if (!form.name || !form.phone || !form.address || !form.city || !form.pincode) {
       toast.error('Please fill in all required fields');
       return;

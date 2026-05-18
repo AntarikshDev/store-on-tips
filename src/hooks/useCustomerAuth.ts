@@ -129,6 +129,25 @@ export const useCustomerAuth = (storeSlug: string) => {
     return { error };
   };
 
+  const signInWithGoogle = async (idToken: string) => {
+    await clearForeignSession();
+    const { data, error } = await invokeCustomerAuth({
+      action: 'google',
+      idToken,
+    });
+    if (error) return { data: null, error };
+    if (data?.error) {
+      const msg = data.error === 'invalid_google_token'
+        ? 'Google sign-in token could not be verified.'
+        : data.error === 'google_not_configured'
+          ? 'Google sign-in is not enabled for this store yet.'
+          : 'Google sign-in failed. Please try again.';
+      return { data: null, error: { message: msg } };
+    }
+    if (data?.session) await applySession(data.session);
+    return { data, error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -141,6 +160,7 @@ export const useCustomerAuth = (storeSlug: string) => {
     requestPasswordReset,
     signInWithOtp,
     verifyOtp,
+    signInWithGoogle,
     signOut,
   };
 };

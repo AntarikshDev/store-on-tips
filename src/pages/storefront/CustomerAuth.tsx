@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
@@ -7,11 +7,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
 const CustomerAuth = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const { store, loading: storeLoading } = useStorefront(slug || '');
-  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset } = useCustomerAuth(slug || '');
+  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset, signInWithGoogle } = useCustomerAuth(slug || '');
   const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +29,14 @@ const CustomerAuth = () => {
   const [otpToken, setOtpToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sellerSessionWarned, setSellerSessionWarned] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    supabase.functions.invoke('customer-auth', { body: { action: 'config', storeSlug: slug } })
+      .then(({ data }) => { if (data?.googleClientId) setGoogleClientId(data.googleClientId); })
+      .catch(() => {});
+  }, [slug]);
 
   // Detect existing SELLER session (no is_customer flag) and warn so the
   // seller's dashboard session isn't silently overwritten by a customer login.
@@ -44,9 +60,15 @@ const CustomerAuth = () => {
 
   if (!store) return null;
 
+  const destinationAfterAuth = () => {
+    if (redirectParam === 'checkout') return `/store/${slug}/checkout`;
+    if (redirectParam === 'cart') return `/store/${slug}/cart`;
+    return `/store/${slug}/account`;
+  };
+
   // Redirect if already logged in
   if (user) {
-    navigate(`/store/${slug}/account`, { replace: true });
+    navigate(destinationAfterAuth(), { replace: true });
     return null;
   }
 
@@ -68,15 +90,15 @@ const CustomerAuth = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Check your email for verification link!');
-        setMode('login');
+        toast.success('Account created! Welcome.');
+        navigate(destinationAfterAuth());
       }
     } else {
       const { error } = await signInWithEmail(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        navigate(`/store/${slug}`);
+        navigate(destinationAfterAuth());
       }
     }
     setSubmitting(false);
@@ -102,7 +124,7 @@ const CustomerAuth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      navigate(`/store/${slug}`);
+      navigate(destinationAfterAuth());
     }
     setSubmitting(false);
   };
@@ -124,9 +146,55 @@ const CustomerAuth = () => {
     setMode('login');
   };
 
-  // Google sign-in is intentionally disabled on storefronts: it would create a
-  // single global Supabase user keyed by the user's real gmail address, which
-  // breaks per-store tenancy. Customers must use email + password (or phone OTP).
+  // Google Sign-In via Google Identity Services. The ID token is verified
+  // server-side and exchanged for a tenant-aliased customer session, so the
+  // visitor's raw gmail address never collides across stores.
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleSignedInRef = useRef(false);
+
+  useEffect(() => {
+    if (!googleClientId || user) return;
+    if (mode !== 'login' && mode !== 'signup') return;
+    const SCRIPT_ID = 'gsi-client';
+    const init = () => {
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (resp: { credential: string }) => {
+          if (!resp?.credential || googleSignedInRef.current) return;
+          googleSignedInRef.current = true;
+          setSubmitting(true);
+          const { error } = await signInWithGoogle(resp.credential);
+          setSubmitting(false);
+          if (error) {
+            googleSignedInRef.current = false;
+            toast.error(error.message || 'Google sign-in failed');
+          } else {
+            navigate(destinationAfterAuth());
+          }
+        },
+      });
+      googleBtnRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 320,
+        text: mode === 'signup' ? 'signup_with' : 'continue_with',
+      });
+    };
+    if (document.getElementById(SCRIPT_ID)) {
+      init();
+    } else {
+      const s = document.createElement('script');
+      s.id = SCRIPT_ID;
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      s.onload = init;
+      document.head.appendChild(s);
+    }
+  }, [mode, user, signInWithGoogle, navigate]);
+
 
   return (
     <StorefrontLayout store={store}>
@@ -251,6 +319,22 @@ const CustomerAuth = () => {
                   </button>
                 )}
               </form>
+
+              {googleClientId && (
+                <div className="space-y-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" style={{ borderColor: colors.secondary }} />
+                    </div>
+                    <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+                      <span className="px-2" style={{ backgroundColor: colors.card, color: colors.text, opacity: 0.5 }}>
+                        Or
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-center" ref={googleBtnRef} />
+                </div>
+              )}
             </>
           )}
 
