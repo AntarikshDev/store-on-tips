@@ -58,9 +58,9 @@ export const HelpLauncher = () => {
             {filtered.length === 0 && <p className="text-sm text-muted-foreground px-3 py-2">No articles found.</p>}
           </div>
           <div className="pt-3 border-t">
-            <a href="https://wa.me/919999999999?text=Hi%20Pictocart%20support" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/919810189606?text=Hi%20PicToCart%20support" target="_blank" rel="noreferrer">
               <Button variant="outline" className="w-full gap-2">
-                <MessageCircle className="h-4 w-4" /> WhatsApp support
+                <MessageCircle className="h-4 w-4" /> WhatsApp support (+91 98101 89606)
               </Button>
             </a>
             <Link to="/help" onClick={() => setOpen(false)}>
