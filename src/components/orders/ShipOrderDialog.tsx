@@ -76,7 +76,7 @@ const ShipOrderDialog = ({ open, onOpenChange, order, store, onShipped }: ShipOr
               total_amount: order.total || 0,
               weight: parseInt(weight) || 500,
               seller_name: store.name,
-              pickup_name: pickup.name,
+              pickup_name: provider === 'shiprocket' ? (shippingConfig.shiprocket_pickup_name || pickup.name || 'Primary') : pickup.name,
               pickup_phone: pickup.phone,
               pickup_address: pickup.address,
               pickup_city: pickup.city,
