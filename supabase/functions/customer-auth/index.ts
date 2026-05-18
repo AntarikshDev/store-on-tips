@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       const fullName = String(payload?.fullName || "").trim();
       const phone = String(payload?.phone || "").trim();
       if (password.length < 6) {
-        return json({ error: "password_too_short" }, 400);
+        return json({ error: "password_too_short" });
       }
 
       const { data: created, error: createErr } = await admin.auth.admin
@@ -132,7 +132,9 @@ Deno.serve(async (req) => {
       if (createErr) {
         const msg = (createErr as any).message || "";
         if (/already.*registered|already exists|duplicate/i.test(msg)) {
-          return json({ error: "already_registered_for_this_store" }, 409);
+          const grant = await passwordGrant(alias, password);
+          if (grant.ok) return json({ ok: true, session: grant.body, existing: true });
+          return json({ error: "already_registered_for_this_store" });
         }
         console.error("createUser failed", createErr);
         return json({ error: "signup_failed", detail: msg }, 400);
@@ -163,12 +165,12 @@ Deno.serve(async (req) => {
 
     if (action === "signin") {
       const password = String(payload?.password || "");
-      if (!password) return json({ error: "missing_password" }, 400);
+      if (!password) return json({ error: "missing_password" });
       const grant = await passwordGrant(alias, password);
       if (!grant.ok) {
         const code = grant.body?.error_code || grant.body?.error || "";
         if (/invalid_credentials|invalid_grant|400/.test(String(code) + grant.status)) {
-          return json({ error: "invalid_credentials" }, 401);
+          return json({ error: "invalid_credentials" });
         }
         return json({ error: "signin_failed", detail: grant.body }, grant.status);
       }
