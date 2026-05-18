@@ -269,6 +269,18 @@ const AdminUsers = () => {
             <SelectItem value="customer">Customer</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={storeFilter} onValueChange={setStoreFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by store" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stores</SelectItem>
+            <SelectItem value="__none__">No Store</SelectItem>
+            {storeOptions.map(([slug, name]) => (
+              <SelectItem key={slug} value={slug}>{name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
