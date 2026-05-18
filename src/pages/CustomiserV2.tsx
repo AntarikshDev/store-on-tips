@@ -769,6 +769,40 @@ function SectionInspector({ idx, section, sectionOv, onUpdate, onReset, onUpload
         <p className="text-xs text-muted-foreground">This section has no editable fields exposed by the theme.</p>
       )}
 
+      <div className="pt-3 border-t space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs flex items-center gap-1.5"><Palette className="h-3 w-3" /> Section colors</Label>
+          {sectionOv?.colors && (
+            <button onClick={() => onResetColors(idx)} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"><RotateCcw className="h-3 w-3" /> reset</button>
+          )}
+        </div>
+        <p className="text-[10px] text-muted-foreground">Override colors just for this section. Leave blank to use the theme default.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {COLOR_KEYS.map(({ key, label }) => {
+            const val = sectionOv?.colors?.[key] ?? "";
+            return (
+              <div key={key} className="space-y-1">
+                <Label className="text-[10px]">{label}</Label>
+                <div className="flex gap-1 items-center">
+                  <input
+                    type="color"
+                    value={val || "#000000"}
+                    onChange={(e) => onColorChange(idx, key, e.target.value)}
+                    className="h-7 w-7 rounded border cursor-pointer shrink-0"
+                  />
+                  <Input
+                    value={val}
+                    onChange={(e) => onColorChange(idx, key, e.target.value)}
+                    placeholder="theme"
+                    className="h-7 text-[11px] font-mono"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="pt-2 border-t">
         <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
           <ExternalLink className="h-3 w-3" /> Open preview in new tab
