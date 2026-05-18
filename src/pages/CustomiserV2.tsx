@@ -274,6 +274,8 @@ export default function CustomiserV2() {
       iframeRef.current?.contentWindow?.postMessage({ type: "customiser:scroll", anchor }, "*");
     }
   };
+
+  const uploadLogo = async (file: File) => {
     if (!store?.id) return;
     try {
       const ext = file.name.split(".").pop();
