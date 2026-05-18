@@ -110,6 +110,7 @@ const CustomDomainRedirect = ({ slug }: { slug: string }) => {
 };
 
 const AppRoutes = () => {
+  const location = useLocation();
   const { data: hostStore, isLoading } = useStoreByHost();
   const onPlatform = typeof window !== "undefined" && isPlatformHost(window.location.hostname);
 
@@ -121,7 +122,7 @@ const AppRoutes = () => {
     );
   }
 
-  if (!onPlatform && hostStore) {
+  if (!onPlatform && hostStore && !location.pathname.startsWith(`/store/${hostStore.slug}`)) {
     return <CustomDomainRedirect slug={hostStore.slug} />;
   }
 
