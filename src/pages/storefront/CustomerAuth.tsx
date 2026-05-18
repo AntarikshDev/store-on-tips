@@ -54,9 +54,15 @@ const CustomerAuth = () => {
 
   if (!store) return null;
 
+  const destinationAfterAuth = () => {
+    if (redirectParam === 'checkout') return `/store/${slug}/checkout`;
+    if (redirectParam === 'cart') return `/store/${slug}/cart`;
+    return `/store/${slug}/account`;
+  };
+
   // Redirect if already logged in
   if (user) {
-    navigate(`/store/${slug}/account`, { replace: true });
+    navigate(destinationAfterAuth(), { replace: true });
     return null;
   }
 
@@ -78,15 +84,15 @@ const CustomerAuth = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Check your email for verification link!');
-        setMode('login');
+        toast.success('Account created! Welcome.');
+        navigate(destinationAfterAuth());
       }
     } else {
       const { error } = await signInWithEmail(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        navigate(`/store/${slug}`);
+        navigate(destinationAfterAuth());
       }
     }
     setSubmitting(false);
