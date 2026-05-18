@@ -73,7 +73,11 @@ const AdminUsers = () => {
         const aliasStoreSlug = auth?.email?.match(/@([a-z0-9-]+)\.customers\.pictocart\.in$/)?.[1];
         const isCustomer = meta.is_customer === true || Boolean(aliasStoreSlug);
         const store = isCustomer ? storeSlugMap.get(meta.store_slug || aliasStoreSlug) : storeMap.get(p.user_id);
-        const roles = roleMap.get(p.user_id) || (isCustomer ? ['customer'] : ['seller']);
+        const rawRoles = roleMap.get(p.user_id) || (isCustomer ? ['customer'] : ['seller']);
+        // Customer accounts should only ever show the customer role
+        const roles = isCustomer
+          ? Array.from(new Set([...rawRoles.filter((r) => r !== 'seller'), 'customer']))
+          : rawRoles;
         return {
           ...p,
           email: meta.customer_email || (aliasStoreSlug ? auth?.email?.split('@')[0]?.replace('-at-', '@') : auth?.email) || null,
@@ -81,7 +85,7 @@ const AdminUsers = () => {
           phone: p.phone || meta.phone || null,
           last_sign_in_at: auth?.last_sign_in_at || null,
           email_confirmed_at: auth?.email_confirmed_at || null,
-          roles: isCustomer && !roles.includes('customer') ? [...roles, 'customer'] : roles,
+          roles,
           storeName: store?.name || null,
           storeSlug: store?.slug || null,
           isCustomer,
