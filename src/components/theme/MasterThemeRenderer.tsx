@@ -68,8 +68,10 @@ interface Props {
 }
 
 export default function MasterThemeRenderer({ manifest, page = "home", overrides, storeSlug, onNavigate, products }: Props) {
-  const dna = manifest?.dna ?? {};
-  const palette = dna.palette ?? {};
+  const baseDna = manifest?.dna ?? {};
+  // Merge global palette overrides into dna so every Section/Header/Footer picks them up.
+  const palette = { ...(baseDna.palette ?? {}), ...((overrides as any)?.palette ?? {}) };
+  const dna = { ...baseDna, palette };
   const fonts = dna.fonts ?? {};
   const radius = dna.radius ?? "8px";
   const headerStyle = manifest?.header_style ?? dna.layout?.header_style ?? "classic";
