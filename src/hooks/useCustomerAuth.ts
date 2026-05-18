@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 const TENANT_DOMAIN = 'customers.pictocart.in';
+const CUSTOMER_AUTH_EVENT = 'pictocart:customer-auth-changed';
 
 export const useCustomerAuth = (storeSlug: string) => {
   const [user, setUser] = useState<User | null>(null);
@@ -15,35 +16,37 @@ export const useCustomerAuth = (storeSlug: string) => {
     return metaSlug === storeSlug || email.endsWith(`@${storeSlug}.${TENANT_DOMAIN}`);
   };
 
+  const scopeCustomerUser = (candidate: User | null) => (
+    isStoreCustomer(candidate) ? candidate : null
+  );
+
   useEffect(() => {
     let active = true;
 
-    const setScopedUser = async (sessionUser: User | null) => {
+    const setScopedUser = (sessionUser: User | null) => {
       if (!active) return;
-      if (!sessionUser?.user_metadata?.is_customer || !storeSlug) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      if (isStoreCustomer(sessionUser)) {
-        setUser(sessionUser);
-        setLoading(false);
-        return;
-      }
-      // Session belongs to a different store / a seller — not this storefront's user.
-      setUser(null);
+      setUser(scopeCustomerUser(sessionUser));
       setLoading(false);
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      void setScopedUser(session?.user ?? null);
-    });
+    const refreshSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setScopedUser(session?.user ?? null);
+    };
+
+    void refreshSession();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      void setScopedUser(session?.user ?? null);
+      setScopedUser(session?.user ?? null);
     });
+    const handleCustomerAuthChanged = (event: Event) => {
+      const changedStore = (event as CustomEvent<{ storeSlug?: string }>).detail?.storeSlug;
+      if (!changedStore || changedStore === storeSlug) void refreshSession();
+    };
+    window.addEventListener(CUSTOMER_AUTH_EVENT, handleCustomerAuthChanged);
 
     return () => {
       active = false;
+      window.removeEventListener(CUSTOMER_AUTH_EVENT, handleCustomerAuthChanged);
       subscription.unsubscribe();
     };
   }, [storeSlug]);
@@ -64,10 +67,13 @@ export const useCustomerAuth = (storeSlug: string) => {
 
   const applySession = async (session: any) => {
     if (!session?.access_token || !session?.refresh_token) return;
-    await supabase.auth.setSession({
+    const { data } = await supabase.auth.setSession({
       access_token: session.access_token,
       refresh_token: session.refresh_token,
     });
+    setUser(scopeCustomerUser(data.session?.user ?? session.user ?? null));
+    setLoading(false);
+    window.dispatchEvent(new CustomEvent(CUSTOMER_AUTH_EVENT, { detail: { storeSlug } }));
   };
 
   const signUpWithEmail = async (email: string, password: string, fullName: string) => {
@@ -150,6 +156,8 @@ export const useCustomerAuth = (storeSlug: string) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUser(null);
+    window.dispatchEvent(new CustomEvent(CUSTOMER_AUTH_EVENT, { detail: { storeSlug } }));
   };
 
   return {
