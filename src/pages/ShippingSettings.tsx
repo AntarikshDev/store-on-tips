@@ -69,24 +69,27 @@ const ShippingSettings = () => {
     if (!store) return;
     setSaving(true);
 
-    // Save pickup + flags (NO api_token) to public settings
     const settings = {
       ...((store.settings as any) || {}),
       shipping: {
-        configured: !!apiToken,
+        configured: !!apiToken || !!(srEmail && srPassword),
         test_mode: testMode,
         pickup,
+        shiprocket_pickup_name: srPickupName,
+        preferred_courier: preferredCourier,
       },
     };
     const { error } = await supabase.from('stores').update({ settings }).eq('id', store.id);
 
-    // Save token to private store_secrets
     const { error: secErr } = await supabase
       .from('store_secrets' as any)
       .upsert({
         store_id: store.id,
         delhivery_api_token: apiToken || null,
         delhivery_test_mode: testMode,
+        shiprocket_email: srEmail || null,
+        shiprocket_password: srPassword || null,
+        preferred_courier: preferredCourier,
       }, { onConflict: 'store_id' });
 
     if (error || secErr) {
@@ -96,6 +99,51 @@ const ShippingSettings = () => {
       setStore({ ...store, settings });
     }
     setSaving(false);
+  };
+
+  const handleTestShiprocket = async () => {
+    if (!store?.id) return;
+    if (!srEmail || !srPassword) {
+      toast.error('Enter Shiprocket email & password, then save before testing');
+      return;
+    }
+    setSrTesting(true);
+    setSrTestResult(null);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/shiprocket-proxy`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify({
+            action: 'serviceability',
+            store_id: store.id,
+            pickup_pincode: pickup.pincode || '110001',
+            delivery_pincode: '560001',
+            weight: 0.5,
+            cod: 0,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        setSrTestResult('success');
+        toast.success('Shiprocket connection successful!');
+      } else {
+        setSrTestResult('error');
+        toast.error(data.error || 'Shiprocket connection failed. Save settings first.');
+      }
+    } catch {
+      setSrTestResult('error');
+      toast.error('Shiprocket connection failed.');
+    }
+    setSrTesting(false);
   };
 
   const handleTestConnection = async () => {
