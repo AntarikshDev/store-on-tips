@@ -56,6 +56,7 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
   const { user } = useCustomerAuth(store.slug);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const customerName = user?.user_metadata?.full_name || user?.user_metadata?.customer_email?.split('@')?.[0] || 'Account';
 
   const footer = footerConfig || (store.settings as any)?.footer || DEFAULT_FOOTER;
   const headerConfig = (store.settings as any)?.header || {};
@@ -108,8 +109,14 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
               <Search className="h-4 w-4" /> Search
             </button>
             {user ? (
-              <Link to={`/store/${store.slug}/account`} className="hidden md:block" aria-label="My account">
-                <User className="h-5 w-5" style={{ color: colors.text }} />
+              <Link
+                to={`/store/${store.slug}/account`}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-colors hover:opacity-80 max-w-40"
+                style={{ borderColor: colors.primary, color: colors.primary }}
+                aria-label="My account"
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <span className="truncate">{customerName}</span>
               </Link>
             ) : (
               <Link
@@ -120,7 +127,16 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
                 <User className="h-4 w-4" /> Sign in
               </Link>
             )}
-            {!user && (
+            {user ? (
+              <Link
+                to={`/store/${store.slug}/account`}
+                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full max-w-28"
+                style={{ backgroundColor: colors.primary, color: '#fff' }}
+              >
+                <User className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{customerName}</span>
+              </Link>
+            ) : (
               <Link
                 to={`/store/${store.slug}/account/auth`}
                 className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full"
