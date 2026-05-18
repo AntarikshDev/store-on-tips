@@ -102,7 +102,8 @@ const AdminUsers = () => {
           const meta = auth.user_metadata || {};
           const aliasStoreSlug = auth?.email?.match(/@([a-z0-9-]+)\.customers\.pictocart\.in$/)?.[1];
           const store = storeSlugMap.get(meta.store_slug || aliasStoreSlug);
-          const roles = roleMap.get(auth.id) || ['customer'];
+          const rawRoles = roleMap.get(auth.id) || ['customer'];
+          const roles = Array.from(new Set([...rawRoles.filter((r) => r !== 'seller'), 'customer']));
           return {
             id: auth.id,
             user_id: auth.id,
@@ -113,7 +114,7 @@ const AdminUsers = () => {
             email: meta.customer_email || (aliasStoreSlug ? auth.email?.split('@')[0]?.replace('-at-', '@') : auth.email) || null,
             last_sign_in_at: auth.last_sign_in_at || null,
             email_confirmed_at: auth.email_confirmed_at || null,
-            roles: roles.includes('customer') ? roles : [...roles, 'customer'],
+            roles,
             storeName: store?.name || null,
             storeSlug: store?.slug || meta.store_slug || null,
             isCustomer: true,
