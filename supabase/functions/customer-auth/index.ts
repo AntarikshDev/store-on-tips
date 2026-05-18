@@ -87,6 +87,28 @@ async function findUserByEmail(email: string) {
   return data?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase()) || null;
 }
 
+async function ensureCustomerUser(userId: string, store: any, realEmail: string, fullName = "", phone = "") {
+  await admin.auth.admin.updateUserById(userId, {
+    email_confirm: true,
+    user_metadata: {
+      is_customer: true,
+      store_slug: store.slug,
+      customer_email: realEmail,
+      full_name: fullName || null,
+      phone: phone || null,
+    },
+  });
+  await admin.from("user_roles").delete().eq("user_id", userId).eq("role", "seller");
+  await admin.from("user_roles").upsert({ user_id: userId, role: "customer" }, { onConflict: "user_id,role" });
+  await admin.from("customers").upsert({
+    user_id: userId,
+    store_id: store.id,
+    name: fullName || null,
+    email: realEmail,
+    phone: phone || null,
+  }, { onConflict: "user_id,store_id" });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -152,6 +174,8 @@ Deno.serve(async (req) => {
       if (createErr) {
         const msg = (createErr as any).message || "";
         if (/already.*registered|already exists|duplicate/i.test(msg)) {
+          const existing = await findUserByEmail(alias);
+          if (existing?.id) await ensureCustomerUser(existing.id, store, email, fullName, phone);
           const grant = await createPasswordSession(alias, password);
           if (grant.ok) return json({ ok: true, session: grant.body, existing: true });
           return json({ error: "already_registered_for_this_store" });
@@ -160,18 +184,7 @@ Deno.serve(async (req) => {
         return json({ error: "signup_failed", detail: msg }, 400);
       }
 
-      // Generate a verification link via the auth-email-hook pipeline.
-      const redirectTo = String(payload?.redirectTo || "");
-      const { error: linkErr } = await admin.auth.admin.generateLink({
-        type: "signup",
-        email: alias,
-        password,
-        options: redirectTo ? { redirectTo } : undefined,
-      });
-      if (linkErr) console.warn("generateLink (signup) failed", linkErr);
-
-      // Immediately password-grant so the user is logged in even before
-      // verifying email — matches the previous customer UX.
+      await ensureCustomerUser(created.user!.id, store, email, fullName, phone);
       const grant = await createPasswordSession(alias, password);
       if (!grant.ok) {
         return json({
@@ -186,6 +199,8 @@ Deno.serve(async (req) => {
     if (action === "signin") {
       const password = String(payload?.password || "");
       if (!password) return json({ error: "missing_password" });
+      const existing = await findUserByEmail(alias);
+      if (existing?.id) await ensureCustomerUser(existing.id, store, email);
       const grant = await createPasswordSession(alias, password);
       if (!grant.ok) {
         const code = grant.body?.error_code || grant.body?.error || "";
