@@ -409,6 +409,162 @@ const ShippingSettings = () => {
         </CardContent>
       </Card>
 
+      {/* Shiprocket Integration */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Shiprocket Integration</CardTitle>
+                <CardDescription>Multi-courier aggregator — compare rates across 17+ partners</CardDescription>
+              </div>
+            </div>
+            <Badge variant={srEmail && srPassword ? 'default' : 'secondary'}>
+              {srEmail && srPassword ? 'Configured' : 'Not Set Up'}
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-4 w-4 text-primary" /> Don't have a Shiprocket account?
+          </CardTitle>
+          <CardDescription>
+            Sign up free, complete KYC, register a pickup location, then paste your login below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ol className="space-y-3 text-sm">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">1</span>
+              <div>
+                <p className="font-medium">Sign up on Shiprocket</p>
+                <p className="text-muted-foreground text-xs">Free account — no monthly fees on the basic plan.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">2</span>
+              <div>
+                <p className="font-medium">Complete KYC & add a Pickup Location</p>
+                <p className="text-muted-foreground text-xs">In Shiprocket → Settings → Pickup Addresses. Note the <strong>nickname</strong> you give it (e.g. "Primary").</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">3</span>
+              <div>
+                <p className="font-medium">Paste your login email & password below</p>
+                <p className="text-muted-foreground text-xs">We use them to fetch a short-lived API token; stored encrypted server-side, never exposed to the storefront.</p>
+              </div>
+            </li>
+          </ol>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button asChild size="sm">
+              <a href="https://app.shiprocket.in/register" target="_blank" rel="noopener noreferrer">
+                Sign up on Shiprocket <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a href="https://app.shiprocket.in/" target="_blank" rel="noopener noreferrer">
+                Open Shiprocket panel <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a href="https://apidocs.shiprocket.in/" target="_blank" rel="noopener noreferrer">
+                API docs <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Shiprocket Credentials</CardTitle>
+          <CardDescription>Login email & password from your Shiprocket account.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Shiprocket Email</Label>
+            <Input
+              type="email"
+              placeholder="you@yourbusiness.com"
+              value={srEmail}
+              onChange={(e) => setSrEmail(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Shiprocket Password</Label>
+            <Input
+              type="password"
+              placeholder="Your Shiprocket login password"
+              value={srPassword}
+              onChange={(e) => setSrPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Pickup Location Nickname</Label>
+            <Input
+              placeholder="Primary"
+              value={srPickupName}
+              onChange={(e) => setSrPickupName(e.target.value)}
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Must match exactly the nickname registered in Shiprocket → Settings → Pickup Addresses.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleTestShiprocket} variant="outline" disabled={srTesting || !srEmail || !srPassword}>
+              {srTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Test Connection
+            </Button>
+            {srTestResult === 'success' && (
+              <div className="flex items-center gap-1 text-sm text-green-600">
+                <CheckCircle2 className="h-4 w-4" /> Connected
+              </div>
+            )}
+            {srTestResult === 'error' && (
+              <div className="flex items-center gap-1 text-sm text-destructive">
+                <XCircle className="h-4 w-4" /> Failed
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Default courier */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Default Courier</CardTitle>
+          <CardDescription>Pre-selected provider in the Ship Order dialog. Sellers can still switch per-order.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-2">
+            {(['delhivery', 'shiprocket'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPreferredCourier(p)}
+                className={`rounded-md border px-3 py-2 text-sm font-medium capitalize transition ${
+                  preferredCourier === p ? 'border-primary bg-primary/10 text-primary' : 'hover:bg-muted'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+
+
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving || loading}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
