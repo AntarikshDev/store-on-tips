@@ -646,7 +646,7 @@ function FooterInspector({ footerOv, onChange }: { footerOv: any; onChange: (k: 
   );
 }
 
-function SectionInspector({ idx, section, sectionOv, onUpdate, onReset, onUploadImage, previewUrl }: any) {
+function SectionInspector({ idx, section, sectionOv, onUpdate, onReset, onUploadImage, onColorChange, onResetColors, previewUrl }: any) {
   const defaults = section?.props ?? {};
   const merged = { ...defaults, ...sectionOv };
   const textKeys = TEXT_KEYS.filter((k) => k in defaults);
