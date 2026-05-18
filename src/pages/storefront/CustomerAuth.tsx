@@ -7,8 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-
 declare global {
   interface Window {
     google?: any;
