@@ -60,6 +60,25 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const customerName = user?.user_metadata?.full_name || user?.user_metadata?.customer_email?.split('@')?.[0] || 'Account';
 
+  // Fallback: if parent did not pass products, fetch them so the search overlay still works on cart/account/etc.
+  const { data: fetchedProducts = [] } = useQuery({
+    queryKey: ['storefront-layout-products', store.id],
+    enabled: !!store.id && products.length === 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, title, price, images, category')
+        .eq('store_id', store.id!)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const searchProducts = products.length > 0 ? products : fetchedProducts;
+
+
   const footer = footerConfig || (store.settings as any)?.footer || DEFAULT_FOOTER;
   const headerConfig = (store.settings as any)?.header || {};
 
