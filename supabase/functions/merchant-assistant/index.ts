@@ -140,8 +140,8 @@ function json(payload: unknown, status = 200) {
 async function loadMerchantContext(admin: any, userId: string) {
   const { data: store } = await admin
     .from('stores')
-    .select('id, name, slug, category, description, is_published, logo_url, settings, onboarding_completed, custom_domain, theme_template_key, created_at')
-    .eq('owner_id', userId)
+    .select('id, name, slug, category, description, is_published, logo_url, settings, onboarding_step, custom_domain, theme, created_at')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -149,13 +149,11 @@ async function loadMerchantContext(admin: any, userId: string) {
   if (!store) return { store: null };
 
   const sid = store.id;
-  const [products, orders, wallet, sub, domain, payCfg] = await Promise.all([
+  const [products, orders, wallet, sub] = await Promise.all([
     admin.from('products').select('id, title, price, inventory_count, is_active, images, short_description', { count: 'exact' }).eq('store_id', sid).limit(200),
-    admin.from('orders').select('id, status, payment_status, total_amount, created_at, awb_number', { count: 'exact' }).eq('store_id', sid).order('created_at', { ascending: false }).limit(50),
+    admin.from('orders').select('id, status, payment_status, total, created_at, tracking_number', { count: 'exact' }).eq('store_id', sid).order('created_at', { ascending: false }).limit(50),
     admin.from('ai_credit_wallets').select('balance, lifetime_used, low_balance_notified_at').eq('store_id', sid).maybeSingle(),
     admin.from('subscriptions').select('plan, status, current_period_end').eq('store_id', sid).maybeSingle(),
-    admin.from('custom_domains').select('domain, status, verified_at').eq('store_id', sid).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
-    admin.from('payment_configs').select('razorpay_key_id, cod_enabled').eq('store_id', sid).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
   ]);
 
   const allProducts = (products.data || []) as any[];
@@ -171,10 +169,16 @@ async function loadMerchantContext(admin: any, userId: string) {
     total: orders.count ?? allOrders.length,
     pending: allOrders.filter((o) => o.status === 'pending' || o.status === 'placed').length,
     paid: allOrders.filter((o) => o.payment_status === 'paid').length,
-    unshipped: allOrders.filter((o) => !o.awb_number && o.payment_status === 'paid').length,
+    unshipped: allOrders.filter((o) => !o.tracking_number && o.payment_status === 'paid').length,
     last_30d_revenue: allOrders
       .filter((o) => o.payment_status === 'paid' && Date.now() - new Date(o.created_at).getTime() < 30 * 86400000)
-      .reduce((s, o) => s + Number(o.total_amount || 0), 0),
+      .reduce((s, o) => s + Number(o.total || 0), 0),
+  };
+
+  const settings = (store.settings || {}) as any;
+  const payments = {
+    razorpay_configured: !!(settings.razorpay_key_id || settings.payment?.razorpay_key_id),
+    cod_enabled: !!(settings.cod_enabled ?? settings.payment?.cod_enabled),
   };
 
   return {
@@ -184,9 +188,10 @@ async function loadMerchantContext(admin: any, userId: string) {
       category: store.category,
       description: store.description,
       is_published: store.is_published,
-      onboarding_completed: store.onboarding_completed,
+      onboarding_step: store.onboarding_step,
+      onboarding_completed: (store.onboarding_step ?? 0) >= 7,
       has_logo: !!store.logo_url,
-      theme: store.theme_template_key,
+      theme: store.theme,
       custom_domain: store.custom_domain,
       created_at: store.created_at,
     },
@@ -194,10 +199,7 @@ async function loadMerchantContext(admin: any, userId: string) {
     orders: orderSummary,
     wallet: wallet?.data ?? null,
     subscription: sub?.data ?? null,
-    domain: domain?.data ?? null,
-    payments: payCfg?.data
-      ? { razorpay_configured: !!payCfg.data.razorpay_key_id, cod_enabled: !!payCfg.data.cod_enabled }
-      : { razorpay_configured: false, cod_enabled: false },
+    payments,
   };
 }
 
