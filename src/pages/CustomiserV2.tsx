@@ -362,9 +362,18 @@ export default function CustomiserV2() {
           <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Sections</div>
           <ScrollArea className="flex-1">
             <div className="px-2 pb-3 space-y-0.5">
+              {/* Theme palette row */}
+              <button
+                onClick={() => selectAndScroll({ kind: "palette" })}
+                className={`w-full text-left text-xs px-2.5 py-1.5 rounded-md flex items-center justify-between ${selected?.kind === "palette" ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}
+              >
+                <span className="flex items-center gap-1.5"><Palette className="h-3 w-3" /> Theme colors</span>
+                {Object.keys(paletteOv).length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+              </button>
+
               {/* Synthetic Header row */}
               <button
-                onClick={() => setSelected({ kind: "header" })}
+                onClick={() => selectAndScroll({ kind: "header" })}
                 className={`w-full text-left text-xs px-2.5 py-1.5 rounded-md flex items-center justify-between ${selected?.kind === "header" ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}
               >
                 <span className="flex items-center gap-1.5"><PanelTop className="h-3 w-3" /> Header</span>
@@ -379,7 +388,7 @@ export default function CustomiserV2() {
                 return (
                   <button
                     key={i}
-                    onClick={() => setSelected({ kind: "section", index: i })}
+                    onClick={() => selectAndScroll({ kind: "section", index: i })}
                     className={`w-full text-left text-xs px-2.5 py-1.5 rounded-md flex items-center justify-between ${isSel ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}
                   >
                     <span className="truncate">{i + 1}. {SECTION_LABEL[s.type] || s.type}</span>
@@ -390,7 +399,7 @@ export default function CustomiserV2() {
 
               {/* Synthetic Footer row */}
               <button
-                onClick={() => setSelected({ kind: "footer" })}
+                onClick={() => selectAndScroll({ kind: "footer" })}
                 className={`w-full text-left text-xs px-2.5 py-1.5 rounded-md flex items-center justify-between ${selected?.kind === "footer" ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}
               >
                 <span className="flex items-center gap-1.5"><PanelBottom className="h-3 w-3" /> Footer</span>
