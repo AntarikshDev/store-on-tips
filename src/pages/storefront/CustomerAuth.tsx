@@ -19,7 +19,7 @@ const CustomerAuth = () => {
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get('redirect');
   const { store, loading: storeLoading } = useStorefront(slug || '');
-  const { user, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset, signInWithGoogle } = useCustomerAuth(slug || '');
+  const { user, loading: authLoading, signInWithEmail, signUpWithEmail, signInWithOtp, verifyOtp, requestPasswordReset, signInWithGoogle } = useCustomerAuth(slug || '');
   const [mode, setMode] = useState<'login' | 'signup' | 'otp' | 'verify-otp' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,7 +37,7 @@ const CustomerAuth = () => {
       .catch(() => {});
   }, [slug]);
 
-  if (storeLoading) {
+  if (storeLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -77,14 +77,14 @@ const CustomerAuth = () => {
         toast.error(error.message);
       } else {
         toast.success('Account created! Welcome.');
-        navigate(destinationAfterAuth());
+        navigate(destinationAfterAuth(), { replace: true });
       }
     } else {
       const { error } = await signInWithEmail(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        navigate(destinationAfterAuth());
+        navigate(destinationAfterAuth(), { replace: true });
       }
     }
     setSubmitting(false);
@@ -110,7 +110,7 @@ const CustomerAuth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      navigate(destinationAfterAuth());
+      navigate(destinationAfterAuth(), { replace: true });
     }
     setSubmitting(false);
   };
@@ -156,7 +156,7 @@ const CustomerAuth = () => {
             googleSignedInRef.current = false;
             toast.error(error.message || 'Google sign-in failed');
           } else {
-            navigate(destinationAfterAuth());
+            navigate(destinationAfterAuth(), { replace: true });
           }
         },
       });
