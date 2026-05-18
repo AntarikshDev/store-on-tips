@@ -26,27 +26,34 @@ export const useCart = (storeSlug: string) => {
     localStorage.setItem(CART_KEY(storeSlug), JSON.stringify(newItems));
   };
 
+  const readStorage = (): CartItem[] => {
+    try {
+      const saved = localStorage.getItem(CART_KEY(storeSlug));
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  };
+
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>, qty = 1) => {
-    setItems((prev) => {
-      const key = `${item.productId}_${item.variant || ''}`;
-      const existing = prev.find((i) => `${i.productId}_${i.variant || ''}` === key);
-      const next = existing
-        ? prev.map((i) => (`${i.productId}_${i.variant || ''}` === key ? { ...i, quantity: i.quantity + qty } : i))
-        : [...prev, { ...item, quantity: qty }];
-      localStorage.setItem(CART_KEY(storeSlug), JSON.stringify(next));
-      return next;
-    });
+    const prev = readStorage();
+    const key = `${item.productId}_${item.variant || ''}`;
+    const existing = prev.find((i) => `${i.productId}_${i.variant || ''}` === key);
+    const next = existing
+      ? prev.map((i) => (`${i.productId}_${i.variant || ''}` === key ? { ...i, quantity: i.quantity + qty } : i))
+      : [...prev, { ...item, quantity: qty }];
+    // Write synchronously BEFORE React state update so navigation immediately
+    // after addItem() still persists the change (Buy Now → navigate to cart).
+    localStorage.setItem(CART_KEY(storeSlug), JSON.stringify(next));
+    setItems(next);
   }, [storeSlug]);
 
   const updateQuantity = useCallback((productId: string, variant: string | undefined, qty: number) => {
-    setItems((prev) => {
-      const key = `${productId}_${variant || ''}`;
-      const next = qty <= 0
-        ? prev.filter((i) => `${i.productId}_${i.variant || ''}` !== key)
-        : prev.map((i) => (`${i.productId}_${i.variant || ''}` === key ? { ...i, quantity: qty } : i));
-      localStorage.setItem(CART_KEY(storeSlug), JSON.stringify(next));
-      return next;
-    });
+    const prev = readStorage();
+    const key = `${productId}_${variant || ''}`;
+    const next = qty <= 0
+      ? prev.filter((i) => `${i.productId}_${i.variant || ''}` !== key)
+      : prev.map((i) => (`${i.productId}_${i.variant || ''}` === key ? { ...i, quantity: qty } : i));
+    localStorage.setItem(CART_KEY(storeSlug), JSON.stringify(next));
+    setItems(next);
   }, [storeSlug]);
 
   const removeItem = useCallback((productId: string, variant?: string) => {
