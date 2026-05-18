@@ -325,7 +325,7 @@ const AdminUsers = () => {
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{user.email || '—'}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm">
+                  <TableCell className="text-sm">
                     {user.storeName ? (
                       <span className="text-foreground">{user.storeName}</span>
                     ) : (
