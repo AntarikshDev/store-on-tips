@@ -29,6 +29,14 @@ const CustomerAuth = () => {
   const [otpToken, setOtpToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sellerSessionWarned, setSellerSessionWarned] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    supabase.functions.invoke('customer-auth', { body: { action: 'config', storeSlug: slug } })
+      .then(({ data }) => { if (data?.googleClientId) setGoogleClientId(data.googleClientId); })
+      .catch(() => {});
+  }, [slug]);
 
   // Detect existing SELLER session (no is_customer flag) and warn so the
   // seller's dashboard session isn't silently overwritten by a customer login.
