@@ -70,8 +70,9 @@ const AdminUsers = () => {
       const profileRows: AdminUser[] = (profilesRes.data || []).map((p) => {
         const auth = authMap.get(p.user_id);
         const meta = auth?.user_metadata || {};
-        const isCustomer = meta.is_customer === true;
-        const store = isCustomer ? storeSlugMap.get(meta.store_slug) : storeMap.get(p.user_id);
+        const aliasStoreSlug = auth?.email?.match(/@([a-z0-9-]+)\.customers\.pictocart\.in$/)?.[1];
+        const isCustomer = meta.is_customer === true || Boolean(aliasStoreSlug);
+        const store = isCustomer ? storeSlugMap.get(meta.store_slug || aliasStoreSlug) : storeMap.get(p.user_id);
         const roles = roleMap.get(p.user_id) || (isCustomer ? ['customer'] : ['seller']);
         return {
           ...p,
@@ -89,10 +90,14 @@ const AdminUsers = () => {
 
       const profiledUserIds = new Set(profileRows.map((u) => u.user_id));
       const customerAuthRows: AdminUser[] = Array.from(authMap.values())
-        .filter((auth: any) => auth?.user_metadata?.is_customer === true && !profiledUserIds.has(auth.id))
+        .filter((auth: any) => {
+          const aliasStoreSlug = auth?.email?.match(/@([a-z0-9-]+)\.customers\.pictocart\.in$/)?.[1];
+          return (auth?.user_metadata?.is_customer === true || Boolean(aliasStoreSlug)) && !profiledUserIds.has(auth.id);
+        })
         .map((auth: any) => {
           const meta = auth.user_metadata || {};
-          const store = storeSlugMap.get(meta.store_slug);
+          const aliasStoreSlug = auth?.email?.match(/@([a-z0-9-]+)\.customers\.pictocart\.in$/)?.[1];
+          const store = storeSlugMap.get(meta.store_slug || aliasStoreSlug);
           const roles = roleMap.get(auth.id) || ['customer'];
           return {
             id: auth.id,
