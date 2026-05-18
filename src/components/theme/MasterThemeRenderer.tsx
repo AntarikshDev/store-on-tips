@@ -129,9 +129,31 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
           newsletter: "contact",
         };
         const anchorId = anchorMap[s.type];
+        // Per-section color override: ov.colors = { primary, accent, bg, surface, fg, muted, border, primary_fg }
+        const secColors = (mergedProps.colors ?? ov.colors) as Record<string, string> | undefined;
+        const sectionDna = secColors ? { ...dna, palette: { ...dna.palette, ...secColors } } : dna;
+        const sectionStyle: React.CSSProperties = secColors
+          ? {
+              ["--p" as any]: sectionDna.palette.primary,
+              ["--pf" as any]: sectionDna.palette.primary_fg,
+              ["--ac" as any]: sectionDna.palette.accent,
+              ["--bg" as any]: sectionDna.palette.bg,
+              ["--sf" as any]: sectionDna.palette.surface,
+              ["--fg" as any]: sectionDna.palette.fg,
+              ["--mu" as any]: sectionDna.palette.muted,
+              ["--bd" as any]: sectionDna.palette.border,
+              color: sectionDna.palette.fg,
+            }
+          : {};
         return (
-          <div key={i} id={anchorId} style={{ scrollMarginTop: 80 }}>
-            <Section s={{ ...s, props: mergedProps }} dna={dna} storeSlug={storeSlug} />
+          <div
+            key={i}
+            id={anchorId}
+            data-section-index={i}
+            data-section-anchor={`s-${i}`}
+            style={{ scrollMarginTop: 80, ...sectionStyle }}
+          >
+            <Section s={{ ...s, props: mergedProps }} dna={sectionDna} storeSlug={storeSlug} />
           </div>
         );
       })}
