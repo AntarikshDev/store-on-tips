@@ -1,6 +1,7 @@
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, LogIn } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 interface Props {
   colors: any;
@@ -11,12 +12,15 @@ const BottomNav = ({ colors, onSearchOpen }: Props) => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const { totalItems } = useCart(slug || '');
+  const { user } = useCustomerAuth(slug || '');
 
   const items = [
     { icon: Home, label: 'Home', path: `/store/${slug}` },
     { icon: Search, label: 'Search', action: onSearchOpen },
     { icon: ShoppingBag, label: 'Cart', path: `/store/${slug}/cart`, badge: totalItems },
-    { icon: User, label: 'Account', path: `/store/${slug}/account` },
+    user
+      ? { icon: User, label: 'Account', path: `/store/${slug}/account` }
+      : { icon: LogIn, label: 'Sign in', path: `/store/${slug}/account/auth` },
   ];
 
   return (
