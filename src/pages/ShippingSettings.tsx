@@ -336,6 +336,17 @@ const ShippingSettings = () => {
               <Input placeholder="6-digit pincode" value={pickup.pincode} onChange={(e) => updatePickup('pincode', e.target.value)} />
             </div>
           </div>
+          <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+            <p className="text-sm font-medium">Register this pickup with Delhivery</p>
+            <p className="text-xs text-muted-foreground">
+              Delhivery requires the <strong>Contact Name</strong> above to exactly match a registered warehouse name in your Delhivery account.
+              Save your settings, then click below to register this address as a pickup warehouse. (If "ClientWarehouse matching query does not exist" appears when shipping, it means this step is needed.)
+            </p>
+            <Button size="sm" variant="outline" onClick={handleRegisterWarehouse} disabled={registering || !apiToken}>
+              {registering ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Register Warehouse with Delhivery
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
