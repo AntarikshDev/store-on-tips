@@ -62,6 +62,12 @@ export default function ThemeMasterPipeline() {
     if (searchQuery && !s.data?.research_query) setSearchQuery("");
   }
   useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("theme_category_briefs").select("vertical,subcategory,display_name").eq("is_active", true).order("sort_order");
+      setBriefs((data ?? []) as any);
+    })();
+  }, []);
   useEffect(() => { if (settings && !searchQuery) setSearchQuery(settings.research_query); /* eslint-disable-next-line */ }, [settings]);
 
   // Poll active research job.
