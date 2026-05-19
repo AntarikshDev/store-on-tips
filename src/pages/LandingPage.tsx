@@ -748,7 +748,7 @@ const LandingPage = () => {
                   '3 themes (Free + Premium)',
                   'Custom domain + SSL',
                   'Razorpay payouts to your bank',
-                  'Shipping (Delhivery)',
+                  'Shipping (Shiprocket)',
                   'Blog, coupons & SEO tools',
                   'Branded emails + Analytics',
                 ],

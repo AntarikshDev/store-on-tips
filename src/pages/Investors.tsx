@@ -123,7 +123,7 @@ const SlideSolution = () => (
       {[
         { i: Brain, t: "AI Generates Everything", p: "Product descriptions, store policies, themes, SEO (Search Engine Optimization) meta, blog posts, email templates — all powered by Google Gemini 2.5." },
         { i: Zap, t: "5-min Onboarding", p: "4-step wizard. Pick category → upload photo → AI fills name, price, variants, ingredients, warranty. Done." },
-        { i: ShoppingBag, t: "30-sec Checkout", p: "Razorpay + COD (Cash on Delivery), pincode-aware shipping (Delhivery), one-page checkout, persistent cart, customer accounts." },
+        { i: ShoppingBag, t: "30-sec Checkout", p: "Razorpay + COD (Cash on Delivery), pincode-aware shipping (Shiprocket — 17+ couriers), one-page checkout, persistent cart, customer accounts." },
         { i: Crown, t: "Premium Themes", p: "30+ AI-generated themes. Custom domains. White-label emails. Launch a brand, not a listing." },
       ].map((f, i) => (
         <div key={i} className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6 hover:border-emerald-400/40 transition-all"
@@ -215,7 +215,7 @@ const SlideRevenue = () => (
         { t: "AI Credits Wallet", p: "Pay-per-use generation (descriptions, images, blogs, themes)", v: "₹200/seller/mo" },
         { t: "Custom Domains", p: "₹999/year domain + DNS (Domain Name System) management upsell", v: "₹999 ARR (Annual Recurring Revenue)" },
         { t: "Payments Float", p: "Razorpay revenue share + branded checkout fees", v: "0.3% GMV" },
-        { t: "Shipping Margin", p: "Delhivery / Shiprocket aggregator markup", v: "₹15/order" },
+        { t: "Shipping Margin", p: "Shiprocket aggregator markup", v: "₹15/order" },
         { t: "Partner Network", p: "Agency commissions, theme marketplace 30% cut", v: "₹50K/agency" },
       ].map((r, i) => (
         <div key={i} className="rounded-2xl bg-white/5 border border-white/10 p-5 flex items-center justify-between hover:bg-white/10 transition-colors"
@@ -319,7 +319,7 @@ const SlideCustomer = () => (
         { i: Clock, t: "5x Faster Setup", p: "Setup in minutes, not weeks. AI fills every field." },
         { i: Coins, t: "10x Cheaper", p: "₹499/mo vs ₹2,500+ on Shopify. 0% commission on Scale plan." },
         { i: Brain, t: "AI Co-Pilot", p: "Descriptions, blog, marketing copy, SEO (Search Engine Optimization) — written for you." },
-        { i: Shield, t: "Made for Bharat", p: "GST (Goods & Services Tax) invoices, COD (Cash on Delivery), Delhivery — out of the box." },
+        { i: Shield, t: "Made for Bharat", p: "GST (Goods & Services Tax) invoices, COD (Cash on Delivery), Shiprocket — out of the box." },
         { i: Crown, t: "Own Your Brand", p: "Custom domain. Branded emails. Full customer data." },
         { i: TrendingUp, t: "Built to Convert", p: "30+ themes, abandoned cart, coupons, reviews, loyalty." },
       ].map((x, i) => (

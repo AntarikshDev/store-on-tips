@@ -63,7 +63,7 @@ const PLAN: Section[] = [
     bullets: [
       'AI-written product titles, descriptions, Search Engine Optimization (SEO) metadata, and tags.',
       'AI-generated themes, blog posts, store policies, and email templates.',
-      'Pincode-aware shipping integrations with Delhivery and Shiprocket.',
+      'Pincode-aware shipping integration with Shiprocket (17+ couriers, 29,000+ pincodes).',
       'One-page checkout with Razorpay, Cash on Delivery (COD) and Unified Payments Interface (UPI).',
       'Custom Domain Name System (DNS) management and white-label transactional emails.',
     ],
@@ -82,7 +82,7 @@ const PLAN: Section[] = [
     body: [
       'Built on a modern stack: React 18, Vite 5, Tailwind Cascading Style Sheets (CSS) v3, TypeScript 5, and a managed Supabase (Postgres + Edge Functions) backend deployed in the Asia-Pacific region.',
       'Core engineering investment so far: 1,800+ hours, 65+ production features, 30+ AI-generated themes, 4 sprints (Foundation, Operations, Growth, Engagement) shipped to production at pictocart.in.',
-      'Key Application Programming Interface (API) integrations: Razorpay, Delhivery, Shiprocket, Resend (email), Web Push, and the Lovable AI Gateway for all generative workloads.',
+      'Key Application Programming Interface (API) integrations: Razorpay, Shiprocket, Resend (email), Web Push, and the Lovable AI Gateway for all generative workloads.',
     ],
   },
   {
@@ -135,7 +135,7 @@ const PLAN: Section[] = [
     ],
     bullets: [
       'AI-first onboarding — no other player generates the entire store from one photo.',
-      'Bharat-native — GST invoices, FSSAI fields, COD, Delhivery, vernacular UI baked in.',
+      'Bharat-native — GST invoices, FSSAI fields, COD, Shiprocket, vernacular UI baked in.',
       'Compounding cost economics — caching, prompt optimization and prefab themes reduce per-store AI cost by 90%.',
     ],
   },
