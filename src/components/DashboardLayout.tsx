@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import CreditBadge from '@/components/wallet/CreditBadge';
 import { HelpLauncher } from '@/components/HelpLauncher';
+import { useStore } from '@/hooks/useStore';
 
 type NavLeaf = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; key: string; children: NavLeaf[] };
@@ -134,9 +135,26 @@ const mobileBottomNav: NavLeaf[] = [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { signOut } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { store } = useStore();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isFnB = ['food', 'food_beverages', 'food-and-beverages', 'restaurant', 'cafe'].includes(
+    String(store?.category || '').toLowerCase()
+  );
+
+  const filteredNavTree = useMemo<NavEntry[]>(() => {
+    const fnbPaths = new Set(['/menu', '/kitchen', '/settings/qr']);
+    return navTree
+      .map((entry) => {
+        if (!isGroup(entry)) return entry;
+        const children = entry.children.filter((c) => isFnB || !fnbPaths.has(c.path));
+        return { ...entry, children };
+      })
+      .filter((entry) => isGroup(entry) ? entry.children.length > 0 : true);
+  }, [isFnB]);
+
 
   const initiallyOpen = useMemo(() => {
     const open: Record<string, boolean> = {};
@@ -218,7 +236,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-          {navTree.map((entry) => {
+          {filteredNavTree.map((entry) => {
             if (!isGroup(entry)) return renderLeaf(entry);
 
             if (collapsed) {
