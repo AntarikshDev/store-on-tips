@@ -158,16 +158,56 @@ const StorefrontMenu = ({ forceMode, tableFromParam }: Props) => {
               placeholder="Search the menu…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 h-9"
+              className="pl-9 pr-9 h-9"
             />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
         {menuLoading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : !filteredSections || filteredSections.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            {query ? `No items match "${query}".` : `No items available for ${MODE_LABEL[fulfillmentMode]}.`}
+          <div className="text-center py-16 px-6">
+            <Search className="h-10 w-10 mx-auto mb-4 opacity-20" />
+            <h3 className="text-lg font-semibold mb-1">
+              {query ? `No results for "${query}"` : `Nothing on the ${MODE_LABEL[fulfillmentMode]} menu`}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
+              {query
+                ? `Try a different keyword, or clear your search to see everything available.`
+                : `This store hasn't added any items for ${MODE_LABEL[fulfillmentMode]} yet.`}
+            </p>
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors hover:opacity-90"
+                style={{ borderColor: themeColors.primary, color: themeColors.primary }}
+              >
+                <X className="h-4 w-4" /> Clear search
+              </button>
+            )}
+            {!query && enabledModes.length > 1 && (
+              <div className="flex flex-wrap justify-center gap-2 mt-2">
+                {enabledModes.filter((m) => m !== fulfillmentMode).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setFulfillmentMode(m)}
+                    className="px-4 py-2 rounded-full text-sm font-medium border transition-colors"
+                    style={{ borderColor: themeColors.primary, color: themeColors.primary }}
+                  >
+                    Browse {MODE_LABEL[m]}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           filteredSections.map((s) => (
