@@ -463,19 +463,29 @@ const StorefrontCheckout = () => {
           <p className="text-lg font-bold mb-6" style={{ color: colors.primary }}>
             {orderPlaced.number}
           </p>
+          {tableLabel && (
+            <p className="text-sm mb-2">Table <span className="font-semibold">{tableLabel}</span> · We'll bring it to you.</p>
+          )}
           <p className="text-sm opacity-50 mb-8">
-            We'll notify you when your order ships. Thank you for shopping with us!
+            {fulfillmentMode === 'dine_in' ? 'Your order has been sent to the kitchen.' :
+             fulfillmentMode === 'takeaway' ? 'We\'ll text you when your order is ready for pickup.' :
+             'We\'ll notify you when your order ships. Thank you!'}
           </p>
+          {orderPlaced.trackingCode && (
+            <Link
+              to={`/track/${orderPlaced.trackingCode}`}
+              className="inline-block px-6 py-2.5 text-sm font-semibold mr-2"
+              style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}
+            >
+              Track Order →
+            </Link>
+          )}
           <Link
-            to={`/store/${slug}`}
-            className="inline-block px-6 py-2.5 text-sm font-semibold"
-            style={{
-              backgroundColor: colors.primary,
-              color: '#fff',
-              borderRadius: `${borderRadius}px`,
-            }}
+            to={fulfillmentMode === 'dine_in' || fulfillmentMode === 'takeaway' ? `/store/${slug}/menu` : `/store/${slug}`}
+            className="inline-block px-6 py-2.5 text-sm font-semibold border"
+            style={{ borderColor: colors.primary, color: colors.primary, borderRadius: `${borderRadius}px` }}
           >
-            Continue Shopping
+            {fulfillmentMode === 'delivery' ? 'Continue Shopping' : 'Back to Menu'}
           </Link>
         </div>
       </StorefrontLayout>
