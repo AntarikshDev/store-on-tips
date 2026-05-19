@@ -499,11 +499,16 @@ const StorefrontCheckout = () => {
     color: colors.text,
   };
 
-  const paymentMethods = [
-    { id: 'cod', label: 'Cash on Delivery', icon: Banknote, always: true, disabledReason: codBlockedReason },
-    { id: 'upi', label: 'UPI (GPay, PhonePe, Paytm)', icon: Smartphone, always: false, disabledReason: null as string | null },
-    { id: 'online', label: 'Cards & Net Banking', icon: CreditCard, always: false, disabledReason: null as string | null },
-  ];
+  const isDineIn = fulfillmentMode === 'dine_in';
+  const isTakeaway = fulfillmentMode === 'takeaway';
+
+  const paymentMethods = isDineIn
+    ? [{ id: 'pay_at_counter', label: 'Pay at Counter', icon: Banknote, always: true, disabledReason: null as string | null }]
+    : [
+        { id: 'cod', label: 'Cash on Delivery', icon: Banknote, always: true, disabledReason: codBlockedReason },
+        { id: 'upi', label: 'UPI (GPay, PhonePe, Paytm)', icon: Smartphone, always: false, disabledReason: null as string | null },
+        { id: 'online', label: 'Cards & Net Banking', icon: CreditCard, always: false, disabledReason: null as string | null },
+      ];
 
   return (
     <StorefrontLayout store={store}>
