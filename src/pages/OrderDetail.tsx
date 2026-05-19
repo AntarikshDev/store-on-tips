@@ -462,15 +462,11 @@ const OrderDetail = () => {
                 </span>
               </div>
 
-              {order.payment_status !== 'paid' && order.payment_status !== 'refunded' && (
+              {order.payment_status !== 'paid' && order.payment_status !== 'refunded' && offlineModes.length > 0 && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
                   <p className="text-xs font-semibold text-primary uppercase tracking-wide">Collect Payment</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'cash', label: 'Cash', icon: Banknote },
-                      { id: 'upi', label: 'UPI', icon: Smartphone },
-                      { id: 'card', label: 'Card', icon: CreditCard },
-                    ].map((m) => (
+                  <div className={cn('grid gap-2', offlineModes.length === 1 ? 'grid-cols-1' : offlineModes.length === 2 ? 'grid-cols-2' : 'grid-cols-3')}>
+                    {offlineModes.map((m) => (
                       <button
                         key={m.id}
                         onClick={() => setCollectMode(m.id)}
@@ -492,6 +488,9 @@ const OrderDetail = () => {
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Payment Received
                   </Button>
+                  <p className="text-[10px] text-muted-foreground">
+                    Manage offline modes in <a href="/settings/payments" className="underline">Settings → Payments → Offline</a>
+                  </p>
                 </div>
               )}
 
