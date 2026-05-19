@@ -1,11 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useStoreMenu, type MenuItem } from '@/hooks/useMenu';
 import { useFulfillment, type FulfillmentMode } from '@/hooks/useFulfillment';
 import { useCart } from '@/hooks/useCart';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
-import { Loader2, Plus, Minus, Flame, Leaf, Clock, Utensils, ShoppingBag, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Plus, Minus, Flame, Clock, Utensils, ShoppingBag, X, Search, Info } from 'lucide-react';
 
 interface Props {
   /** When true, route is /menu/t/:tableToken and we force dine-in. */
