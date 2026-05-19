@@ -31,6 +31,7 @@ import {
   Star,
   Utensils,
   QrCode,
+  ChefHat,
 } from 'lucide-react';
 
 
