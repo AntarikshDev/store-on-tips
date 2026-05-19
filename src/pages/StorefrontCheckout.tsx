@@ -85,6 +85,15 @@ const StorefrontCheckout = () => {
     }
   }, [store]);
 
+  // Force payment method to match fulfillment mode (dine-in = pay-at-counter only)
+  useEffect(() => {
+    if (fulfillmentMode === 'dine_in' && form.paymentMethod !== 'pay_at_counter') {
+      setForm((f) => ({ ...f, paymentMethod: 'pay_at_counter' }));
+    } else if (fulfillmentMode !== 'dine_in' && form.paymentMethod === 'pay_at_counter') {
+      setForm((f) => ({ ...f, paymentMethod: 'cod' }));
+    }
+  }, [fulfillmentMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load COD rules + customer order history (for risk checks)
   useEffect(() => {
     if (!store?.id) return;
