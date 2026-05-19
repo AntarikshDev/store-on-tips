@@ -389,6 +389,7 @@ const AppRoutes = () => {
             <Route path="/store/:slug/menu/delivery" element={<StorefrontMenu forceMode="delivery" />} />
             <Route path="/track/:code" element={<OrderTracking />} />
             <Route path="/menu" element={<ProtectedRoute><DashboardLayout><Menu /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/kitchen" element={<ProtectedRoute><DashboardLayout><Kitchen /></DashboardLayout></ProtectedRoute>} />
             <Route path="/store/:slug/blog" element={<StorefrontBlog />} />
             <Route path="/store/:slug/blog/:postSlug" element={<StorefrontBlogPost />} />
             <Route path="/store/:slug/account/auth" element={<CustomerAuth />} />
