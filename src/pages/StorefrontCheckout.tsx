@@ -757,6 +757,8 @@ const StorefrontCheckout = () => {
                 {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {placing
                   ? 'Processing...'
+                  : isDineIn
+                  ? 'Place Order (Pay at Counter)'
                   : form.paymentMethod === 'cod'
                   ? 'Place Order (COD)'
                   : 'Pay Now'}
