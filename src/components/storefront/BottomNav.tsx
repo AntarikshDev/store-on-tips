@@ -1,7 +1,9 @@
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingBag, User, LogIn } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, LogIn, Utensils } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useStoreByHost } from '@/hooks/useStoreByHost';
+import { useFulfillment } from '@/hooks/useFulfillment';
 
 interface Props {
   colors: any;
@@ -13,9 +15,13 @@ const BottomNav = ({ colors, onSearchOpen }: Props) => {
   const location = useLocation();
   const { totalItems } = useCart(slug || '');
   const { user } = useCustomerAuth(slug || '');
+  const { store } = useStoreByHost(slug);
+  const { enabledModes } = useFulfillment(store?.id);
+  const menuEnabled = enabledModes.includes('dine_in') || enabledModes.includes('takeaway');
 
   const items = [
     { icon: Home, label: 'Home', path: `/store/${slug}` },
+    ...(menuEnabled ? [{ icon: Utensils, label: 'Menu', path: `/store/${slug}/menu` }] : []),
     { icon: Search, label: 'Search', action: onSearchOpen },
     { icon: ShoppingBag, label: 'Cart', path: `/store/${slug}/cart`, badge: totalItems },
     user
