@@ -32,6 +32,8 @@ import {
   Utensils,
   QrCode,
   ChefHat,
+  Receipt,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 
 
