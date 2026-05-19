@@ -113,6 +113,9 @@ const Onboarding = () => {
 
   const saveStep = async (step: number) => {
     if (!user) return;
+    // Prevent the resume effect from re-firing when setStore() updates state
+    // mid-save and racing with goNext's setCurrentStep.
+    hasResumed.current = true;
     setSaving(true);
     try {
       const selectedTemplate = THEME_TEMPLATES.find((t) => t.id === data.selectedThemeId);
