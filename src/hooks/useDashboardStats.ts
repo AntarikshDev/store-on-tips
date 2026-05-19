@@ -42,11 +42,12 @@ export const useDashboardStats = (storeId?: string) => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['dashboard-orders', storeId],
     enabled: !!storeId,
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await supabase
         .from('orders')
-        .select('total, status, created_at')
+        .select('total, status, payment_status, created_at')
         .eq('store_id', storeId!)
         .order('created_at', { ascending: true });
       return data || [];
