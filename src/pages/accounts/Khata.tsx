@@ -40,10 +40,26 @@ const Khata = () => {
     },
   });
 
-  const totals = useMemo(() => {
-    const recv = customers.reduce((s: number, c: any) => s + Math.max(Number(c.balance || 0), 0), 0);
-    return { recv };
-  }, [customers]);
+  // Aggregate balances from khata_entries (works for walk-ins without customer_id too)
+  const owingList = useMemo(() => {
+    const map = new Map<string, { key: string; customer_id: string | null; name: string; phone: string; balance: number }>();
+    entries.forEach((e: any) => {
+      const id = e.customer_id || null;
+      const name = e.customer_name || e.customers?.name || 'Walk-in';
+      const phone = e.customer_phone || e.customers?.phone || '';
+      const key = id || `${name}|${phone}`;
+      const cur = map.get(key) || { key, customer_id: id, name, phone, balance: 0 };
+      const amt = Number(e.amount) || 0;
+      cur.balance += e.entry_type === 'credit' ? amt : -amt;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).filter((c) => c.balance > 0.005)
+      .sort((a, b) => b.balance - a.balance);
+  }, [entries]);
+
+  const totals = useMemo(() => ({
+    recv: owingList.reduce((s, c) => s + c.balance, 0),
+  }), [owingList]);
 
   const save = async () => {
     if (!form.customer_id && !form.customer_name) return toast.error('Pick or name a customer');
@@ -55,6 +71,20 @@ const Khata = () => {
     toast.success('Khata entry saved');
     setOpen(false);
     setForm({ customer_id: '', customer_name: '', customer_phone: '', entry_type: 'credit', amount: 0, entry_date: todayISO(), payment_mode: 'cash', notes: '' });
+  };
+
+  const settle = (c: any) => {
+    setForm({
+      customer_id: c.customer_id || '',
+      customer_name: c.name,
+      customer_phone: c.phone || '',
+      entry_type: 'payment',
+      amount: c.balance,
+      entry_date: todayISO(),
+      payment_mode: 'cash',
+      notes: 'Settlement',
+    });
+    setOpen(true);
   };
 
   const sendReminder = (c: any) => {
@@ -143,19 +173,22 @@ const Khata = () => {
                 </tr>
               </thead>
               <tbody>
-                {customers.filter((c: any) => Number(c.balance) > 0).map((c: any) => (
-                  <tr key={c.id} className="border-t">
+                {owingList.map((c) => (
+                  <tr key={c.key} className="border-t">
                     <td className="p-3">{c.name}</td>
                     <td className="p-3">{c.phone || '—'}</td>
                     <td className="p-3 text-right font-semibold">{inr(c.balance)}</td>
-                    <td className="p-3 text-right">
-                      <Button size="sm" variant="outline" onClick={() => sendReminder(c)}>
+                    <td className="p-3 text-right whitespace-nowrap">
+                      <Button size="sm" variant="outline" className="mr-2" onClick={() => settle(c)}>
+                        Settle
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => sendReminder(c)}>
                         <MessageCircle className="h-4 w-4 mr-1" /> Remind
                       </Button>
                     </td>
                   </tr>
                 ))}
-                {!customers.some((c: any) => Number(c.balance) > 0) && (
+                {!owingList.length && (
                   <tr><td className="p-6 text-center text-muted-foreground" colSpan={4}>No outstanding khata.</td></tr>
                 )}
               </tbody>
