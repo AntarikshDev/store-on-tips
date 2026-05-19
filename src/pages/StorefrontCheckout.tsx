@@ -354,7 +354,7 @@ const StorefrontCheckout = () => {
             }).catch(() => {});
             clearCart();
             track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'razorpay' } });
-            setOrderPlaced(order.order_number);
+            setOrderPlaced({ number: order.order_number, trackingCode: order.guest_tracking_code });
           } else {
             toast.error('Payment verification failed. Contact support.');
           }
@@ -396,7 +396,7 @@ const StorefrontCheckout = () => {
       }).catch(() => {});
       clearCart();
       track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'cod' } });
-      setOrderPlaced(order.order_number);
+      setOrderPlaced({ number: order.order_number, trackingCode: order.guest_tracking_code });
     } catch (err) {
       console.error(err);
       toast.error('Failed to place order. Please try again.');
@@ -405,6 +405,28 @@ const StorefrontCheckout = () => {
   };
 
   const handlePlaceOrder = () => {
+    if (items.length === 0) { toast.error('Your cart is empty'); return; }
+
+    if (fulfillmentMode === 'dine_in') {
+      if (settings.dine_in_requires_table && !tableLabel) {
+        toast.error('Please scan your table QR code to place a dine-in order.');
+        return;
+      }
+      handleCODOrder(); // pay-at-counter uses the same code path (no payment gateway)
+      return;
+    }
+
+    if (fulfillmentMode === 'takeaway') {
+      if (!form.phone || form.phone.length < 7) {
+        toast.error('Please enter your phone number');
+        return;
+      }
+      if (form.paymentMethod === 'cod') handleCODOrder();
+      else handleRazorpayPayment();
+      return;
+    }
+
+    // delivery (existing path)
     if (!user) {
       toast.error('Please sign in or create an account to place your order');
       navigate(`/store/${slug}/account/auth?redirect=checkout`);
@@ -414,11 +436,6 @@ const StorefrontCheckout = () => {
       toast.error('Please fill in all required fields');
       return;
     }
-    if (items.length === 0) {
-      toast.error('Your cart is empty');
-      return;
-    }
-
     if (form.paymentMethod === 'cod') {
       if (codBlockedReason) { toast.error(codBlockedReason); return; }
       handleCODOrder();
