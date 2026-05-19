@@ -135,7 +135,7 @@ const mobileBottomNav: NavLeaf[] = [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { signOut } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { store } = require('@/hooks/useStore').useStore();
+  const { store } = useStore();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
