@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Crown, Check, X, Loader2, Zap } from 'lucide-react';
+import { Crown, Check, X, Loader2, Zap, Sparkles } from 'lucide-react';
 
 declare global {
   interface Window { Razorpay: any; }
