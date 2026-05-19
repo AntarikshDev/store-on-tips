@@ -126,11 +126,11 @@ Deno.serve(async (req) => {
     }
     let cb: any = null;
     if (sub) {
-      const { data } = await admin.from("theme_category_briefs").select("*").eq("vertical", vert).eq("subcategory", sub).eq("is_active", true).maybeSingle();
+      const { data } = await supabase.from("theme_category_briefs").select("*").eq("vertical", vert).eq("subcategory", sub).eq("is_active", true).maybeSingle();
       cb = data;
     }
     if (!cb) {
-      const { data } = await admin.from("theme_category_briefs").select("*").eq("vertical", vert).eq("is_active", true).order("sort_order", { ascending: true }).limit(1).maybeSingle();
+      const { data } = await supabase.from("theme_category_briefs").select("*").eq("vertical", vert).eq("is_active", true).order("sort_order", { ascending: true }).limit(1).maybeSingle();
       cb = data;
     }
     const category: string = cb ? `${cb.vertical}${cb.subcategory ? "/" + cb.subcategory : ""}` : rawCategory;
