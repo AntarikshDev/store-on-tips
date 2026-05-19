@@ -5,6 +5,7 @@ import StorefrontLayout, { resolveTheme } from '@/components/storefront/Storefro
 import { useCart } from '@/hooks/useCart';
 import { useValidateCoupon } from '@/hooks/useCoupons';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useFulfillment } from '@/hooks/useFulfillment';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Check, ChevronLeft, CreditCard, Banknote, Smartphone, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
