@@ -17,6 +17,7 @@ import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { THEMES, ThemeRenderer } from '@/themes';
 import MasterThemeRenderer from '@/components/theme/MasterThemeRenderer';
 import { useThemeManifest } from '@/hooks/useThemeManifest';
+import { useFulfillment } from '@/hooks/useFulfillment';
 
 import SEOHead from '@/components/storefront/SEOHead';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
