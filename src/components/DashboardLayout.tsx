@@ -65,6 +65,7 @@ const navTree: NavEntry[] = [
     key: 'sales',
     children: [
       { label: 'Orders', icon: ShoppingCart, path: '/orders' },
+      { label: 'Kitchen Desk', icon: ChefHat, path: '/kitchen' },
       { label: 'Returns', icon: Truck, path: '/returns' },
       { label: 'Reviews', icon: FileText, path: '/reviews' },
       { label: 'Customers', icon: Users, path: '/customers' },
