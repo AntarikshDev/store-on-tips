@@ -32,6 +32,8 @@ import {
   Utensils,
   QrCode,
   ChefHat,
+  Receipt,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 
 
@@ -70,6 +72,14 @@ const navTree: NavEntry[] = [
       { label: 'Reviews', icon: FileText, path: '/reviews' },
       { label: 'Customers', icon: Users, path: '/customers' },
       { label: 'Coupons', icon: Ticket, path: '/coupons' },
+    ],
+  },
+  {
+    label: 'Accounts',
+    icon: WalletIcon,
+    key: 'accounts',
+    children: [
+      { label: 'Invoices', icon: Receipt, path: '/invoices' },
     ],
   },
   {

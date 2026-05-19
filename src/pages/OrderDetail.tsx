@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, User, MapPin, Phone, Mail, Package, Truck, Loader2, FileText } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Mail, Package, Truck, Loader2, FileText, Printer, Banknote, Smartphone, CreditCard, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ShipOrderDialog from '@/components/orders/ShipOrderDialog';
 import RefundPanel from '@/components/orders/RefundPanel';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { Json } from '@/integrations/supabase/types';
 
 interface OrderItem {
@@ -42,6 +43,9 @@ const OrderDetail = () => {
   const [shipDialogOpen, setShipDialogOpen] = useState(false);
   const [trackingData, setTrackingData] = useState<any>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
+  const [collectMode, setCollectMode] = useState<string>('cash');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [collecting, setCollecting] = useState(false);
 
   if (isLoading) {
     return (
@@ -128,6 +132,22 @@ const OrderDetail = () => {
     }
     setTrackingLoading(false);
   };
+  const confirmCollectPayment = async () => {
+    setCollecting(true);
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        payment_status: 'paid',
+        payment_method: collectMode,
+      } as any)
+      .eq('id', order.id);
+    setCollecting(false);
+    setConfirmOpen(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Payment received via ${collectMode.toUpperCase()}`);
+    refetch();
+  };
+
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
@@ -391,7 +411,7 @@ const OrderDetail = () => {
             <CardHeader>
               <CardTitle className="text-base">Payment</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+            <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Method</span>
                 <span className="capitalize">{order.payment_method || '—'}</span>
@@ -409,6 +429,62 @@ const OrderDetail = () => {
                   );
                 })()}
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount Due</span>
+                <span className="font-semibold">
+                  ₹{order.payment_status === 'paid' ? 0 : Number(order.total || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+
+              {order.payment_status !== 'paid' && order.payment_status !== 'refunded' && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide">Collect Payment</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'cash', label: 'Cash', icon: Banknote },
+                      { id: 'upi', label: 'UPI', icon: Smartphone },
+                      { id: 'card', label: 'Card', icon: CreditCard },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setCollectMode(m.id)}
+                        className={cn(
+                          'flex flex-col items-center gap-1 rounded-md border-2 p-2 transition-colors',
+                          collectMode === m.id
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border hover:border-primary/40 text-muted-foreground'
+                        )}
+                      >
+                        <m.icon className="h-4 w-4" />
+                        <span className="text-xs font-medium">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => setConfirmOpen(true)}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Payment Received
+                  </Button>
+                </div>
+              )}
+
+              {order.payment_status === 'paid' && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3 flex items-center gap-2 text-green-800">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-xs font-medium">Payment received</span>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => window.open(`/invoices/${order.id}/print`, '_blank')}
+              >
+                <Printer className="h-4 w-4 mr-1" /> Print Invoice
+              </Button>
+
               <RefundPanel
                 orderId={order.id}
                 total={Number(order.total ?? 0)}
@@ -419,6 +495,27 @@ const OrderDetail = () => {
               />
             </CardContent>
           </Card>
+
+          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm payment received?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You're marking ₹{Number(order.total || 0).toLocaleString('en-IN')} as received via{' '}
+                  <span className="font-semibold uppercase">{collectMode}</span>. This will update the
+                  order's payment status to <span className="font-semibold">Paid</span>.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={collecting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmCollectPayment} disabled={collecting}>
+                  {collecting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Yes, payment received
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
 
           {order.notes && (
             <Card>
