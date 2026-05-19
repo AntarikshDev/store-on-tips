@@ -38,13 +38,35 @@ const STATUS_ORDER: OrderStatus[] = ['pending', 'confirmed', 'processing', 'ship
 const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: order, isLoading, refetch } = useOrder(id);
   const { updateStatus } = useOrders();
   const { store } = useStore();
   const [shipDialogOpen, setShipDialogOpen] = useState(false);
   const [trackingData, setTrackingData] = useState<any>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
-  const [collectMode, setCollectMode] = useState<string>('cash');
+
+  // Offline payment modes available for "Collect Payment" at counter.
+  // F&B stores get all three on by default; other shops respect merchant choice.
+  const FNB_KEYWORDS = ['food', 'food_beverages', 'food-and-beverages', 'restaurant', 'cafe'];
+  const isFnB = !!store?.category && FNB_KEYWORDS.includes(String(store.category).toLowerCase());
+  const offlineCfg = (store?.settings as any)?.offline_payments;
+  const enabledOffline = useMemo(() => {
+    const defaults = { cash: true, upi: isFnB, card: isFnB };
+    const cfg = offlineCfg ?? defaults;
+    return {
+      cash: cfg.cash !== false,
+      upi: cfg.upi !== false ? (isFnB || !!cfg.upi) : false,
+      card: cfg.card !== false ? (isFnB || !!cfg.card) : false,
+    };
+  }, [offlineCfg, isFnB]);
+  const offlineModes = [
+    enabledOffline.cash && { id: 'cash', label: 'Cash', icon: Banknote },
+    enabledOffline.upi && { id: 'upi', label: 'UPI', icon: Smartphone },
+    enabledOffline.card && { id: 'card', label: 'Card', icon: CreditCard },
+  ].filter(Boolean) as Array<{ id: string; label: string; icon: any }>;
+
+  const [collectMode, setCollectMode] = useState<string>(offlineModes[0]?.id || 'cash');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [collecting, setCollecting] = useState(false);
 
