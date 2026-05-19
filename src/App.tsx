@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { StoreProvider } from "@/contexts/StoreContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
+import DashboardShell from "@/components/DashboardShell";
+import AdminShell from "@/components/AdminShell";
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import ProductList from "@/pages/ProductList";
