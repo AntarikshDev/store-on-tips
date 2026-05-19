@@ -21,7 +21,7 @@ const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
   { key: 'commission_percent', label: 'Commission' },
   { key: 'custom_domain',      label: 'Custom Domain' },
   { key: 'razorpay_payments',  label: 'Online Payments' },
-  { key: 'shipping',           label: 'Shipping (Delhivery)' },
+  { key: 'shipping',           label: 'Shipping (Shiprocket)' },
   { key: 'blog',               label: 'Blog & Newsletter' },
   { key: 'coupons',            label: 'Coupons' },
   { key: 'analytics',          label: 'Analytics' },
