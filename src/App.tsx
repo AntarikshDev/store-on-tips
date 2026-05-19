@@ -133,6 +133,7 @@ const AppRoutes = () => {
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>}>
     <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/q/:slug" element={<QRRedirect />} />
             <Route path="/investors" element={<Investors />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/auth" element={<Auth />} />
@@ -265,6 +266,26 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <ShippingSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/fulfillment"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <FulfillmentSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/qr"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <QRCodes />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
