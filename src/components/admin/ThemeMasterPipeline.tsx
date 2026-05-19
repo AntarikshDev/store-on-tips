@@ -131,7 +131,7 @@ export default function ThemeMasterPipeline() {
     setBusy("adhoc");
     try {
       const { data, error } = await supabase.functions.invoke("theme-action", {
-        body: { action: "generate_adhoc", brief: { name: adhocName, category: adhocVertical, subcategory: adhocSub, vibe: adhocVibe || `${adhocVertical}/${adhocSub} aesthetic` } },
+        body: { action: "generate_adhoc", brief: { name: adhocName, category: adhocVertical, subcategory: adhocSub, vibe: adhocVibe || `${adhocVertical}/${adhocSub} aesthetic`, layout_slug: adhocLayout === "auto" ? undefined : adhocLayout } },
       });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Failed");
