@@ -134,9 +134,26 @@ const mobileBottomNav: NavLeaf[] = [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { signOut } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { store } = require('@/hooks/useStore').useStore();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isFnB = ['food', 'food_beverages', 'food-and-beverages', 'restaurant', 'cafe'].includes(
+    String(store?.category || '').toLowerCase()
+  );
+
+  const filteredNavTree = useMemo<NavEntry[]>(() => {
+    const fnbPaths = new Set(['/menu', '/kitchen', '/settings/qr']);
+    return navTree
+      .map((entry) => {
+        if (!isGroup(entry)) return entry;
+        const children = entry.children.filter((c) => isFnB || !fnbPaths.has(c.path));
+        return { ...entry, children };
+      })
+      .filter((entry) => isGroup(entry) ? entry.children.length > 0 : true);
+  }, [isFnB]);
+
 
   const initiallyOpen = useMemo(() => {
     const open: Record<string, boolean> = {};
