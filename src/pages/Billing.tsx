@@ -16,6 +16,7 @@ declare global {
 // Razorpay key ID is returned by the create-razorpay-subscription edge function (sourced from RAZORPAY_KEY_ID secret)
 
 const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
+  { key: 'signup_bonus_credits', label: 'Signup AI Credits' },
   { key: 'product_limit',      label: 'Products' },
   { key: 'theme_limit',        label: 'Themes' },
   { key: 'commission_percent', label: 'Commission' },
