@@ -123,7 +123,7 @@ const SlideSolution = () => (
       {[
         { i: Brain, t: "AI Generates Everything", p: "Product descriptions, store policies, themes, SEO (Search Engine Optimization) meta, blog posts, email templates — all powered by Google Gemini 2.5." },
         { i: Zap, t: "5-min Onboarding", p: "4-step wizard. Pick category → upload photo → AI fills name, price, variants, ingredients, warranty. Done." },
-        { i: ShoppingBag, t: "30-sec Checkout", p: "Razorpay + COD (Cash on Delivery), pincode-aware shipping (Delhivery), one-page checkout, persistent cart, customer accounts." },
+        { i: ShoppingBag, t: "30-sec Checkout", p: "Razorpay + COD (Cash on Delivery), pincode-aware shipping (Shiprocket — 17+ couriers), one-page checkout, persistent cart, customer accounts." },
         { i: Crown, t: "Premium Themes", p: "30+ AI-generated themes. Custom domains. White-label emails. Launch a brand, not a listing." },
       ].map((f, i) => (
         <div key={i} className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6 hover:border-emerald-400/40 transition-all"
