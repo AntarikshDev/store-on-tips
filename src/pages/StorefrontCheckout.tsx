@@ -554,56 +554,69 @@ const StorefrontCheckout = () => {
               />
             </div>
 
-            <h2 className="text-sm font-semibold mb-3 pt-3" style={{ fontFamily: fonts.heading }}>
-              Shipping Address
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                placeholder="Address *"
-                value={form.address}
-                onChange={(e) => handleField('address', e.target.value)}
-                className="col-span-2 w-full px-3 py-2.5 text-sm border"
-                style={inputStyle}
-              />
-              <input
-                placeholder="City *"
-                value={form.city}
-                onChange={(e) => handleField('city', e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border"
-                style={inputStyle}
-              />
-              <input
-                placeholder="State"
-                value={form.state}
-                onChange={(e) => handleField('state', e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border"
-                style={inputStyle}
-              />
-              <input
-                placeholder="Pincode *"
-                value={form.pincode}
-                onChange={(e) => handleField('pincode', e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Pincode Delivery Check */}
-            {(() => {
-              const settings = store?.settings as any;
-              const shipping = settings?.shipping;
-              // Show only if seller has configured shipping (token is server-side)
-              if ((shipping?.configured || shipping?.api_token) && shipping?.pickup?.pincode) {
-                return (
-                  <PincodeChecker
-                    storeId={store.id}
-                    colors={colors}
-                    borderRadius={borderRadius}
+            {!isDineIn && !isTakeaway && (
+              <>
+                <h2 className="text-sm font-semibold mb-3 pt-3" style={{ fontFamily: fonts.heading }}>
+                  Shipping Address
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    placeholder="Address *"
+                    value={form.address}
+                    onChange={(e) => handleField('address', e.target.value)}
+                    className="col-span-2 w-full px-3 py-2.5 text-sm border"
+                    style={inputStyle}
                   />
-                );
-              }
-              return null;
-            })()}
+                  <input
+                    placeholder="City *"
+                    value={form.city}
+                    onChange={(e) => handleField('city', e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border"
+                    style={inputStyle}
+                  />
+                  <input
+                    placeholder="State"
+                    value={form.state}
+                    onChange={(e) => handleField('state', e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border"
+                    style={inputStyle}
+                  />
+                  <input
+                    placeholder="Pincode *"
+                    value={form.pincode}
+                    onChange={(e) => handleField('pincode', e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border"
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Pincode Delivery Check */}
+                {(() => {
+                  const settings = store?.settings as any;
+                  const shipping = settings?.shipping;
+                  if ((shipping?.configured || shipping?.api_token) && shipping?.pickup?.pincode) {
+                    return (
+                      <PincodeChecker
+                        storeId={store.id}
+                        colors={colors}
+                        borderRadius={borderRadius}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </>
+            )}
+
+            {isDineIn && tableLabel && (
+              <div
+                className="flex items-center gap-2 p-3 text-sm"
+                style={{ backgroundColor: colors.primary + '10', borderRadius: `${borderRadius / 2}px`, color: colors.primary }}
+              >
+                <span className="font-semibold">Table {tableLabel}</span>
+                <span className="opacity-70">· We'll bring your order to your table.</span>
+              </div>
+            )}
 
             <h2 className="text-sm font-semibold mb-3 pt-3" style={{ fontFamily: fonts.heading }}>
               Payment Method
