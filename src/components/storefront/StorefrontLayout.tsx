@@ -5,6 +5,8 @@ import { ShoppingBag, Search, User, Menu, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useFulfillment } from '@/hooks/useFulfillment';
+import { Utensils } from 'lucide-react';
 import { THEME_TEMPLATES, type ThemeTemplate } from '@/lib/themes';
 import BottomNav from './BottomNav';
 import SearchOverlay from './SearchOverlay';
