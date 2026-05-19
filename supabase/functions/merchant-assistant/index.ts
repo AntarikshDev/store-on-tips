@@ -242,7 +242,7 @@ function buildSystemPrompt(ctx: any): string {
 - payments.razorpay_configured=false AND payments.cod_enabled=false → no way to accept money. Send to /payment-settings.
 - products.total=0 → no catalog. Send to /products/new (mention AI product creation).
 - products.missing_image>0 or missing_description>0 → suggest /products to fix.
-- orders.unshipped>0 → guide to /orders to generate Delhivery AWB.
+- orders.unshipped>0 → guide to /orders to generate a Shiprocket AWB.
 - wallet.balance<100 → suggest /wallet recharge so shipping/AI doesn't fail.
 - domain.status!='active' → guide to /domain-settings DNS records.
 - subscription.plan='free' AND they ask about premium themes/custom domain/blog → suggest upgrading via /billing.
