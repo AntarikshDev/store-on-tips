@@ -109,6 +109,32 @@ const ReviewsModeration = () => {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
+      ) : tab === 'order_feedback' ? (
+        feedback.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center">
+            <MessageSquare className="h-7 w-7 text-muted-foreground mb-3" />
+            <h3 className="text-lg font-semibold">No feedback yet</h3>
+            <p className="text-sm text-muted-foreground mt-1">Dine-in customers can rate their meal after completing an order.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {feedback.map((f) => (
+              <Card key={f.id}>
+                <CardContent className="py-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star key={n} className={cn('h-4 w-4', n <= f.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30')} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{format(new Date(f.created_at), 'dd MMM yyyy, HH:mm')}</span>
+                  </div>
+                  {f.comment && <p className="text-sm text-muted-foreground">{f.comment}</p>}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center">
           <MessageSquare className="h-7 w-7 text-muted-foreground mb-3" />
