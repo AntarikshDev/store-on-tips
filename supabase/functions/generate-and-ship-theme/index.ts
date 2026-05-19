@@ -215,6 +215,8 @@ Design a theme called "${briefName}" with vibe "${brief.vibe ?? category}". Fill
       version: 2,
       dna,
       layout,
+      layout_slug: layoutSlug,
+      layout_archetype: archetype ? { slug: archetype.slug, name: archetype.name, editor_schema: archetype.editor_schema, image_ratios: archetype.image_ratios, motion_language: archetype.motion_language } : null,
       hero_image: heroUrl,
       pages: {
         auth: { sections: [
