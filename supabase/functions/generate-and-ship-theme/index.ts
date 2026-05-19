@@ -288,9 +288,11 @@ Design a theme called "${briefName}" with vibe "${brief.vibe ?? category}". Fill
       category,
       preview_image: heroUrl,
       lovable_project_url: lovableUrl || null,
-      client_patch_prompt: `Apply theme ${dna.name} (${dna.vibe}). Palette: ${JSON.stringify(dna.palette)}. Fonts: ${JSON.stringify(dna.fonts)}. Layout: ${JSON.stringify(layout)}.`,
+      client_patch_prompt: `Apply theme ${dna.name} (${dna.vibe}) using layout "${layoutSlug}". Palette: ${JSON.stringify(dna.palette)}. Fonts: ${JSON.stringify(dna.fonts)}. Layout: ${JSON.stringify(layout)}.`,
       is_active: true,
     }, { onConflict: "theme_id" });
+
+    await supabase.from("master_theme_deliveries").update({ layout_slug: layoutSlug }).eq("master_id", themeId);
 
     const totalCost = Number(((dnaRes.cost ?? 0) + imageCostTotal).toFixed(4));
     await supabase.from("theme_master_metrics").upsert({
