@@ -226,7 +226,7 @@ function buildSystemPrompt(ctx: any): string {
 - /products, /products/new — add/edit products
 - /orders — manage orders, generate AWB labels
 - /payment-settings — Razorpay keys, COD toggle
-- /shipping-settings — Delhivery, weight defaults
+- /shipping-settings — Shiprocket API-User credentials, pickup address
 - /domain-settings — connect a custom domain (A record → 185.158.133.1, TXT verification)
 - /store-design — themes, header, footer, sections
 - /wallet — recharge AI/shipping credits
