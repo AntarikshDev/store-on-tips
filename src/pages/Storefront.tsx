@@ -181,10 +181,15 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
                 {section.title || store.description || `Welcome to ${store.name}`}
               </h1>
               {section.subtitle && <p className="text-sm mb-6 max-w-md mx-auto text-center px-4" style={{ color: heroImages[0] ? 'rgba(255,255,255,0.85)' : undefined, opacity: heroImages[0] ? 1 : 0.6 }}>{section.subtitle}</p>}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-3 flex-wrap px-4">
                 <a href="#products" className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105" style={{ backgroundColor: colors.primary, color: '#fff', borderRadius: `${borderRadius}px` }}>
                   Shop Now
                 </a>
+                {menuEnabled && (
+                  <Link to={`/store/${slug}/menu`} className="inline-block px-6 py-2.5 text-sm font-semibold transition-transform hover:scale-105 border-2" style={{ borderColor: '#fff', color: heroImages[0] ? '#fff' : colors.primary, borderRadius: `${borderRadius}px`, backgroundColor: heroImages[0] ? 'rgba(255,255,255,0.1)' : 'transparent' }}>
+                    View Menu
+                  </Link>
+                )}
               </div>
             </div>
           </section>
