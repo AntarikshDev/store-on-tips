@@ -570,6 +570,19 @@ const ShippingSettings = () => {
               </div>
             )}
           </div>
+          {srTestResult === 'error' && srTestError && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs space-y-2">
+              <p className="font-medium text-destructive">Shiprocket said: "{srTestError}"</p>
+              {/access forbidden|invalid|unauthor/i.test(srTestError) && (
+                <p className="text-muted-foreground">
+                  This almost always means you're using your <strong>dashboard login</strong>.
+                  Shiprocket's API only accepts a separate <strong>API User</strong> — create one at
+                  {' '}<a className="underline" href="https://app.shiprocket.in/api/dashboard" target="_blank" rel="noopener noreferrer">Settings → API → Configure</a>{' '}
+                  and paste those credentials here.
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
