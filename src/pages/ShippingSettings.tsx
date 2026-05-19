@@ -34,6 +34,9 @@ const ShippingSettings = () => {
   const [srTesting, setSrTesting] = useState(false);
   const [srTestResult, setSrTestResult] = useState<'success' | 'error' | null>(null);
   const [srTestError, setSrTestError] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [slideDir, setSlideDir] = useState<'left' | 'right'>('right');
 
   useEffect(() => {
     const load = async () => {
