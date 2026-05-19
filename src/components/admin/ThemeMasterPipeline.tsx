@@ -38,6 +38,8 @@ export default function ThemeMasterPipeline() {
   const [adhocVertical, setAdhocVertical] = useState("general");
   const [adhocSub, setAdhocSub] = useState("general");
   const [briefs, setBriefs] = useState<Array<{ vertical: string; subcategory: string; display_name: string }>>([]);
+  const [layouts, setLayouts] = useState<Array<{ slug: string; name: string; description: string }>>([]);
+  const [adhocLayout, setAdhocLayout] = useState<string>("auto");
   const [searchQuery, setSearchQuery] = useState("");
   const pollRef = useRef<number | null>(null);
 
