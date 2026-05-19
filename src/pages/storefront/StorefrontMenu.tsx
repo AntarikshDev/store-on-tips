@@ -149,6 +149,9 @@ const StorefrontMenu = ({ forceMode, tableFromParam }: Props) => {
               <button onClick={() => setTableLabel(null)} className="ml-1 opacity-70 hover:opacity-100"><X className="h-3 w-3" /></button>
             </div>
           )}
+          {fulfillmentMode === 'delivery' && settings.delivery_min_order > 0 && (
+            <p className="text-xs text-muted-foreground mt-2">Minimum delivery order: ₹{settings.delivery_min_order}</p>
+          )}
           <div className="mt-3 relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
