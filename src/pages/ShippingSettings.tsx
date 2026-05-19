@@ -510,25 +510,28 @@ const ShippingSettings = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Shiprocket Credentials</CardTitle>
-          <CardDescription>Login email & password from your Shiprocket account.</CardDescription>
+          <CardTitle className="text-base">Shiprocket API User Credentials</CardTitle>
+          <CardDescription>
+            Use the email & password of the <strong>API User</strong> you created in Shiprocket → Settings → API → Configure.
+            Regular dashboard logins return "Access forbidden".
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Shiprocket Email</Label>
+            <Label>Shiprocket API-User Email</Label>
             <Input
               type="email"
-              placeholder="you@yourbusiness.com"
+              placeholder="api-user@yourbusiness.com"
               value={srEmail}
               onChange={(e) => setSrEmail(e.target.value)}
               disabled={loading}
             />
           </div>
           <div className="space-y-2">
-            <Label>Shiprocket Password</Label>
+            <Label>Shiprocket API-User Password</Label>
             <Input
               type="password"
-              placeholder="Your Shiprocket login password"
+              placeholder="Password set for the API User"
               value={srPassword}
               onChange={(e) => setSrPassword(e.target.value)}
               disabled={loading}
