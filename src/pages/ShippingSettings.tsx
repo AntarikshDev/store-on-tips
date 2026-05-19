@@ -38,6 +38,7 @@ const ShippingSettings = () => {
   const [srPickupName, setSrPickupName] = useState('Primary');
   const [srTesting, setSrTesting] = useState(false);
   const [srTestResult, setSrTestResult] = useState<'success' | 'error' | null>(null);
+  const [srTestError, setSrTestError] = useState<string | null>(null);
 
   const [preferredCourier, setPreferredCourier] = useState<'delhivery' | 'shiprocket'>('delhivery');
 
@@ -109,8 +110,8 @@ const ShippingSettings = () => {
     }
     setSrTesting(true);
     setSrTestResult(null);
+    setSrTestError(null);
     try {
-      // Auto-save credentials first so the proxy can read them
       const { error: secErr } = await supabase
         .from('store_secrets' as any)
         .upsert({
@@ -121,6 +122,7 @@ const ShippingSettings = () => {
         }, { onConflict: 'store_id' });
       if (secErr) {
         setSrTestResult('error');
+        setSrTestError(secErr.message);
         toast.error('Could not save credentials: ' + secErr.message);
         setSrTesting(false);
         return;
@@ -147,16 +149,19 @@ const ShippingSettings = () => {
           }),
         }
       );
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && !data.error) {
         setSrTestResult('success');
         toast.success('Shiprocket connected successfully!');
       } else {
+        const msg = data?.error || `HTTP ${res.status}`;
         setSrTestResult('error');
-        toast.error(data.error || 'Shiprocket connection failed. Check your email & password.');
+        setSrTestError(msg);
+        toast.error(msg);
       }
-    } catch {
+    } catch (e: any) {
       setSrTestResult('error');
+      setSrTestError(e?.message || 'Network error');
       toast.error('Shiprocket connection failed.');
     }
     setSrTesting(false);
@@ -473,8 +478,18 @@ const ShippingSettings = () => {
             <li className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">3</span>
               <div>
-                <p className="font-medium">Paste your login email & password below</p>
-                <p className="text-muted-foreground text-xs">We use them to fetch a short-lived API token; stored encrypted server-side, never exposed to the storefront.</p>
+                <p className="font-medium">Create a dedicated API User</p>
+                <p className="text-muted-foreground text-xs">
+                  In Shiprocket → <strong>Settings → API → Configure</strong> → click <strong>"Create an API User"</strong> and set a separate email + password.
+                  Your normal dashboard login will return <em>"Access forbidden"</em> — only API-User credentials work here.
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">4</span>
+              <div>
+                <p className="font-medium">Paste those API-User credentials below</p>
+                <p className="text-muted-foreground text-xs">Stored encrypted server-side, never exposed to the storefront.</p>
               </div>
             </li>
           </ol>
@@ -500,25 +515,28 @@ const ShippingSettings = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Shiprocket Credentials</CardTitle>
-          <CardDescription>Login email & password from your Shiprocket account.</CardDescription>
+          <CardTitle className="text-base">Shiprocket API User Credentials</CardTitle>
+          <CardDescription>
+            Use the email & password of the <strong>API User</strong> you created in Shiprocket → Settings → API → Configure.
+            Regular dashboard logins return "Access forbidden".
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Shiprocket Email</Label>
+            <Label>Shiprocket API-User Email</Label>
             <Input
               type="email"
-              placeholder="you@yourbusiness.com"
+              placeholder="api-user@yourbusiness.com"
               value={srEmail}
               onChange={(e) => setSrEmail(e.target.value)}
               disabled={loading}
             />
           </div>
           <div className="space-y-2">
-            <Label>Shiprocket Password</Label>
+            <Label>Shiprocket API-User Password</Label>
             <Input
               type="password"
-              placeholder="Your Shiprocket login password"
+              placeholder="Password set for the API User"
               value={srPassword}
               onChange={(e) => setSrPassword(e.target.value)}
               disabled={loading}
@@ -552,6 +570,19 @@ const ShippingSettings = () => {
               </div>
             )}
           </div>
+          {srTestResult === 'error' && srTestError && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs space-y-2">
+              <p className="font-medium text-destructive">Shiprocket said: "{srTestError}"</p>
+              {/access forbidden|invalid|unauthor/i.test(srTestError) && (
+                <p className="text-muted-foreground">
+                  This almost always means you're using your <strong>dashboard login</strong>.
+                  Shiprocket's API only accepts a separate <strong>API User</strong> — create one at
+                  {' '}<a className="underline" href="https://app.shiprocket.in/api/dashboard" target="_blank" rel="noopener noreferrer">Settings → API → Configure</a>{' '}
+                  and paste those credentials here.
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
