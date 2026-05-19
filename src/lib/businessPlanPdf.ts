@@ -82,7 +82,7 @@ const PLAN: Section[] = [
     body: [
       'Built on a modern stack: React 18, Vite 5, Tailwind Cascading Style Sheets (CSS) v3, TypeScript 5, and a managed Supabase (Postgres + Edge Functions) backend deployed in the Asia-Pacific region.',
       'Core engineering investment so far: 1,800+ hours, 65+ production features, 30+ AI-generated themes, 4 sprints (Foundation, Operations, Growth, Engagement) shipped to production at pictocart.in.',
-      'Key Application Programming Interface (API) integrations: Razorpay, Delhivery, Shiprocket, Resend (email), Web Push, and the Lovable AI Gateway for all generative workloads.',
+      'Key Application Programming Interface (API) integrations: Razorpay, Shiprocket, Resend (email), Web Push, and the Lovable AI Gateway for all generative workloads.',
     ],
   },
   {
