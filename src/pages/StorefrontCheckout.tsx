@@ -180,34 +180,44 @@ const StorefrontCheckout = () => {
       variant: i.variant || null,
     }));
 
+    const trackingCode = isGuestMode
+      ? Math.random().toString(36).slice(2, 8).toUpperCase()
+      : null;
+
+    const paymentMethod = fulfillmentMode === 'dine_in' ? 'pay_at_counter' : form.paymentMethod;
+    const paymentStatus = fulfillmentMode === 'dine_in'
+      ? 'pending'
+      : paymentMethod === 'cod' ? 'cod' : 'pending';
+
     const { data, error } = await supabase.from('orders').insert({
       store_id: store.id,
       order_number: orderNumber,
       items: orderItems,
       subtotal: totalPrice,
       tax: 0,
-      shipping: 0,
+      shipping: fulfillmentMode === 'delivery' ? 0 : 0,
       total: finalTotal,
       notes: appliedCoupon ? `Coupon: ${appliedCoupon.code} (-₹${discount})` : null,
-      customer_name: form.name,
+      customer_name: form.name || (fulfillmentMode === 'dine_in' ? `Table ${tableLabel ?? ''}`.trim() : ''),
       customer_email: form.email || null,
-      customer_phone: form.phone,
-      customer_address: {
-        address: form.address,
-        city: form.city,
-        state: form.state,
-        pincode: form.pincode,
-      },
-      payment_method: form.paymentMethod,
-      payment_status: form.paymentMethod === 'cod' ? 'cod' : 'pending',
+      customer_phone: form.phone || null,
+      customer_address: fulfillmentMode === 'delivery' ? {
+        address: form.address, city: form.city, state: form.state, pincode: form.pincode,
+      } : null,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
       status: 'pending',
       customer_user_id: user?.id || null,
+      fulfillment_mode: fulfillmentMode,
+      table_label: tableLabel || null,
+      prep_status: 'received',
+      guest_tracking_code: trackingCode,
     } as any).select('id, order_number').single();
 
     if (error) throw error;
 
-    // Save address to customer's profile (so it appears under My Account → Addresses)
-    if (user?.id) {
+    // Save address to customer's profile (delivery + signed-in only)
+    if (fulfillmentMode === 'delivery' && user?.id) {
       try {
         const { data: existing } = await supabase
           .from('customers')
@@ -224,32 +234,23 @@ const StorefrontCheckout = () => {
         );
         if (!duplicate) {
           const newAddr = {
-            id: Date.now().toString(),
-            label: 'Home',
-            name: form.name,
-            address: form.address,
-            landmark: '',
-            city: form.city,
-            state: form.state,
-            pincode: form.pincode,
-            phone: form.phone,
-            isDefault: current.length === 0,
+            id: Date.now().toString(), label: 'Home', name: form.name,
+            address: form.address, landmark: '', city: form.city, state: form.state,
+            pincode: form.pincode, phone: form.phone, isDefault: current.length === 0,
           };
-          const updated = [...current, newAddr];
-          await supabase
-            .from('customers')
-            .upsert(
-              { user_id: user.id, store_id: store.id, saved_addresses: updated },
-              { onConflict: 'user_id,store_id' }
-            );
+          await supabase.from('customers').upsert(
+            { user_id: user.id, store_id: store.id, saved_addresses: [...current, newAddr] },
+            { onConflict: 'user_id,store_id' }
+          );
         }
       } catch (e) {
         console.warn('[checkout] failed to persist address to profile', e);
       }
     }
 
-    return data;
+    return { ...data, guest_tracking_code: trackingCode };
   };
+
 
   const handleRazorpayPayment = async () => {
     setPlacing(true);
