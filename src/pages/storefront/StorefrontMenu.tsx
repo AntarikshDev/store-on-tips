@@ -55,17 +55,53 @@ const StorefrontMenu = ({ forceMode, tableFromParam }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledModes.join(',')]);
 
-  const qtyOf = (id: string) => cartItems.find((i) => i.productId === id)?.quantity ?? 0;
+  const qtyOf = (id: string) => cartItems.filter((i) => i.productId === id).reduce((s, i) => s + i.quantity, 0);
 
-  const onAdd = (it: MenuItem) => {
-    addItem({
-      productId: it.id,
-      title: it.title,
-      price: it.price,
-      image: it.image_url,
-      available_modes: it.menu_meta.available_modes,
-    });
+  const [query, setQuery] = useState('');
+  const [detail, setDetail] = useState<MenuItem | null>(null);
+  const [detailVariants, setDetailVariants] = useState<Record<string, string>>({});
+  const [detailQty, setDetailQty] = useState(1);
+  const [detailNotes, setDetailNotes] = useState('');
+
+  const openDetail = (it: MenuItem) => {
+    setDetail(it);
+    setDetailVariants({});
+    setDetailQty(1);
+    setDetailNotes('');
   };
+
+  const quickAdd = (it: MenuItem) => {
+    if ((it.variants && it.variants.length > 0) || (it.description && it.description.length > 0)) {
+      openDetail(it);
+      return;
+    }
+    addItem({ productId: it.id, title: it.title, price: it.price, image: it.image_url, available_modes: it.menu_meta.available_modes });
+  };
+
+  const addFromDetail = () => {
+    if (!detail) return;
+    const variantStr = Object.entries(detailVariants).map(([k, v]) => `${k}: ${v}`).join(' / ');
+    const key = [variantStr, detailNotes].filter(Boolean).join(' • ') || undefined;
+    addItem({
+      productId: detail.id,
+      title: detail.title,
+      price: detail.price,
+      image: detail.image_url,
+      available_modes: detail.menu_meta.available_modes,
+      variant: key,
+      notes: detailNotes || undefined,
+    }, detailQty);
+    setDetail(null);
+  };
+
+  const filteredSections = useMemo(() => {
+    if (!sections) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return sections;
+    return sections
+      .map((s) => ({ ...s, items: s.items.filter((it) => it.title.toLowerCase().includes(q) || (it.description ?? '').toLowerCase().includes(q)) }))
+      .filter((s) => s.items.length > 0);
+  }, [sections, query]);
 
   const themeColors = useMemo(() => resolveTheme(store?.theme).colors, [store?.theme]);
 
