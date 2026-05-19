@@ -317,6 +317,23 @@ const StorefrontMenu = ({ forceMode, tableFromParam }: Props) => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Sticky checkout bar */}
+      {totalItems > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 pointer-events-none">
+          <button
+            onClick={() => navigate(`/store/${slug}/checkout`)}
+            className="pointer-events-auto w-full max-w-3xl mx-auto flex items-center justify-between gap-3 px-5 py-3 rounded-full shadow-lg font-semibold"
+            style={{ backgroundColor: themeColors.primary, color: '#fff' }}
+          >
+            <span className="flex items-center gap-2 text-sm">
+              <ShoppingBag className="h-4 w-4" />{totalItems} item{totalItems > 1 ? 's' : ''} · {MODE_LABEL[fulfillmentMode]}
+            </span>
+            <span>₹{totalPrice.toLocaleString('en-IN')} →</span>
+          </button>
+        </div>
+      )}
+    </StorefrontLayout>
   );
 };
 
