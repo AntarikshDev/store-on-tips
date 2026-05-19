@@ -1,5 +1,5 @@
-// Shiprocket courier proxy. Mirrors the contract used by delhivery-proxy so
-// the seller-facing UI can call either provider with the same payload shape.
+// Shiprocket courier proxy — the sole shipping provider for the platform.
+// Sellers must create a dedicated Shiprocket API User (Settings → API → Configure).
 //
 // Actions:
 //   - serviceability { pickup_pincode, delivery_pincode, weight, cod }
