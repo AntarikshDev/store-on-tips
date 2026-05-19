@@ -72,14 +72,33 @@ serve(async (req) => {
     if (t.error) return json({ error: t.error }, 400);
     const headers = { Authorization: `Bearer ${t.token}`, "Content-Type": "application/json" };
 
-    if (action === "serviceability") {
-      const { pickup_pincode, delivery_pincode, weight = 0.5, cod = 0 } = body;
+    if (action === "serviceability" || action === "check-serviceability") {
+      let { pickup_pincode, delivery_pincode, weight = 0.5, cod = 0 } = body;
+      // Storefront PincodeChecker uses { destination_pincode } and doesn't know the seller's pickup.
+      if (!delivery_pincode && body.destination_pincode) delivery_pincode = body.destination_pincode;
+      if (!pickup_pincode) {
+        const { data: storeRow } = await admin
+          .from("stores")
+          .select("settings")
+          .eq("id", store_id)
+          .maybeSingle();
+        pickup_pincode = (storeRow?.settings as any)?.shipping?.pickup?.pincode;
+      }
+      if (!pickup_pincode || !delivery_pincode) {
+        return json({ error: "pickup_pincode and delivery_pincode are required", serviceable: false }, 400);
+      }
       const url = `${BASE}/courier/serviceability/?pickup_postcode=${pickup_pincode}&delivery_postcode=${delivery_pincode}&cod=${cod}&weight=${weight}`;
       const r = await fetch(url, { headers });
       const j = await r.json();
-      const cheapest = j?.data?.available_courier_companies?.[0];
+      const couriers = j?.data?.available_courier_companies || [];
+      const cheapest = couriers[0];
+      const days = cheapest?.estimated_delivery_days
+        ? parseInt(String(cheapest.estimated_delivery_days), 10)
+        : null;
       return json({
-        ok: !!cheapest,
+        ok: couriers.length > 0,
+        serviceable: couriers.length > 0,
+        estimated_days: Number.isFinite(days as number) ? days : null,
         courier: cheapest?.courier_name,
         rate: cheapest?.rate,
         etd: cheapest?.etd,
