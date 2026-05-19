@@ -40,10 +40,26 @@ const Khata = () => {
     },
   });
 
-  const totals = useMemo(() => {
-    const recv = customers.reduce((s: number, c: any) => s + Math.max(Number(c.balance || 0), 0), 0);
-    return { recv };
-  }, [customers]);
+  // Aggregate balances from khata_entries (works for walk-ins without customer_id too)
+  const owingList = useMemo(() => {
+    const map = new Map<string, { key: string; customer_id: string | null; name: string; phone: string; balance: number }>();
+    entries.forEach((e: any) => {
+      const id = e.customer_id || null;
+      const name = e.customer_name || e.customers?.name || 'Walk-in';
+      const phone = e.customer_phone || e.customers?.phone || '';
+      const key = id || `${name}|${phone}`;
+      const cur = map.get(key) || { key, customer_id: id, name, phone, balance: 0 };
+      const amt = Number(e.amount) || 0;
+      cur.balance += e.entry_type === 'credit' ? amt : -amt;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).filter((c) => c.balance > 0.005)
+      .sort((a, b) => b.balance - a.balance);
+  }, [entries]);
+
+  const totals = useMemo(() => ({
+    recv: owingList.reduce((s, c) => s + c.balance, 0),
+  }), [owingList]);
 
   const save = async () => {
     if (!form.customer_id && !form.customer_name) return toast.error('Pick or name a customer');
@@ -55,6 +71,20 @@ const Khata = () => {
     toast.success('Khata entry saved');
     setOpen(false);
     setForm({ customer_id: '', customer_name: '', customer_phone: '', entry_type: 'credit', amount: 0, entry_date: todayISO(), payment_mode: 'cash', notes: '' });
+  };
+
+  const settle = (c: any) => {
+    setForm({
+      customer_id: c.customer_id || '',
+      customer_name: c.name,
+      customer_phone: c.phone || '',
+      entry_type: 'payment',
+      amount: c.balance,
+      entry_date: todayISO(),
+      payment_mode: 'cash',
+      notes: 'Settlement',
+    });
+    setOpen(true);
   };
 
   const sendReminder = (c: any) => {
