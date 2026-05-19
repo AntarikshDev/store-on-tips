@@ -407,6 +407,33 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
 
       {homepageSections.map(renderSection)}
 
+      {menuEnabled && (
+        <section className="max-w-6xl mx-auto px-4 mt-6">
+          <Link
+            to={`/store/${slug}/menu`}
+            className="group relative block overflow-hidden rounded-2xl p-6 md:p-8 transition-transform hover:scale-[1.01]"
+            style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent || colors.primary})` }}
+          >
+            <div className="flex items-center justify-between gap-4 flex-wrap text-white">
+              <div>
+                <p className="text-xs uppercase tracking-widest opacity-80">Order food</p>
+                <h2 className="text-2xl md:text-3xl font-bold mt-1" style={{ fontFamily: fonts.heading }}>View our Menu</h2>
+                <p className="text-sm opacity-90 mt-1">
+                  {menuModes.includes('dine_in') && 'Dine-in'}
+                  {menuModes.includes('dine_in') && (menuModes.includes('takeaway') || menuModes.includes('delivery')) && ' · '}
+                  {menuModes.includes('takeaway') && 'Takeaway'}
+                  {menuModes.includes('takeaway') && menuModes.includes('delivery') && ' · '}
+                  {menuModes.includes('delivery') && 'Delivery'}
+                </p>
+              </div>
+              <span className="px-5 py-2.5 bg-white text-sm font-semibold rounded-full shadow group-hover:shadow-lg transition-shadow" style={{ color: colors.primary }}>
+                Browse menu →
+              </span>
+            </div>
+          </Link>
+        </section>
+      )}
+
       {showCategoryFilters && (
         <section className="max-w-6xl mx-auto px-4 py-6 md:py-8">
           <div className="flex gap-2 flex-wrap">
