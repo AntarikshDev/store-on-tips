@@ -58,6 +58,8 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
   const { colors, fonts } = theme;
   const { totalItems } = useCart(store.slug);
   const { user } = useCustomerAuth(store.slug);
+  const { enabledModes } = useFulfillment(store.id);
+  const menuEnabled = enabledModes.includes('dine_in') || enabledModes.includes('takeaway');
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const customerName = user?.user_metadata?.full_name || user?.user_metadata?.customer_email?.split('@')?.[0] || 'Account';
