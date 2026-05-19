@@ -92,6 +92,8 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
   const { wishlistProductIds, toggle: toggleWishlist } = useWishlist(store?.id, user?.id);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const track = useTrackEvent();
+  const { enabledModes: menuModes } = useFulfillment(store?.id);
+  const menuEnabled = menuModes.includes('dine_in') || menuModes.includes('takeaway');
   useEffect(() => {
     if (store?.id && !isOwnerPreview) track({ store_id: store.id, event_type: 'page_view' });
   }, [store?.id, isOwnerPreview, track]);
