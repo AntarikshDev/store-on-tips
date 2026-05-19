@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import CreditBadge from '@/components/wallet/CreditBadge';
 import { HelpLauncher } from '@/components/HelpLauncher';
+import { useStore } from '@/hooks/useStore';
 
 type NavLeaf = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; key: string; children: NavLeaf[] };
