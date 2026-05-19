@@ -319,7 +319,7 @@ const SlideCustomer = () => (
         { i: Clock, t: "5x Faster Setup", p: "Setup in minutes, not weeks. AI fills every field." },
         { i: Coins, t: "10x Cheaper", p: "₹499/mo vs ₹2,500+ on Shopify. 0% commission on Scale plan." },
         { i: Brain, t: "AI Co-Pilot", p: "Descriptions, blog, marketing copy, SEO (Search Engine Optimization) — written for you." },
-        { i: Shield, t: "Made for Bharat", p: "GST (Goods & Services Tax) invoices, COD (Cash on Delivery), Delhivery — out of the box." },
+        { i: Shield, t: "Made for Bharat", p: "GST (Goods & Services Tax) invoices, COD (Cash on Delivery), Shiprocket — out of the box." },
         { i: Crown, t: "Own Your Brand", p: "Custom domain. Branded emails. Full customer data." },
         { i: TrendingUp, t: "Built to Convert", p: "30+ themes, abandoned cart, coupons, reviews, loyalty." },
       ].map((x, i) => (
