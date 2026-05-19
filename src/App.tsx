@@ -213,6 +213,24 @@ const AppRoutes = () => {
               }
             />
             <Route
+              path="/invoices"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Invoices />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoices/:id/print"
+              element={
+                <ProtectedRoute>
+                  <InvoicePrint />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/returns"
               element={
                 <ProtectedRoute>
