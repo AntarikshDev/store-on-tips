@@ -182,14 +182,37 @@ const StorefrontCheckout = () => {
 
   const createOrder = async () => {
     const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-    const orderItems = items.map((i) => ({
-      product_id: i.productId,
-      title: i.title,
-      price: i.price,
-      quantity: i.quantity,
-      image: i.image,
-      variant: i.variant || null,
-    }));
+
+    // Fetch tax_rate for items so GST is captured at sale time
+    const productIds = Array.from(new Set(items.map((i) => i.productId).filter(Boolean)));
+    const taxRateById: Record<string, number> = {};
+    if (productIds.length) {
+      const { data: prods } = await supabase
+        .from('products')
+        .select('id, tax_rate')
+        .in('id', productIds);
+      prods?.forEach((p: any) => { taxRateById[p.id] = Number(p.tax_rate) || 0; });
+    }
+
+    // GST is treated as inclusive in product price → back it out
+    let totalTaxInclusive = 0;
+    const orderItems = items.map((i) => {
+      const rate = taxRateById[i.productId] || 0;
+      const lineTotal = i.price * i.quantity;
+      const lineTax = rate > 0 ? +(lineTotal * rate / (100 + rate)).toFixed(2) : 0;
+      totalTaxInclusive += lineTax;
+      return {
+        product_id: i.productId,
+        title: i.title,
+        price: i.price,
+        quantity: i.quantity,
+        image: i.image,
+        variant: i.variant || null,
+        tax_rate: rate,
+        tax_amount: lineTax,
+      };
+    });
+    const totalTax = +totalTaxInclusive.toFixed(2);
 
     const trackingCode = isGuestMode
       ? Math.random().toString(36).slice(2, 8).toUpperCase()
@@ -204,8 +227,8 @@ const StorefrontCheckout = () => {
       store_id: store.id,
       order_number: orderNumber,
       items: orderItems,
-      subtotal: totalPrice,
-      tax: 0,
+      subtotal: +(totalPrice - totalTax).toFixed(2),
+      tax: totalTax,
       shipping: fulfillmentMode === 'delivery' ? 0 : 0,
       total: finalTotal,
       notes: appliedCoupon ? `Coupon: ${appliedCoupon.code} (-₹${discount})` : null,

@@ -47,6 +47,8 @@ const ProductForm = () => {
   const [images, setImages] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantOption[]>([]);
   const [inventoryCount, setInventoryCount] = useState('0');
+  const [costPrice, setCostPrice] = useState('');
+  const [taxRate, setTaxRate] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
@@ -80,6 +82,8 @@ const ProductForm = () => {
       setImages((existingProduct.images as string[]) || []);
       setVariants((existingProduct.variants as unknown as VariantOption[]) || []);
       setInventoryCount(String(existingProduct.inventory_count ?? 0));
+      setCostPrice(existingProduct.cost_price ? String(existingProduct.cost_price) : '');
+      setTaxRate((existingProduct as any).tax_rate ? String((existingProduct as any).tax_rate) : '');
       setIsActive(existingProduct.is_active ?? true);
       setSeoTitle(existingProduct.seo_title || '');
       setSeoDescription(existingProduct.seo_description || '');
@@ -154,6 +158,8 @@ const ProductForm = () => {
       images,
       variants: variants as any,
       inventory_count: Number(inventoryCount) || 0,
+      cost_price: costPrice ? Number(costPrice) : 0,
+      tax_rate: taxRate ? Number(taxRate) : 0,
       is_active: asDraft ? false : isActive,
       seo_title: seoTitle || null,
       seo_description: seoDescription || null,
@@ -405,10 +411,36 @@ const ProductForm = () => {
                   <Badge className="bg-green-600 text-white text-[10px]">{discountPercent || Math.round(((Number(compareAtPrice) - Number(price)) / Number(compareAtPrice)) * 100)}% OFF</Badge>
                 </div>
               )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cost_price">Cost Price (₹)</Label>
+                  <Input
+                    id="cost_price"
+                    type="number"
+                    min="0"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                    placeholder="What you paid"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Used for COGS in Profit &amp; Loss</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tax_rate">GST Rate (%)</Label>
+                  <Input
+                    id="tax_rate"
+                    type="number"
+                    min="0"
+                    max="28"
+                    step="0.01"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    placeholder="0, 5, 12, 18, 28"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Inclusive in selling price</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Variants */}
           <Card>
             <CardContent className="pt-6">
               <VariantMatrix category={category} options={variants} onChange={setVariants} />
