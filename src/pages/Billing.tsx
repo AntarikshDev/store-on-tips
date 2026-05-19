@@ -39,6 +39,10 @@ const renderCell = (plan: PlanConfig, key: keyof PlanConfig) => {
     return (v as number) >= 2_000_000_000 ? 'Unlimited' : String(v);
   }
   if (key === 'commission_percent') return `${v}%`;
+  if (key === 'signup_bonus_credits') {
+    const n = Number(v ?? 0);
+    return n > 0 ? `${n.toLocaleString('en-IN')} cr` : '—';
+  }
   if (typeof v === 'boolean') {
     return v
       ? <Check className="h-4 w-4 text-green-600 mx-auto" />
