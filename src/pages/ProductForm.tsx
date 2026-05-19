@@ -411,10 +411,36 @@ const ProductForm = () => {
                   <Badge className="bg-green-600 text-white text-[10px]">{discountPercent || Math.round(((Number(compareAtPrice) - Number(price)) / Number(compareAtPrice)) * 100)}% OFF</Badge>
                 </div>
               )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cost_price">Cost Price (₹)</Label>
+                  <Input
+                    id="cost_price"
+                    type="number"
+                    min="0"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                    placeholder="What you paid"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Used for COGS in Profit &amp; Loss</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tax_rate">GST Rate (%)</Label>
+                  <Input
+                    id="tax_rate"
+                    type="number"
+                    min="0"
+                    max="28"
+                    step="0.01"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    placeholder="0, 5, 12, 18, 28"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Inclusive in selling price</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Variants */}
           <Card>
             <CardContent className="pt-6">
               <VariantMatrix category={category} options={variants} onChange={setVariants} />
