@@ -61,6 +61,10 @@ const ShippingSettings = () => {
 
   const isConfigured = !!srEmail && !!srPassword && !!pickup.pincode;
 
+  useEffect(() => {
+    if (!loading) setGuideOpen(!isConfigured);
+  }, [loading, isConfigured]);
+
   const handleSave = async () => {
     if (!store) return;
     setSaving(true);
