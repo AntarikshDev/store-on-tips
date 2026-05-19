@@ -179,9 +179,21 @@ const Billing = () => {
                 <p className="text-xs text-muted-foreground">
                   Commission {p.commission_percent}% · {p.trial_days > 0 ? `${p.trial_days}-day trial` : 'No trial'}
                 </p>
+                {!!p.signup_bonus_credits && p.signup_bonus_credits > 0 && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-900 text-xs font-semibold">
+                    <Sparkles className="h-3 w-3" />
+                    {p.signup_bonus_credits.toLocaleString('en-IN')} AI credits free
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-3">
                 <ul className="space-y-1.5 text-sm flex-1">
+                  {!!p.signup_bonus_credits && p.signup_bonus_credits > 0 && (
+                    <li className="flex items-center gap-2 text-amber-700 font-medium">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {p.signup_bonus_credits.toLocaleString('en-IN')} AI credits on signup
+                    </li>
+                  )}
                   <li className="flex items-center gap-2">
                     <Check className="h-3.5 w-3.5 text-green-600" />
                     {p.product_limit >= 2_000_000_000 ? 'Unlimited' : p.product_limit} products
