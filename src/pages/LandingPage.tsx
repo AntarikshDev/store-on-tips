@@ -827,7 +827,7 @@ const LandingPage = () => {
             ))}
           </div>
           <p className="text-center text-sm text-slate-500 mt-8">
-            Need more? <Link to="/billing" className="font-semibold text-indigo-600 hover:underline">See our Scale plan (₹4,999, 0% commission)</Link>
+            Need more? <Link to="/billing" className="font-semibold text-indigo-600 hover:underline">See our Scale plan (₹4,999, 0% commission + 6,000 AI credits free)</Link>
           </p>
         </div>
       </section>
