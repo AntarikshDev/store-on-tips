@@ -35,6 +35,9 @@ const AdminThemeLivePreview = lazy(() => import("@/pages/admin/AdminThemeLivePre
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
 const CodSettings = lazy(() => import("@/pages/CodSettings"));
 const ShippingSettings = lazy(() => import("@/pages/ShippingSettings"));
+const FulfillmentSettings = lazy(() => import("@/pages/FulfillmentSettings"));
+const QRCodes = lazy(() => import("@/pages/QRCodes"));
+const QRRedirect = lazy(() => import("@/pages/QRRedirect"));
 const DomainSettings = lazy(() => import("@/pages/DomainSettings"));
 const CouponList = lazy(() => import("@/pages/CouponList"));
 const SEOSettings = lazy(() => import("@/pages/SEOSettings"));
@@ -130,6 +133,7 @@ const AppRoutes = () => {
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>}>
     <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/q/:slug" element={<QRRedirect />} />
             <Route path="/investors" element={<Investors />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/auth" element={<Auth />} />
@@ -262,6 +266,26 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <ShippingSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/fulfillment"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <FulfillmentSettings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/qr"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <QRCodes />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

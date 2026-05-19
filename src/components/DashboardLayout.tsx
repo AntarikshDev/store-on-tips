@@ -29,7 +29,11 @@ import {
   Settings as SettingsIcon,
   Sparkles,
   Star,
+  Utensils,
+  QrCode,
 } from 'lucide-react';
+
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
@@ -96,6 +100,8 @@ const navTree: NavEntry[] = [
       { label: 'Payments', icon: CreditCard, path: '/settings/payments' },
       { label: 'COD Rules', icon: Banknote, path: '/settings/cod' },
       { label: 'Shipping', icon: Truck, path: '/settings/shipping' },
+      { label: 'Fulfillment', icon: Utensils, path: '/settings/fulfillment' },
+      { label: 'QR Codes', icon: QrCode, path: '/settings/qr' },
       { label: 'Domain', icon: Globe, path: '/settings/domain' },
       { label: 'Email Branding', icon: Mail, path: '/settings/email' },
       { label: 'Billing', icon: Crown, path: '/billing' },

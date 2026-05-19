@@ -570,6 +570,7 @@ export type Database = {
       }
       coupons: {
         Row: {
+          allowed_modes: Database["public"]["Enums"]["fulfillment_mode"][]
           auto_apply: boolean
           bogo_buy_qty: number | null
           bogo_get_discount_pct: number | null
@@ -591,6 +592,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          allowed_modes?: Database["public"]["Enums"]["fulfillment_mode"][]
           auto_apply?: boolean
           bogo_buy_qty?: number | null
           bogo_get_discount_pct?: number | null
@@ -612,6 +614,7 @@ export type Database = {
           value?: number
         }
         Update: {
+          allowed_modes?: Database["public"]["Enums"]["fulfillment_mode"][]
           auto_apply?: boolean
           bogo_buy_qty?: number | null
           bogo_get_discount_pct?: number | null
@@ -1260,6 +1263,8 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           customer_user_id: string | null
+          fulfillment_mode: Database["public"]["Enums"]["fulfillment_mode"]
+          guest_tracking_code: string | null
           id: string
           invoice_number: string | null
           items: Json
@@ -1267,12 +1272,14 @@ export type Database = {
           order_number: string
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          prep_status: Database["public"]["Enums"]["prep_status"] | null
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
           shipping: number | null
           status: Database["public"]["Enums"]["order_status"] | null
           store_id: string
           subtotal: number | null
+          table_label: string | null
           tax: number | null
           total: number | null
           tracking_number: string | null
@@ -1288,6 +1295,8 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_user_id?: string | null
+          fulfillment_mode?: Database["public"]["Enums"]["fulfillment_mode"]
+          guest_tracking_code?: string | null
           id?: string
           invoice_number?: string | null
           items?: Json
@@ -1295,12 +1304,14 @@ export type Database = {
           order_number: string
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          prep_status?: Database["public"]["Enums"]["prep_status"] | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           shipping?: number | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id: string
           subtotal?: number | null
+          table_label?: string | null
           tax?: number | null
           total?: number | null
           tracking_number?: string | null
@@ -1316,6 +1327,8 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_user_id?: string | null
+          fulfillment_mode?: Database["public"]["Enums"]["fulfillment_mode"]
+          guest_tracking_code?: string | null
           id?: string
           invoice_number?: string | null
           items?: Json
@@ -1323,12 +1336,14 @@ export type Database = {
           order_number?: string
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          prep_status?: Database["public"]["Enums"]["prep_status"] | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           shipping?: number | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id?: string
           subtotal?: number | null
+          table_label?: string | null
           tax?: number | null
           total?: number | null
           tracking_number?: string | null
@@ -1797,6 +1812,7 @@ export type Database = {
           images: string[] | null
           inventory_count: number | null
           is_active: boolean | null
+          menu_meta: Json
           price: number
           seo_description: string | null
           seo_title: string | null
@@ -1818,6 +1834,7 @@ export type Database = {
           images?: string[] | null
           inventory_count?: number | null
           is_active?: boolean | null
+          menu_meta?: Json
           price?: number
           seo_description?: string | null
           seo_title?: string | null
@@ -1839,6 +1856,7 @@ export type Database = {
           images?: string[] | null
           inventory_count?: number | null
           is_active?: boolean | null
+          menu_meta?: Json
           price?: number
           seo_description?: string | null
           seo_title?: string | null
@@ -2416,6 +2434,63 @@ export type Database = {
           },
         ]
       }
+      store_fulfillment_settings: {
+        Row: {
+          auto_accept: boolean
+          created_at: string
+          delivery_enabled: boolean
+          delivery_fee_flat: number
+          delivery_min_order: number
+          delivery_radius_km: number
+          dine_in_enabled: boolean
+          dine_in_payment_modes: string[]
+          dine_in_requires_table: boolean
+          kitchen_prep_minutes: number
+          store_id: string
+          tables: Json
+          takeaway_enabled: boolean
+          takeaway_min_phone_only: boolean
+          takeaway_payment_modes: string[]
+          updated_at: string
+        }
+        Insert: {
+          auto_accept?: boolean
+          created_at?: string
+          delivery_enabled?: boolean
+          delivery_fee_flat?: number
+          delivery_min_order?: number
+          delivery_radius_km?: number
+          dine_in_enabled?: boolean
+          dine_in_payment_modes?: string[]
+          dine_in_requires_table?: boolean
+          kitchen_prep_minutes?: number
+          store_id: string
+          tables?: Json
+          takeaway_enabled?: boolean
+          takeaway_min_phone_only?: boolean
+          takeaway_payment_modes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          auto_accept?: boolean
+          created_at?: string
+          delivery_enabled?: boolean
+          delivery_fee_flat?: number
+          delivery_min_order?: number
+          delivery_radius_km?: number
+          dine_in_enabled?: boolean
+          dine_in_payment_modes?: string[]
+          dine_in_requires_table?: boolean
+          kitchen_prep_minutes?: number
+          store_id?: string
+          tables?: Json
+          takeaway_enabled?: boolean
+          takeaway_min_phone_only?: boolean
+          takeaway_payment_modes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_google_reviews_cache: {
         Row: {
           author_name: string | null
@@ -2543,6 +2618,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_qr_codes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          last_scanned_at: string | null
+          scans_count: number
+          slug: string
+          store_id: string
+          table_label: string | null
+          target_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind: string
+          last_scanned_at?: string | null
+          scans_count?: number
+          slug: string
+          store_id: string
+          table_label?: string | null
+          target_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          last_scanned_at?: string | null
+          scans_count?: number
+          slug?: string
+          store_id?: string
+          table_label?: string | null
+          target_path?: string
+        }
+        Relationships: []
       }
       store_secrets: {
         Row: {
@@ -3618,6 +3732,7 @@ export type Database = {
         | "loyalty"
         | "referral"
       credit_txn_type: "debit" | "credit" | "bonus" | "refund" | "grant"
+      fulfillment_mode: "dine_in" | "takeaway" | "delivery"
       order_status:
         | "pending"
         | "confirmed"
@@ -3627,6 +3742,14 @@ export type Database = {
         | "cancelled"
         | "returned"
       payment_status: "pending" | "paid" | "failed" | "refunded" | "cod"
+      prep_status:
+        | "received"
+        | "preparing"
+        | "ready"
+        | "served"
+        | "out_for_delivery"
+        | "completed"
+        | "cancelled"
       subscription_plan: "free" | "premium" | "starter" | "growth" | "scale"
       subscription_status:
         | "active"
@@ -3771,6 +3894,7 @@ export const Constants = {
         "referral",
       ],
       credit_txn_type: ["debit", "credit", "bonus", "refund", "grant"],
+      fulfillment_mode: ["dine_in", "takeaway", "delivery"],
       order_status: [
         "pending",
         "confirmed",
@@ -3781,6 +3905,15 @@ export const Constants = {
         "returned",
       ],
       payment_status: ["pending", "paid", "failed", "refunded", "cod"],
+      prep_status: [
+        "received",
+        "preparing",
+        "ready",
+        "served",
+        "out_for_delivery",
+        "completed",
+        "cancelled",
+      ],
       subscription_plan: ["free", "premium", "starter", "growth", "scale"],
       subscription_status: [
         "active",
