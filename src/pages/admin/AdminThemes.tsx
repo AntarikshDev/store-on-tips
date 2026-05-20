@@ -200,7 +200,7 @@ const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; 
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Price (₹) — set 0 for free</Label>
+          <Label className="text-xs">Price (₹) — set 0 for free, any value &gt; 0 marks it Premium 👑</Label>
           <Input
             type="number"
             min={0}
