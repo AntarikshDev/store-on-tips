@@ -44,6 +44,51 @@ Deno.serve(async (req) => {
     const rzpOrderId: string | undefined = payment?.order_id ?? refund?.notes?.razorpay_order_id;
     const rzpPaymentId: string | undefined = payment?.id ?? refund?.payment_id;
 
+    // === THEME PURCHASE FAST PATH ===
+    // notes.purpose === 'theme_purchase' → handle in isolation and exit.
+    const purpose = payment?.notes?.purpose ?? event.payload?.order?.entity?.notes?.purpose;
+    if (purpose === "theme_purchase" && rzpOrderId) {
+      const { data: intent } = await supabase
+        .from("theme_purchase_intents")
+        .select("*")
+        .eq("razorpay_order_id", rzpOrderId)
+        .maybeSingle();
+      if (!intent) return json({ ok: true, note: "theme intent not found" });
+
+      if (eventType === "payment.captured" || eventType === "order.paid") {
+        if (intent.status !== "paid") {
+          await supabase.from("theme_purchase_intents").update({
+            status: "paid",
+            razorpay_payment_id: rzpPaymentId ?? null,
+            paid_at: new Date().toISOString(),
+          }).eq("id", intent.id);
+
+          if (intent.theme_kind === "pack") {
+            await supabase.from("theme_purchases").upsert({
+              store_id: intent.store_id,
+              theme_pack_id: intent.theme_ref,
+            }, { onConflict: "store_id,theme_pack_id" });
+          } else {
+            // master theme — append theme_ref to stores.settings.purchased_themes
+            const { data: st } = await supabase.from("stores").select("settings").eq("id", intent.store_id).maybeSingle();
+            const s: any = st?.settings || {};
+            const purchased: string[] = Array.isArray(s.purchased_themes) ? s.purchased_themes : [];
+            if (!purchased.includes(intent.theme_ref)) purchased.push(intent.theme_ref);
+            const pending = s.pending_premium_theme;
+            const nextSettings = { ...s, purchased_themes: purchased };
+            if (pending?.theme_id === intent.theme_ref) delete nextSettings.pending_premium_theme;
+            await supabase.from("stores").update({ settings: nextSettings }).eq("id", intent.store_id);
+          }
+        }
+      } else if (eventType === "payment.failed") {
+        await supabase.from("theme_purchase_intents")
+          .update({ status: "failed" })
+          .eq("id", intent.id);
+      }
+      return json({ ok: true, kind: "theme_purchase" });
+    }
+
+
     // Find matching order
     let orderRow: any = null;
     if (rzpOrderId) {

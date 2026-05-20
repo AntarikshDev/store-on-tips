@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { Check, Palette, Loader2, Sparkles, Flame, Eye } from 'lucide-react';
+import { Check, Palette, Loader2, Sparkles, Flame, Eye, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { OnboardingData } from '@/pages/Onboarding';
 
@@ -20,6 +20,8 @@ interface ThemeMaster {
   preview_image: string | null;
   is_default: boolean;
   created_at: string;
+  is_premium?: boolean;
+  price?: number;
 }
 
 const StepTheme = ({ data, setData }: Props) => {
@@ -31,7 +33,7 @@ const StepTheme = ({ data, setData }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('theme_master_projects')
-        .select('id, theme_id, name, description, category, preview_image, is_default, created_at')
+        .select('id, theme_id, name, description, category, preview_image, is_default, created_at, is_premium, price')
         .eq('is_active', true)
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
@@ -122,7 +124,14 @@ const ThemeCard = ({ theme, selected, onClick }: { theme: ThemeMaster; selected:
         )}
       </div>
       <div className="p-3">
-        <p className="text-sm font-bold leading-tight">{theme.name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-bold leading-tight flex-1 truncate">{theme.name}</p>
+          {theme.is_premium && (
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] gap-1 px-1.5 py-0">
+              <Crown className="h-2.5 w-2.5" /> ₹{theme.price}
+            </Badge>
+          )}
+        </div>
         {theme.category && (
           <Badge variant="secondary" className="mt-1 text-[10px] capitalize">{theme.category}</Badge>
         )}
