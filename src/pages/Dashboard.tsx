@@ -21,6 +21,7 @@ import RecentOrders from '@/components/dashboard/RecentOrders';
 import ProvisioningStatus from '@/components/dashboard/ProvisioningStatus';
 import WeeklyDigest from '@/components/dashboard/WeeklyDigest';
 import AbandonedCartBanner from '@/components/dashboard/AbandonedCartBanner';
+import PremiumThemePendingCard from '@/components/dashboard/PremiumThemePendingCard';
 import { ThemeUpdateBanner } from '@/components/ThemeUpdateBanner';
 import WalletCard from '@/components/dashboard/WalletCard';
 import HeroGreeting from '@/components/dashboard/HeroGreeting';
@@ -97,6 +98,7 @@ const Dashboard = () => {
       />
 
       <ProvisioningStatus />
+      <PremiumThemePendingCard />
 
       {/* Hero greeting */}
       <HeroGreeting
