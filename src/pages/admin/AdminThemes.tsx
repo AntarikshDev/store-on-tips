@@ -38,6 +38,7 @@ interface ThemeMaster {
   created_at: string;
   price: number;
   compare_at_price: number | null;
+  is_premium?: boolean;
 }
 
 const PublishVersionDialog = ({ theme, open, onOpenChange }: { theme: ThemeMaster; open: boolean; onOpenChange: (o: boolean) => void }) => {
