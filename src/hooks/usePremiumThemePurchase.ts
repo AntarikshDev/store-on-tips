@@ -76,11 +76,11 @@ export function usePremiumThemePurchase() {
             for (let i = 0; i < 12; i++) {
               await new Promise((r) => setTimeout(r, 1000));
               const { data: intent } = await supabase
-                .from('theme_purchase_intents')
+                .from('theme_purchase_intents' as any)
                 .select('status')
                 .eq('id', data.intent_id)
                 .maybeSingle();
-              if (intent?.status === 'paid') break;
+              if ((intent as any)?.status === 'paid') break;
             }
             qc.invalidateQueries({ queryKey: ['theme-purchases'] });
             qc.invalidateQueries({ queryKey: ['store'] });
