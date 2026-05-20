@@ -7,6 +7,7 @@
 - **Routing**: `/` is marketing landing page, `/dashboard` is the seller application.
 - **Auth**: Customers have `is_customer: true` metadata. Never redirect them to seller onboarding.
 - **Cart**: Persistent customer shopping cart is managed via `localStorage`.
+- **Pica 2**: Merchant assistant prompt lives in `supabase/functions/merchant-assistant/index.ts`. **Update it for every new module/route/business mode.** Food/cafe stores use dine-in workflow — never suggest shipping.
 
 ## Memories
 - [Onboarding Wizard](mem://features/onboarding-wizard) — 7-step mandatory flow, AI product saved only on completion
@@ -36,3 +37,4 @@
 - [White-Label Emails](mem://features/white-label-emails) — AI-generated branded email templates per store
 - [Email Sender Identity](mem://features/email-sender-identity) — Resend multi-domain API for custom sender addresses
 - [Partner Program](mem://features/partner-program) — Phase 6 freelancer/agency referrals, ?ref= cookie, /partners + /admin/partners
+- [Pica 2 Assistant](mem://features/pica2-assistant) — Merchant help prompt, food/cafe vs e-commerce business modes, must stay in sync with new modules
