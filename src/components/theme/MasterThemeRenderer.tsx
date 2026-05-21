@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Truck, Shield, RefreshCw, Headphones, Lock, Tag, Gift, Sparkles, Star, ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -102,10 +102,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
     (page === "home" ? (overrides as any)?.sections ?? {} : {});
 
   // Inject real products into the first product/trending section if products were supplied.
+  // On the shop page we pass ALL products (no slice) so category filtering works on the full catalog.
   const productItemsForOverride = products && products.length > 0
-    ? products.slice(0, 8).map((p) => ({
+    ? (page === "shop" ? products : products.slice(0, 8)).map((p: any) => ({
         id: p.id, name: p.title, price: p.price, compare_at: p.compare_at_price,
-        image: p.images?.[0],
+        image: p.images?.[0], category: p.category,
       }))
     : null;
   let productSectionInjected = false;
@@ -155,7 +156,7 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
             data-section-anchor={`s-${i}`}
             style={{ scrollMarginTop: 80, ...sectionStyle }}
           >
-            <Section s={{ ...s, props: mergedProps }} dna={sectionDna} storeSlug={storeSlug} />
+            <Section s={{ ...s, props: mergedProps }} dna={sectionDna} storeSlug={storeSlug} page={page} />
           </div>
         );
       })}
@@ -261,7 +262,7 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
   );
 }
 
-function Section({ s, dna, storeSlug }: any) {
+function Section({ s, dna, storeSlug, page }: any) {
   const p = s.props ?? {};
   // If image was explicitly cleared via override (image === ""), do not render image.
   switch (s.type) {
@@ -281,9 +282,10 @@ function Section({ s, dna, storeSlug }: any) {
         </div>
       </section>
     );
-    case "category_grid": return <CategoryBlock p={p} dna={dna} />;
+    case "category_grid": return <CategoryBlock p={p} dna={dna} storeSlug={storeSlug} />;
     case "trending":
-    case "product_grid": return <ProductBlock p={p} dna={dna} storeSlug={storeSlug} />;
+    case "product_grid": return <ProductBlock p={p} dna={dna} storeSlug={storeSlug} page={page} />;
+
     case "story": return (
       <section className="py-20" style={{ background: dna.palette?.surface }}>
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
@@ -588,9 +590,13 @@ function Hero({ p, dna, storeSlug }: any) {
   );
 }
 
-function CategoryBlock({ p, dna }: any) {
+function CategoryBlock({ p, dna, storeSlug }: any) {
   const v = p.style ?? "grid_4";
   const items = p.items ?? [];
+  // Each tile links to the shop page filtered by that category name. Falls back to #products
+  // when there is no slug (admin theme preview).
+  const hrefFor = (name: string) =>
+    storeSlug ? `/store/${storeSlug}/shop?category=${encodeURIComponent(name || "")}` : "#products";
   const Title = <h2 className="text-3xl mb-10" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2>;
   if (v === "carousel_strip") {
     return (
@@ -598,10 +604,10 @@ function CategoryBlock({ p, dna }: any) {
         <div className="max-w-6xl mx-auto px-6">{Title}</div>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 snap-x">
           {items.map((c: any, i: number) => (
-            <a key={i} className="snap-start shrink-0 w-72 aspect-[4/5] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+            <Link to={hrefFor(c.name)} key={i} className="snap-start shrink-0 w-72 aspect-[4/5] relative overflow-hidden hover:opacity-90 transition" style={{ borderRadius: "var(--r)" }}>
               {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               <div className="absolute bottom-0 inset-x-0 p-4 text-white" style={{ background: "linear-gradient(180deg,transparent,rgba(0,0,0,0.7))" }}>{c.name}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -613,12 +619,12 @@ function CategoryBlock({ p, dna }: any) {
         {Title}
         <div className="flex flex-wrap justify-center gap-10">
           {items.map((c: any, i: number) => (
-            <a key={i} className="flex flex-col items-center gap-3">
+            <Link to={hrefFor(c.name)} key={i} className="flex flex-col items-center gap-3 hover:opacity-80 transition">
               <div className="w-32 h-32 rounded-full overflow-hidden border" style={{ borderColor: dna.palette?.border }}>
                 {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               </div>
               <span className="text-sm">{c.name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -629,17 +635,17 @@ function CategoryBlock({ p, dna }: any) {
     return (
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-4">
         {first && (
-          <a className="relative aspect-[4/5] md:aspect-auto overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+          <Link to={hrefFor(first.name)} className="relative aspect-[4/5] md:aspect-auto overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)" }}>
             {first.image && <img src={first.image} className="w-full h-full object-cover" />}
             <div className="absolute bottom-6 left-6 right-6 text-white"><div className="text-2xl" style={{ fontFamily: "var(--hf)" }}>{first.name}</div></div>
-          </a>
+          </Link>
         )}
         <div className="grid grid-cols-2 gap-4">
           {rest.slice(0, 3).map((c: any, i: number) => (
-            <a key={i} className="relative aspect-square overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+            <Link to={hrefFor(c.name)} key={i} className="relative aspect-square overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)" }}>
               {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               <div className="absolute bottom-3 left-3 text-white text-sm">{c.name}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -653,10 +659,10 @@ function CategoryBlock({ p, dna }: any) {
           {items.map((c: any, i: number) => {
             const tall = v === "masonry" && i % 3 === 0;
             return (
-              <a key={i} className="relative overflow-hidden" style={{ borderRadius: "var(--r)", gridRow: tall ? "span 2" : undefined, aspectRatio: tall ? "3/5" : "1/1" }}>
+              <Link to={hrefFor(c.name)} key={i} className="relative overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)", gridRow: tall ? "span 2" : undefined, aspectRatio: tall ? "3/5" : "1/1" }}>
                 {c.image && <img src={c.image} className="w-full h-full object-cover" />}
                 <div className="absolute bottom-3 left-3 text-white text-sm">{c.name}</div>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -668,27 +674,98 @@ function CategoryBlock({ p, dna }: any) {
       {Title}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {items.map((c: any, i: number) => (
-          <a key={i} className="group block aspect-[3/4] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+          <Link to={hrefFor(c.name)} key={i} className="group block aspect-[3/4] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
             {c.image ? <img src={c.image} className="w-full h-full object-cover transition-transform group-hover:scale-105" /> : <div className="w-full h-full" style={{ background: dna.palette?.surface }} />}
             <div className="absolute inset-0 flex items-end p-4" style={{ background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.7))" }}>
               <span className="text-white font-medium" style={{ fontFamily: "var(--hf)" }}>{c.name}</span>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
   );
 }
 
-function ProductBlock({ p, dna, storeSlug }: any) {
+
+function ProductBlock({ p, dna, storeSlug, page }: any) {
   const v = p.style ?? "grid_clean";
-  const items = p.items ?? [];
+  const allItems: any[] = p.items ?? [];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = page === "shop" ? (searchParams.get("category") || "") : "";
+
+  // Build unique category chips from real product data (case-insensitive).
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>();
+    allItems.forEach((it) => {
+      const c = (it.category || "").trim();
+      if (c && !seen.has(c.toLowerCase())) seen.set(c.toLowerCase(), c);
+    });
+    return Array.from(seen.values());
+  }, [allItems]);
+
+  const items = selectedCategory
+    ? allItems.filter((it) => (it.category || "").toLowerCase() === selectedCategory.toLowerCase())
+    : allItems;
+
+  const setCategory = (next: string) => {
+    const sp = new URLSearchParams(searchParams);
+    if (next) sp.set("category", next); else sp.delete("category");
+    setSearchParams(sp, { replace: true });
+  };
+
   const linkFor = (pr: any) => (storeSlug && pr.id ? `/store/${storeSlug}/product/${pr.id}` : "#");
-  const Title = p.title ? <h2 className="text-3xl mb-10" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2> : null;
+  const Title = p.title ? <h2 className="text-3xl mb-6" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2> : null;
+
+  const Chips = page === "shop" && categories.length > 0 ? (
+    <div className="flex flex-wrap gap-2 mb-8">
+      <button
+        type="button"
+        onClick={() => setCategory("")}
+        className="text-xs px-3 py-1.5 border transition"
+        style={{
+          borderColor: dna.palette?.border,
+          borderRadius: "var(--r)",
+          background: !selectedCategory ? dna.palette?.primary : "transparent",
+          color: !selectedCategory ? dna.palette?.primary_fg : dna.palette?.fg,
+        }}
+      >
+        All ({allItems.length})
+      </button>
+      {categories.map((cat) => {
+        const active = selectedCategory.toLowerCase() === cat.toLowerCase();
+        const count = allItems.filter((it) => (it.category || "").toLowerCase() === cat.toLowerCase()).length;
+        return (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setCategory(cat)}
+            className="text-xs px-3 py-1.5 border transition"
+            style={{
+              borderColor: dna.palette?.border,
+              borderRadius: "var(--r)",
+              background: active ? dna.palette?.primary : "transparent",
+              color: active ? dna.palette?.primary_fg : dna.palette?.fg,
+            }}
+          >
+            {cat} ({count})
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const Empty = page === "shop" && items.length === 0 ? (
+    <div className="py-16 text-center text-sm" style={{ color: dna.palette?.muted }}>
+      No products in this category yet.
+    </div>
+  ) : null;
+
   if (v === "editorial_list") {
     return (
       <section className="max-w-5xl mx-auto px-6 py-20">
         {Title}
+        {Chips}
+        {Empty}
         <div className="divide-y" style={{ borderColor: dna.palette?.border }}>
           {items.map((pr: any, i: number) => (
             <Link to={linkFor(pr)} key={i} className="grid grid-cols-[80px,1fr,auto] gap-6 py-6 items-center" style={{ borderColor: dna.palette?.border }}>
@@ -711,6 +788,8 @@ function ProductBlock({ p, dna, storeSlug }: any) {
   return (
     <section id="products" className="max-w-6xl mx-auto px-6 py-20">
       {Title}
+      {Chips}
+      {Empty}
       <div className={`grid grid-cols-2 ${cols} gap-6`}>
         {items.map((pr: any, i: number) => (
           <Link to={linkFor(pr)} key={i} className="group">
@@ -729,6 +808,7 @@ function ProductBlock({ p, dna, storeSlug }: any) {
     </section>
   );
 }
+
 
 function Footer({ footer, dna, brandName, storeSlug, onNavigate, footerOv }: any) {
   const ov: FooterOv = footerOv || {};
