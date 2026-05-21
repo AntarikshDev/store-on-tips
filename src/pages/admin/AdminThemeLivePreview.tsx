@@ -141,7 +141,7 @@ export default function AdminThemeLivePreview() {
           </div>
         </div>
       )}
-      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} onNavigate={setActive} />
+      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} onNavigate={setActive} products={products} sellerCategories={sellerCategories} />
     </div>
   );
 }
