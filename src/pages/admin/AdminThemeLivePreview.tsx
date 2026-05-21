@@ -27,6 +27,8 @@ export default function AdminThemeLivePreview() {
   const [loading, setLoading] = useState(true);
   const [overrides, setOverrides] = useState<any>({});
   const [page, setPage] = useState<string>(initialPage);
+  const [products, setProducts] = useState<any[]>([]);
+  const [sellerCategories, setSellerCategories] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -42,6 +44,31 @@ export default function AdminThemeLivePreview() {
       window.parent?.postMessage({ type: "customiser:ready" }, "*");
     })();
   }, [themeId]);
+
+  // Load the merchant's real store data so the preview mirrors the live storefront
+  // (products, categories, saved theme overrides). Parent customiser still
+  // postMessages live edits on top via `customiser:update`.
+  useEffect(() => {
+    if (!storeSlug) return;
+    (async () => {
+      const { data: store } = await supabase
+        .from("stores")
+        .select("id, name, settings")
+        .eq("slug", storeSlug)
+        .maybeSingle();
+      if (!store) return;
+      const savedOv = (store.settings as any)?.theme_overrides;
+      if (savedOv) {
+        setOverrides((cur: any) => (Object.keys(cur || {}).length ? cur : { ...savedOv, brand_name: savedOv?.brand_name || store.name }));
+      }
+      const [{ data: prods }, { data: cats }] = await Promise.all([
+        supabase.from("products").select("id, title, price, compare_at_price, images, category").eq("store_id", store.id).eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("categories").select("name, image_url, parent_id, sort_order").eq("store_id", store.id).is("parent_id", null).order("sort_order", { ascending: true }),
+      ]);
+      setProducts((prods ?? []) as any[]);
+      setSellerCategories(((cats ?? []) as any[]).map((c) => ({ name: c.name, image_url: c.image_url })));
+    })();
+  }, [storeSlug]);
 
   useEffect(() => {
     const handler = (ev: MessageEvent) => {
@@ -114,7 +141,7 @@ export default function AdminThemeLivePreview() {
           </div>
         </div>
       )}
-      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} onNavigate={setActive} />
+      <MasterThemeRenderer manifest={manifest} page={page} overrides={overrides} storeSlug={storeSlug} onNavigate={setActive} products={products} sellerCategories={sellerCategories} />
     </div>
   );
 }
