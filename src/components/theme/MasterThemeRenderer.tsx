@@ -590,9 +590,13 @@ function Hero({ p, dna, storeSlug }: any) {
   );
 }
 
-function CategoryBlock({ p, dna }: any) {
+function CategoryBlock({ p, dna, storeSlug }: any) {
   const v = p.style ?? "grid_4";
   const items = p.items ?? [];
+  // Each tile links to the shop page filtered by that category name. Falls back to #products
+  // when there is no slug (admin theme preview).
+  const hrefFor = (name: string) =>
+    storeSlug ? `/store/${storeSlug}/shop?category=${encodeURIComponent(name || "")}` : "#products";
   const Title = <h2 className="text-3xl mb-10" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2>;
   if (v === "carousel_strip") {
     return (
@@ -600,10 +604,10 @@ function CategoryBlock({ p, dna }: any) {
         <div className="max-w-6xl mx-auto px-6">{Title}</div>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 snap-x">
           {items.map((c: any, i: number) => (
-            <a key={i} className="snap-start shrink-0 w-72 aspect-[4/5] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+            <Link to={hrefFor(c.name)} key={i} className="snap-start shrink-0 w-72 aspect-[4/5] relative overflow-hidden hover:opacity-90 transition" style={{ borderRadius: "var(--r)" }}>
               {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               <div className="absolute bottom-0 inset-x-0 p-4 text-white" style={{ background: "linear-gradient(180deg,transparent,rgba(0,0,0,0.7))" }}>{c.name}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -615,12 +619,12 @@ function CategoryBlock({ p, dna }: any) {
         {Title}
         <div className="flex flex-wrap justify-center gap-10">
           {items.map((c: any, i: number) => (
-            <a key={i} className="flex flex-col items-center gap-3">
+            <Link to={hrefFor(c.name)} key={i} className="flex flex-col items-center gap-3 hover:opacity-80 transition">
               <div className="w-32 h-32 rounded-full overflow-hidden border" style={{ borderColor: dna.palette?.border }}>
                 {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               </div>
               <span className="text-sm">{c.name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -631,17 +635,17 @@ function CategoryBlock({ p, dna }: any) {
     return (
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-4">
         {first && (
-          <a className="relative aspect-[4/5] md:aspect-auto overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+          <Link to={hrefFor(first.name)} className="relative aspect-[4/5] md:aspect-auto overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)" }}>
             {first.image && <img src={first.image} className="w-full h-full object-cover" />}
             <div className="absolute bottom-6 left-6 right-6 text-white"><div className="text-2xl" style={{ fontFamily: "var(--hf)" }}>{first.name}</div></div>
-          </a>
+          </Link>
         )}
         <div className="grid grid-cols-2 gap-4">
           {rest.slice(0, 3).map((c: any, i: number) => (
-            <a key={i} className="relative aspect-square overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+            <Link to={hrefFor(c.name)} key={i} className="relative aspect-square overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)" }}>
               {c.image && <img src={c.image} className="w-full h-full object-cover" />}
               <div className="absolute bottom-3 left-3 text-white text-sm">{c.name}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -655,10 +659,10 @@ function CategoryBlock({ p, dna }: any) {
           {items.map((c: any, i: number) => {
             const tall = v === "masonry" && i % 3 === 0;
             return (
-              <a key={i} className="relative overflow-hidden" style={{ borderRadius: "var(--r)", gridRow: tall ? "span 2" : undefined, aspectRatio: tall ? "3/5" : "1/1" }}>
+              <Link to={hrefFor(c.name)} key={i} className="relative overflow-hidden hover:opacity-95 transition" style={{ borderRadius: "var(--r)", gridRow: tall ? "span 2" : undefined, aspectRatio: tall ? "3/5" : "1/1" }}>
                 {c.image && <img src={c.image} className="w-full h-full object-cover" />}
                 <div className="absolute bottom-3 left-3 text-white text-sm">{c.name}</div>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -670,17 +674,18 @@ function CategoryBlock({ p, dna }: any) {
       {Title}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {items.map((c: any, i: number) => (
-          <a key={i} className="group block aspect-[3/4] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
+          <Link to={hrefFor(c.name)} key={i} className="group block aspect-[3/4] relative overflow-hidden" style={{ borderRadius: "var(--r)" }}>
             {c.image ? <img src={c.image} className="w-full h-full object-cover transition-transform group-hover:scale-105" /> : <div className="w-full h-full" style={{ background: dna.palette?.surface }} />}
             <div className="absolute inset-0 flex items-end p-4" style={{ background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.7))" }}>
               <span className="text-white font-medium" style={{ fontFamily: "var(--hf)" }}>{c.name}</span>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
   );
 }
+
 
 function ProductBlock({ p, dna, storeSlug }: any) {
   const v = p.style ?? "grid_clean";
