@@ -14,6 +14,7 @@ import { template as provisionRequestReceived } from './provision-request-receiv
 import { template as provisionLive } from './provision-live.tsx'
 import { template as customerPasswordReset } from './customer-password-reset.tsx'
 import { template as lowBalance } from './low-balance.tsx'
+import { template as welcomeCustomer } from './welcome-customer.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'trial-ending': trialEnding,
@@ -21,4 +22,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'provision-live': provisionLive,
   'customer-password-reset': customerPasswordReset,
   'low-balance': lowBalance,
+  'welcome-customer': welcomeCustomer,
 }
