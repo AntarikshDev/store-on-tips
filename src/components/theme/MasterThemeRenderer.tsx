@@ -102,10 +102,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
     (page === "home" ? (overrides as any)?.sections ?? {} : {});
 
   // Inject real products into the first product/trending section if products were supplied.
+  // On the shop page we pass ALL products (no slice) so category filtering works on the full catalog.
   const productItemsForOverride = products && products.length > 0
-    ? products.slice(0, 8).map((p) => ({
+    ? (page === "shop" ? products : products.slice(0, 8)).map((p: any) => ({
         id: p.id, name: p.title, price: p.price, compare_at: p.compare_at_price,
-        image: p.images?.[0],
+        image: p.images?.[0], category: p.category,
       }))
     : null;
   let productSectionInjected = false;
