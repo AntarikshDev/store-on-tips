@@ -512,6 +512,20 @@ const DedicatedThemeView = ({ slug, themeId, seo, store }: { slug: string; theme
  */
 const MasterThemeView = ({ slug, themeId, seo, store, products, page = 'home' }: { slug: string; themeId: string; seo: any; store: any; products: any[]; page?: string }) => {
   const { data: manifest, isLoading } = useThemeManifest(themeId);
+  const { data: sellerCategories = [] } = useQuery({
+    queryKey: ['storefront-categories', store?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('name, image_url, parent_id, sort_order')
+        .eq('store_id', store.id)
+        .is('parent_id', null)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map((c: any) => ({ name: c.name, image_url: c.image_url }));
+    },
+    enabled: !!store?.id,
+  });
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
