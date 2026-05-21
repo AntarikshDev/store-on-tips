@@ -64,10 +64,12 @@ interface Props {
   /** When set (preview mode), in-theme menu clicks call this instead of routing. */
   onNavigate?: (page: string) => void;
   /** Real catalog products to splice into product_grid sections. */
-  products?: Array<{ id: string; title: string; price: number; compare_at_price?: number | null; images?: string[] | null }>;
+  products?: Array<{ id: string; title: string; price: number; compare_at_price?: number | null; images?: string[] | null; category?: string | null }>;
+  /** Seller-defined categories (with optional image) to splice into category_grid sections. */
+  sellerCategories?: Array<{ name: string; image_url?: string | null }>;
 }
 
-export default function MasterThemeRenderer({ manifest, page = "home", overrides, storeSlug, onNavigate, products }: Props) {
+export default function MasterThemeRenderer({ manifest, page = "home", overrides, storeSlug, onNavigate, products, sellerCategories }: Props) {
   const baseDna = manifest?.dna ?? {};
   // Merge global palette overrides into dna so every Section/Header/Footer picks them up.
   const palette = { ...(baseDna.palette ?? {}), ...((overrides as any)?.palette ?? {}) };
@@ -111,6 +113,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
     : null;
   let productSectionInjected = false;
 
+  // Seller-defined categories override the theme's stock category tiles when present.
+  const sellerCategoryItems = sellerCategories && sellerCategories.length > 0
+    ? sellerCategories.map((c) => ({ name: c.name, image: c.image_url || undefined }))
+    : null;
+
   return (
     <div style={style} className="min-h-screen">
       <div data-section-anchor="header" style={{ scrollMarginTop: 80 }}>
@@ -124,6 +131,10 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
         if (productItemsForOverride && !productSectionInjected && (s.type === "product_grid" || s.type === "trending")) {
           mergedProps.items = productItemsForOverride;
           productSectionInjected = true;
+        }
+        // category_grid: replace items with seller's real categories if they've defined any.
+        if (sellerCategoryItems && s.type === "category_grid") {
+          mergedProps.items = sellerCategoryItems;
         }
         const anchorMap: Record<string, string> = {
           product_grid: "products", trending: "products",
