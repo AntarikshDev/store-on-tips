@@ -262,7 +262,7 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
   );
 }
 
-function Section({ s, dna, storeSlug }: any) {
+function Section({ s, dna, storeSlug, page }: any) {
   const p = s.props ?? {};
   // If image was explicitly cleared via override (image === ""), do not render image.
   switch (s.type) {
@@ -282,9 +282,10 @@ function Section({ s, dna, storeSlug }: any) {
         </div>
       </section>
     );
-    case "category_grid": return <CategoryBlock p={p} dna={dna} />;
+    case "category_grid": return <CategoryBlock p={p} dna={dna} storeSlug={storeSlug} />;
     case "trending":
-    case "product_grid": return <ProductBlock p={p} dna={dna} storeSlug={storeSlug} />;
+    case "product_grid": return <ProductBlock p={p} dna={dna} storeSlug={storeSlug} page={page} />;
+
     case "story": return (
       <section className="py-20" style={{ background: dna.palette?.surface }}>
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
