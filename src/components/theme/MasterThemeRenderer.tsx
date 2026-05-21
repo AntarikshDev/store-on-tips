@@ -132,6 +132,10 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
           mergedProps.items = productItemsForOverride;
           productSectionInjected = true;
         }
+        // Pass seller catalog categories into product sections so shop-page chips use them.
+        if (sellerCategoryItems && (s.type === "product_grid" || s.type === "trending")) {
+          mergedProps.sellerCategories = sellerCategoryItems;
+        }
         // category_grid: replace items with seller's real categories if they've defined any.
         if (sellerCategoryItems && s.type === "category_grid") {
           mergedProps.items = sellerCategoryItems;
