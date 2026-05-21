@@ -156,7 +156,7 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
             data-section-anchor={`s-${i}`}
             style={{ scrollMarginTop: 80, ...sectionStyle }}
           >
-            <Section s={{ ...s, props: mergedProps }} dna={sectionDna} storeSlug={storeSlug} />
+            <Section s={{ ...s, props: mergedProps }} dna={sectionDna} storeSlug={storeSlug} page={page} />
           </div>
         );
       })}
