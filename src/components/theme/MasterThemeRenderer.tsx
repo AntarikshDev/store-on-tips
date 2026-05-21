@@ -687,15 +687,85 @@ function CategoryBlock({ p, dna, storeSlug }: any) {
 }
 
 
-function ProductBlock({ p, dna, storeSlug }: any) {
+function ProductBlock({ p, dna, storeSlug, page }: any) {
   const v = p.style ?? "grid_clean";
-  const items = p.items ?? [];
+  const allItems: any[] = p.items ?? [];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = page === "shop" ? (searchParams.get("category") || "") : "";
+
+  // Build unique category chips from real product data (case-insensitive).
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>();
+    allItems.forEach((it) => {
+      const c = (it.category || "").trim();
+      if (c && !seen.has(c.toLowerCase())) seen.set(c.toLowerCase(), c);
+    });
+    return Array.from(seen.values());
+  }, [allItems]);
+
+  const items = selectedCategory
+    ? allItems.filter((it) => (it.category || "").toLowerCase() === selectedCategory.toLowerCase())
+    : allItems;
+
+  const setCategory = (next: string) => {
+    const sp = new URLSearchParams(searchParams);
+    if (next) sp.set("category", next); else sp.delete("category");
+    setSearchParams(sp, { replace: true });
+  };
+
   const linkFor = (pr: any) => (storeSlug && pr.id ? `/store/${storeSlug}/product/${pr.id}` : "#");
-  const Title = p.title ? <h2 className="text-3xl mb-10" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2> : null;
+  const Title = p.title ? <h2 className="text-3xl mb-6" style={{ fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 }}>{p.title}</h2> : null;
+
+  const Chips = page === "shop" && categories.length > 0 ? (
+    <div className="flex flex-wrap gap-2 mb-8">
+      <button
+        type="button"
+        onClick={() => setCategory("")}
+        className="text-xs px-3 py-1.5 border transition"
+        style={{
+          borderColor: dna.palette?.border,
+          borderRadius: "var(--r)",
+          background: !selectedCategory ? dna.palette?.primary : "transparent",
+          color: !selectedCategory ? dna.palette?.primary_fg : dna.palette?.fg,
+        }}
+      >
+        All ({allItems.length})
+      </button>
+      {categories.map((cat) => {
+        const active = selectedCategory.toLowerCase() === cat.toLowerCase();
+        const count = allItems.filter((it) => (it.category || "").toLowerCase() === cat.toLowerCase()).length;
+        return (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setCategory(cat)}
+            className="text-xs px-3 py-1.5 border transition"
+            style={{
+              borderColor: dna.palette?.border,
+              borderRadius: "var(--r)",
+              background: active ? dna.palette?.primary : "transparent",
+              color: active ? dna.palette?.primary_fg : dna.palette?.fg,
+            }}
+          >
+            {cat} ({count})
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const Empty = page === "shop" && items.length === 0 ? (
+    <div className="py-16 text-center text-sm" style={{ color: dna.palette?.muted }}>
+      No products in this category yet.
+    </div>
+  ) : null;
+
   if (v === "editorial_list") {
     return (
       <section className="max-w-5xl mx-auto px-6 py-20">
         {Title}
+        {Chips}
+        {Empty}
         <div className="divide-y" style={{ borderColor: dna.palette?.border }}>
           {items.map((pr: any, i: number) => (
             <Link to={linkFor(pr)} key={i} className="grid grid-cols-[80px,1fr,auto] gap-6 py-6 items-center" style={{ borderColor: dna.palette?.border }}>
@@ -718,6 +788,8 @@ function ProductBlock({ p, dna, storeSlug }: any) {
   return (
     <section id="products" className="max-w-6xl mx-auto px-6 py-20">
       {Title}
+      {Chips}
+      {Empty}
       <div className={`grid grid-cols-2 ${cols} gap-6`}>
         {items.map((pr: any, i: number) => (
           <Link to={linkFor(pr)} key={i} className="group">
@@ -736,6 +808,7 @@ function ProductBlock({ p, dna, storeSlug }: any) {
     </section>
   );
 }
+
 
 function Footer({ footer, dna, brandName, storeSlug, onNavigate, footerOv }: any) {
   const ov: FooterOv = footerOv || {};
