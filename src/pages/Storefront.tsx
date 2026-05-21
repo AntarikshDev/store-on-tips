@@ -538,6 +538,7 @@ const MasterThemeView = ({ slug, themeId, seo, store, products, page = 'home' }:
         overrides={{ ...overrides, brand_name: overrides?.brand_name || store.name }}
         storeSlug={slug}
         products={products}
+        sellerCategories={sellerCategories}
       />
     </>
   );
