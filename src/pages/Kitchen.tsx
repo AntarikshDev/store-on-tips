@@ -114,35 +114,12 @@ const Kitchen = () => {
     };
     load();
 
-    const channel = supabase
-      .channel(`kitchen-${store.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${store.id}` },
-        (payload) => {
-          const row: any = payload.new ?? payload.old;
-          if (!row?.prep_status) return;
-          if (payload.eventType === 'INSERT') {
-            playPing();
-            toast.success(`New ${MODE_LABEL[row.fulfillment_mode]} order #${row.order_number}`);
-            setOrders((prev) => [...prev, row]);
-          } else if (payload.eventType === 'UPDATE') {
-            setOrders((prev) => {
-              const isDone = ['completed', 'cancelled'].includes(row.prep_status);
-              if (isDone) return prev.filter((o) => o.id !== row.id);
-              const exists = prev.find((o) => o.id === row.id);
-              return exists ? prev.map((o) => (o.id === row.id ? { ...o, ...row } : o)) : [...prev, row];
-            });
-          } else if (payload.eventType === 'DELETE') {
-            setOrders((prev) => prev.filter((o) => o.id !== (payload.old as any).id));
-          }
-        },
-      )
-      .subscribe();
+    // Poll every 10s (orders removed from Realtime publication for PII safety)
+    const interval = setInterval(load, 10000);
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [store?.id]);
 
