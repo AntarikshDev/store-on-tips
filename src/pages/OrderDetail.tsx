@@ -92,11 +92,15 @@ const OrderDetail = () => {
   const currentStatusIndex = STATUS_ORDER.indexOf(order.status as OrderStatus);
   const isCancelled = order.status === 'cancelled' || order.status === 'returned';
 
-  const sendOrderNotification = (type: string) => {
+  const sendOrderNotification = async (type: string) => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const { data: { session } } = await supabase.auth.getSession();
     fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({ type, order_id: order.id, store_id: order.store_id }),
     }).catch(() => {});
   };
