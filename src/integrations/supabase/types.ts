@@ -4279,6 +4279,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_coupon_to_recent_order: {
+        Args: { _coupon_id: string; _order_id: string }
+        Returns: undefined
+      }
       consume_credits: {
         Args: { _action_key: string; _cache_hit?: boolean; _store_id: string }
         Returns: number
