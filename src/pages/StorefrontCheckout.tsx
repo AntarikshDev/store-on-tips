@@ -94,16 +94,14 @@ const StorefrontCheckout = () => {
     }
   }, [fulfillmentMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load COD rules + customer order history (for risk checks)
+  // Load COD rules (safe non-sensitive subset via RPC) + customer order history (for risk checks)
   useEffect(() => {
     if (!store?.id) return;
     (async () => {
       const { data } = await supabase
-        .from('cod_rules' as any)
-        .select('*')
-        .eq('store_id', store.id)
-        .maybeSingle();
-      setCodRules(data ?? null);
+        .rpc('get_storefront_cod_rules' as any, { _store_id: store.id });
+      const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+      setCodRules(row);
 
       if (user?.id) {
         const { count } = await supabase
