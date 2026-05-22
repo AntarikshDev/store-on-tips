@@ -141,6 +141,16 @@ const Billing = () => {
         </CardContent>
       </Card>
 
+      {/* GMV commission */}
+      {store && (
+        <CommissionPanel
+          storeId={store.id}
+          storeName={store.name}
+          storeSettings={(store as any).settings}
+          commissionPercent={planConfig.commission_percent}
+        />
+      )}
+
       {/* Usage on free */}
       {plan === 'free' && (
         <Card>
