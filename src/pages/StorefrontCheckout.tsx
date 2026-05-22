@@ -135,10 +135,23 @@ const StorefrontCheckout = () => {
       if (codRules.pincode_allowlist?.length > 0 && !codRules.pincode_allowlist.includes(pin))
         return 'COD not available for this pincode';
     }
-    if (form.phone && codRules.blocked_phones?.includes(form.phone.trim()))
+    if (phoneCodBlocked)
       return 'COD is not available for this phone number';
     return null;
   })();
+
+  // Async server-side check for blocked phones (list is private to the seller)
+  useEffect(() => {
+    const phone = form.phone?.trim();
+    if (!store?.id || !phone || phone.length < 6) { setPhoneCodBlocked(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc('is_phone_cod_blocked' as any, { _store_id: store.id, _phone: phone });
+      if (!cancelled) setPhoneCodBlocked(!!data);
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.id, /* form.phone read below */]);
   function finalTotalForCheck() { return Math.max(0, totalPrice - (appliedCoupon?.discount || 0)); }
 
 
