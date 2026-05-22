@@ -27,31 +27,25 @@ const OrderTracking = () => {
 
   useEffect(() => {
     if (!code) return;
+    let cancelled = false;
     const load = async () => {
-      const { data } = await supabase
-        .from('orders')
-        .select('id, order_number, status, prep_status, fulfillment_mode, table_label, total, items, created_at, store_id, guest_tracking_code')
-        .eq('guest_tracking_code', code)
-        .maybeSingle();
-      setOrder(data);
-      if (data?.id) {
+      const { data } = await supabase.rpc('get_order_by_tracking' as any, { tracking_code: code });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (cancelled) return;
+      setOrder(row || null);
+      if (row?.id) {
         const { data: fb } = await supabase
           .from('order_feedback' as any)
           .select('id')
-          .eq('order_id', data.id)
+          .eq('order_id', row.id)
           .maybeSingle();
         if (fb) setSubmitted(true);
       }
       setLoading(false);
     };
     load();
-    const channel = supabase
-      .channel(`track-${code}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
-        if ((payload.new as any)?.guest_tracking_code === code) setOrder(payload.new);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const interval = setInterval(load, 15000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [code]);
 
   const submitFeedback = async () => {

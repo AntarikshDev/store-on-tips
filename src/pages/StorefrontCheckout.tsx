@@ -43,6 +43,7 @@ const StorefrontCheckout = () => {
   const [razorpayAvailable, setRazorpayAvailable] = useState(false);
   const [codRules, setCodRules] = useState<any | null>(null);
   const [priorOrders, setPriorOrders] = useState<number>(0);
+  const [phoneCodBlocked, setPhoneCodBlocked] = useState(false);
   const { validateCoupon, incrementUsage, findBestAutoCoupon } = useValidateCoupon();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; code: string; discount: number } | null>(null);
@@ -94,16 +95,14 @@ const StorefrontCheckout = () => {
     }
   }, [fulfillmentMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load COD rules + customer order history (for risk checks)
+  // Load COD rules (safe non-sensitive subset via RPC) + customer order history (for risk checks)
   useEffect(() => {
     if (!store?.id) return;
     (async () => {
       const { data } = await supabase
-        .from('cod_rules' as any)
-        .select('*')
-        .eq('store_id', store.id)
-        .maybeSingle();
-      setCodRules(data ?? null);
+        .rpc('get_storefront_cod_rules' as any, { _store_id: store.id });
+      const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+      setCodRules(row);
 
       if (user?.id) {
         const { count } = await supabase
@@ -136,10 +135,22 @@ const StorefrontCheckout = () => {
       if (codRules.pincode_allowlist?.length > 0 && !codRules.pincode_allowlist.includes(pin))
         return 'COD not available for this pincode';
     }
-    if (form.phone && codRules.blocked_phones?.includes(form.phone.trim()))
+    if (phoneCodBlocked)
       return 'COD is not available for this phone number';
     return null;
   })();
+
+  // Async server-side check for blocked phones (list is private to the seller)
+  useEffect(() => {
+    const phone = form.phone?.trim();
+    if (!store?.id || !phone || phone.length < 6) { setPhoneCodBlocked(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc('is_phone_cod_blocked' as any, { _store_id: store.id, _phone: phone });
+      if (!cancelled) setPhoneCodBlocked(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, [store?.id, form.phone]);
   function finalTotalForCheck() { return Math.max(0, totalPrice - (appliedCoupon?.discount || 0)); }
 
 
@@ -375,16 +386,17 @@ const StorefrontCheckout = () => {
           );
 
           if (verifyRes.ok) {
-            if (appliedCoupon) await incrementUsage(appliedCoupon.id);
-            // Send email notifications
+            if (appliedCoupon) await incrementUsage(appliedCoupon.id, order.id);
+            // Send email notifications (anon — authorized via guest_tracking_code)
             const pid = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+            const notifBody = (type: string) => JSON.stringify({ type, order_id: order.id, store_id: store.id, guest_tracking_code: order.guest_tracking_code });
             fetch(`https://${pid}.supabase.co/functions/v1/send-order-notification`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'order_confirmed', order_id: order.id, store_id: store.id }),
+              body: notifBody('order_confirmed'),
             }).catch(() => {});
             fetch(`https://${pid}.supabase.co/functions/v1/send-order-notification`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
+              body: notifBody('new_order_seller'),
             }).catch(() => {});
             clearCart();
             track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'razorpay' } });
@@ -415,18 +427,17 @@ const StorefrontCheckout = () => {
     setPlacing(true);
     try {
       const order = await createOrder();
-      if (appliedCoupon) await incrementUsage(appliedCoupon.id);
+      if (appliedCoupon) await incrementUsage(appliedCoupon.id, order.id);
       // Send notification
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const notifBody = (type: string) => JSON.stringify({ type, order_id: order.id, store_id: store.id, guest_tracking_code: order.guest_tracking_code });
       fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'order_confirmed', order_id: order.id, store_id: store.id }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: notifBody('order_confirmed'),
       }).catch(() => {});
       fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: notifBody('new_order_seller'),
       }).catch(() => {});
       clearCart();
       track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'cod' } });

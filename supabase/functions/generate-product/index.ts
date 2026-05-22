@@ -26,10 +26,20 @@ serve(async (req) => {
     if (!imageUrl) return json({ error: "imageUrl is required" }, 400);
     if (!store_id) return json({ error: "store_id is required" }, 400);
 
+    // Auth: must be signed in and own the store
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const { data: storeOwn } = await supabase.from('stores').select('user_id').eq('id', store_id).maybeSingle();
+    if (!storeOwn || storeOwn.user_id !== userData.user.id) return json({ error: 'Forbidden' }, 403);
 
     // Cache key: deterministic over inputs that influence the answer
     const cacheKey = await sha256Hex(JSON.stringify({

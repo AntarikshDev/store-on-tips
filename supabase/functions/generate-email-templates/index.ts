@@ -25,6 +25,22 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Auth: must be signed in and own the store
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (!userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { data: ownCheck } = await supabase.from('stores').select('user_id').eq('id', store_id).maybeSingle();
+    if (!ownCheck || ownCheck.user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
     // Fetch store details
     const { data: store, error: storeErr } = await supabase
       .from('stores')
