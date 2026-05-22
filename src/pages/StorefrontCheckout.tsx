@@ -426,7 +426,7 @@ const StorefrontCheckout = () => {
     setPlacing(true);
     try {
       const order = await createOrder();
-      if (appliedCoupon) await incrementUsage(appliedCoupon.id);
+      if (appliedCoupon) await incrementUsage(appliedCoupon.id, order.id);
       // Send notification
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       fetch(`https://${projectId}.supabase.co/functions/v1/send-order-notification`, {
