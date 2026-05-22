@@ -43,6 +43,7 @@ const StorefrontCheckout = () => {
   const [razorpayAvailable, setRazorpayAvailable] = useState(false);
   const [codRules, setCodRules] = useState<any | null>(null);
   const [priorOrders, setPriorOrders] = useState<number>(0);
+  const [phoneCodBlocked, setPhoneCodBlocked] = useState(false);
   const { validateCoupon, incrementUsage, findBestAutoCoupon } = useValidateCoupon();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; code: string; discount: number } | null>(null);
