@@ -386,16 +386,16 @@ const StorefrontCheckout = () => {
           );
 
           if (verifyRes.ok) {
-            if (appliedCoupon) await incrementUsage(appliedCoupon.id);
-            // Send email notifications
+            // Send email notifications (anon — authorized via guest_tracking_code)
             const pid = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+            const notifBody = (type: string) => JSON.stringify({ type, order_id: order.id, store_id: store.id, guest_tracking_code: order.guest_tracking_code });
             fetch(`https://${pid}.supabase.co/functions/v1/send-order-notification`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'order_confirmed', order_id: order.id, store_id: store.id }),
+              body: notifBody('order_confirmed'),
             }).catch(() => {});
             fetch(`https://${pid}.supabase.co/functions/v1/send-order-notification`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'new_order_seller', order_id: order.id, store_id: store.id }),
+              body: notifBody('new_order_seller'),
             }).catch(() => {});
             clearCart();
             track({ store_id: store.id, event_type: 'purchase', order_id: order.id, value: totalPrice, metadata: { payment: 'razorpay' } });
