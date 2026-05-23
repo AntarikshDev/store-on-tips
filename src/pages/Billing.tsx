@@ -1,38 +1,41 @@
 import { useState } from 'react';
 import { useSubscription, usePlanConfigs, type PlanConfig } from '@/hooks/useSubscription';
+import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
 import { useStore } from '@/hooks/useStore';
 import { useProducts } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Crown, Check, X, Loader2, Zap, Sparkles } from 'lucide-react';
+import { Crown, Check, X, Loader2, Zap, Sparkles, AlertTriangle, Lock } from 'lucide-react';
 import { CommissionPanel } from '@/components/billing/CommissionPanel';
 
-declare global {
-  interface Window { Razorpay: any; }
-}
-
-// Razorpay key ID is returned by the create-razorpay-subscription edge function (sourced from RAZORPAY_KEY_ID secret)
+declare global { interface Window { Razorpay: any; } }
 
 const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
   { key: 'signup_bonus_credits', label: 'Signup AI Credits' },
-  { key: 'product_limit',      label: 'Products' },
-  { key: 'theme_limit',        label: 'Themes' },
+  { key: 'product_limit', label: 'Products' },
+  { key: 'theme_limit', label: 'Themes' },
   { key: 'commission_percent', label: 'Commission' },
-  { key: 'custom_domain',      label: 'Custom Domain' },
-  { key: 'razorpay_payments',  label: 'Online Payments' },
-  { key: 'shipping',           label: 'Shipping (Shiprocket)' },
-  { key: 'blog',               label: 'Blog & Newsletter' },
-  { key: 'coupons',            label: 'Coupons' },
-  { key: 'analytics',          label: 'Analytics' },
-  { key: 'seo',                label: 'Advanced SEO' },
-  { key: 'email_branding',     label: 'Branded Emails' },
-  { key: 'premium_themes',     label: 'Premium Themes' },
-  { key: 'multi_domain',       label: 'Multi-Domain' },
-  { key: 'early_access',       label: 'Early Access' },
+  { key: 'custom_domain', label: 'Custom Domain' },
+  { key: 'razorpay_payments', label: 'Online Payments' },
+  { key: 'shipping', label: 'Shipping (Shiprocket)' },
+  { key: 'blog', label: 'Blog & Newsletter' },
+  { key: 'coupons', label: 'Coupons' },
+  { key: 'analytics', label: 'Analytics' },
+  { key: 'seo', label: 'Advanced SEO' },
+  { key: 'email_branding', label: 'Branded Emails' },
+  { key: 'premium_themes', label: 'Premium Themes' },
+  { key: 'multi_domain', label: 'Multi-Domain' },
+  { key: 'early_access', label: 'Early Access' },
 ];
+
+const gstTotal = (base: number, gst: number) => Math.round(base * (1 + gst / 100) * 100) / 100;
 
 const renderCell = (plan: PlanConfig, key: keyof PlanConfig) => {
   const v = plan[key];
@@ -54,46 +57,75 @@ const renderCell = (plan: PlanConfig, key: keyof PlanConfig) => {
 
 const Billing = () => {
   const { subscription, plan, planConfig, loading } = useSubscription();
+  const { isBlocked, inGrace, graceDaysLeft, pendingPlan, pendingPlanEffectiveAt } = useSubscriptionAccess();
   const { data: plans = [] } = usePlanConfigs();
   const { store } = useStore();
   const { products } = useProducts();
-  const [upgradingTo, setUpgradingTo] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [downgradeTarget, setDowngradeTarget] = useState<PlanConfig | null>(null);
 
-  const handleUpgrade = async (target: 'starter' | 'growth' | 'scale') => {
+  const currentOrder = plans.find((p) => p.plan === plan)?.sort_order ?? 1;
+
+  const startRazorpay = async (target: PlanConfig) => {
     if (!store) return;
-    setUpgradingTo(target);
+    setPendingAction(target.plan);
     try {
       const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
-        body: { store_id: store.id, plan: target },
+        body: { store_id: store.id, plan: target.plan },
       });
-      if (error || !data?.subscription_id) {
-        throw new Error(error?.message || data?.error || 'Failed to create subscription');
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      document.body.appendChild(script);
-      await new Promise((res) => { script.onload = res; });
+      if (error || !data?.subscription_id) throw new Error(error?.message || data?.error || 'Failed');
 
-      const targetPlan = plans.find((p) => p.plan === target);
+      if (!(window as any).Razorpay) {
+        const s = document.createElement('script');
+        s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        document.body.appendChild(s);
+        await new Promise((res) => { s.onload = res; });
+      }
       const rzp = new window.Razorpay({
         key: data.razorpay_key_id,
         subscription_id: data.subscription_id,
         name: 'Pic to Cart',
-        description: `${targetPlan?.display_name} — ₹${targetPlan?.price_inr}/month`,
+        description: `${target.display_name} — ₹${target.price_inr} + ${target.gst_percent ?? 18}% GST/month`,
         theme: { color: '#F97316' },
         handler: () => {
           toast.success('Payment successful! Your plan will activate shortly.');
-          setUpgradingTo(null);
+          setPendingAction(null);
           setTimeout(() => window.location.reload(), 3000);
         },
-        modal: { ondismiss: () => setUpgradingTo(null) },
+        modal: { ondismiss: () => setPendingAction(null) },
       });
       rzp.open();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to start payment');
-      setUpgradingTo(null);
+      setPendingAction(null);
     }
+  };
+
+  const confirmDowngrade = async () => {
+    if (!store || !downgradeTarget) return;
+    setPendingAction(downgradeTarget.plan);
+    try {
+      const { data, error } = await supabase.functions.invoke('change-subscription-plan', {
+        body: { store_id: store.id, new_plan: downgradeTarget.plan },
+      });
+      if (error) throw new Error(error.message);
+      toast.success((data as any)?.message || 'Downgrade scheduled');
+      setDowngradeTarget(null);
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to schedule downgrade');
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const cancelPending = async () => {
+    if (!store) return;
+    const { error } = await supabase.rpc('cancel_pending_plan_change', { _store_id: store.id });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Pending plan change cancelled');
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   if (loading) {
@@ -108,29 +140,67 @@ const Billing = () => {
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Billing & Plan</h1>
-        <p className="text-muted-foreground">Pick the plan that fits your store.</p>
+        <p className="text-muted-foreground">
+          Monthly subscription. All prices exclude 18% GST. Upgrade anytime; downgrades apply at the end of your current billing cycle.
+        </p>
       </div>
+
+      {/* Lifecycle banners */}
+      {isBlocked && (
+        <Card className="border-destructive bg-destructive/5">
+          <CardContent className="flex items-center gap-3 py-4 text-sm">
+            <Lock className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="font-semibold text-destructive">Your store is paused</p>
+              <p className="text-muted-foreground">Renew your subscription below to restore access instantly.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {inGrace && !isBlocked && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="flex items-center gap-3 py-4 text-sm">
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="font-semibold text-amber-900">Payment overdue — {graceDaysLeft} day(s) left</p>
+              <p className="text-amber-800">Renew before the grace period ends to avoid your store being paused.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {pendingPlan && (
+        <Card className="border-blue-300 bg-blue-50">
+          <CardContent className="flex items-center justify-between gap-3 py-4 text-sm">
+            <div>
+              <p className="font-semibold text-blue-900">Downgrade scheduled</p>
+              <p className="text-blue-800">
+                You'll move to <strong>{pendingPlan}</strong>
+                {pendingPlanEffectiveAt && ` on ${new Date(pendingPlanEffectiveAt).toLocaleDateString('en-IN')}`}.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={cancelPending}>Cancel</Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Current Plan */}
       <Card className={plan !== 'free' ? 'border-primary/30 bg-primary/5' : ''}>
         <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              {plan === 'free'
-                ? <Zap className="h-5 w-5 text-muted-foreground" />
-                : <Crown className="h-5 w-5 text-primary" />}
+              {plan === 'free' ? <Zap className="h-5 w-5 text-muted-foreground" /> : <Crown className="h-5 w-5 text-primary" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold">{planConfig.display_name} Plan</h2>
                 <Badge variant={plan === 'free' ? 'secondary' : 'default'}>
-                  {subscription?.status === 'trialing' ? 'Trial' : 'Current'}
+                  {subscription?.status === 'trialing' ? 'Trial' : (subscription?.status || 'active')}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 {plan === 'free'
                   ? 'Limited features • Upgrade for more'
-                  : `₹${planConfig.price_inr}/month • Renews ${
+                  : `₹${gstTotal(planConfig.price_inr, planConfig.gst_percent ?? 18).toFixed(2)} / month (incl. 18% GST) • Renews ${
                       subscription?.current_period_end
                         ? new Date(subscription.current_period_end).toLocaleDateString('en-IN')
                         : 'soon'
@@ -141,7 +211,6 @@ const Billing = () => {
         </CardContent>
       </Card>
 
-      {/* GMV commission */}
       {store && (
         <CommissionPanel
           storeId={store.id}
@@ -151,22 +220,17 @@ const Billing = () => {
         />
       )}
 
-      {/* Usage on free */}
       {plan === 'free' && (
         <Card>
           <CardHeader><CardTitle className="text-base">Usage</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <span className="text-sm">Products</span>
-              <span className="text-sm font-medium">
-                {products.length} / {planConfig.product_limit}
-              </span>
+              <span className="text-sm font-medium">{products.length} / {planConfig.product_limit}</span>
             </div>
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all"
-                style={{ width: `${Math.min(100, (products.length / planConfig.product_limit) * 100)}%` }}
-              />
+              <div className="h-full bg-primary rounded-full transition-all"
+                style={{ width: `${Math.min(100, (products.length / planConfig.product_limit) * 100)}%` }} />
             </div>
           </CardContent>
         </Card>
@@ -177,12 +241,14 @@ const Billing = () => {
         {plans.map((p) => {
           const isCurrent = p.plan === plan;
           const isFree = p.plan === 'free';
-          const isUpgrading = upgradingTo === p.plan;
+          const isUpgrade = p.sort_order > currentOrder;
+          const isDowngrade = p.sort_order < currentOrder;
+          const busy = pendingAction === p.plan;
+          const gstPct = p.gst_percent ?? 18;
+          const total = gstTotal(p.price_inr, gstPct);
+
           return (
-            <Card
-              key={p.id}
-              className={`flex flex-col ${isCurrent ? 'border-primary ring-2 ring-primary/20' : ''}`}
-            >
+            <Card key={p.id} className={`flex flex-col ${isCurrent ? 'border-primary ring-2 ring-primary/20' : ''}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{p.display_name}</CardTitle>
@@ -192,6 +258,11 @@ const Billing = () => {
                   <span className="text-3xl font-bold">₹{p.price_inr}</span>
                   <span className="text-sm text-muted-foreground">/mo</span>
                 </div>
+                {!isFree && (
+                  <p className="text-xs text-muted-foreground">
+                    ₹{total.toFixed(2)} incl. {gstPct}% GST
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Commission {p.commission_percent}% · {p.trial_days > 0 ? `${p.trial_days}-day trial` : 'No trial'}
                 </p>
@@ -204,20 +275,10 @@ const Billing = () => {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-3">
                 <ul className="space-y-1.5 text-sm flex-1">
-                  {!!p.signup_bonus_credits && p.signup_bonus_credits > 0 && (
-                    <li className="flex items-center gap-2 text-amber-700 font-medium">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {p.signup_bonus_credits.toLocaleString('en-IN')} AI credits on signup
-                    </li>
-                  )}
-                  <li className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-600" />
-                    {p.product_limit >= 2_000_000_000 ? 'Unlimited' : p.product_limit} products
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-600" />
-                    {p.theme_limit >= 2_000_000_000 ? 'All' : p.theme_limit} theme(s)
-                  </li>
+                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-600" />
+                    {p.product_limit >= 2_000_000_000 ? 'Unlimited' : p.product_limit} products</li>
+                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-600" />
+                    {p.theme_limit >= 2_000_000_000 ? 'All' : p.theme_limit} theme(s)</li>
                   {p.custom_domain && <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-600" />Custom domain</li>}
                   {p.razorpay_payments && <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-600" />Online payments</li>}
                   {p.shipping && <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-600" />Shipping (Shiprocket)</li>}
@@ -230,15 +291,21 @@ const Billing = () => {
                 {isCurrent ? (
                   <Button variant="outline" disabled className="w-full">Current Plan</Button>
                 ) : isFree ? (
-                  <Button variant="outline" disabled className="w-full">Free Forever</Button>
+                  isDowngrade ? (
+                    <Button variant="outline" disabled={!!pendingAction} className="w-full"
+                      onClick={() => setDowngradeTarget(p)}>Schedule downgrade</Button>
+                  ) : (
+                    <Button variant="outline" disabled className="w-full">Free Forever</Button>
+                  )
+                ) : isUpgrade ? (
+                  <Button onClick={() => startRazorpay(p)} disabled={!!pendingAction} className="w-full gap-2">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                    Upgrade now
+                  </Button>
                 ) : (
-                  <Button
-                    onClick={() => handleUpgrade(p.plan as any)}
-                    disabled={!!upgradingTo}
-                    className="w-full gap-2"
-                  >
-                    {isUpgrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
-                    Upgrade
+                  <Button variant="outline" onClick={() => setDowngradeTarget(p)}
+                    disabled={!!pendingAction} className="w-full">
+                    Schedule downgrade
                   </Button>
                 )}
               </CardContent>
@@ -246,6 +313,11 @@ const Billing = () => {
           );
         })}
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Need a feature on a higher plan for just one project? Upgrade now to use it, then schedule a downgrade —
+        you'll only be billed for the plans you keep at the start of each cycle.
+      </p>
 
       {/* Detailed comparison */}
       <Card>
@@ -273,6 +345,26 @@ const Billing = () => {
           </table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!downgradeTarget} onOpenChange={(o) => !o && setDowngradeTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Schedule downgrade to {downgradeTarget?.display_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll keep your current <strong>{planConfig.display_name}</strong> features until{' '}
+              {subscription?.current_period_end
+                ? new Date(subscription.current_period_end).toLocaleDateString('en-IN')
+                : 'the end of your current billing cycle'}.
+              After that you'll move to <strong>{downgradeTarget?.display_name}</strong> and any features
+              not included in that plan will become unavailable. You can cancel this anytime before then.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep current plan</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDowngrade}>Confirm downgrade</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
