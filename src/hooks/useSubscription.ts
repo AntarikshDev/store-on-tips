@@ -28,6 +28,7 @@ export interface PlanConfig {
   sort_order: number;
   is_active: boolean;
   signup_bonus_credits?: number;
+  gst_percent?: number;
 }
 
 export interface Subscription {
