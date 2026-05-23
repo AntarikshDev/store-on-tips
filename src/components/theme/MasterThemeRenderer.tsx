@@ -115,8 +115,16 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
 
   // Seller-defined categories override the theme's stock category tiles when present.
   const sellerCategoryItems = sellerCategories && sellerCategories.length > 0
-    ? sellerCategories.map((c) => ({ name: c.name, image: c.image_url || undefined }))
+    ? sellerCategories.map((c) => ({ id: c.id, name: c.name, image: c.image_url || undefined, description: c.description || undefined, subs: c.subs || [] }))
     : null;
+
+  // Synthesize a built-in Collections page if the manifest doesn't define one.
+  const collectionsItems = sellerCategoryItems ?? [];
+  const renderedSections: any[] = page === "collections" && (!manifest?.pages?.collections?.sections?.length)
+    ? [{ type: "page_title", props: { title: "Collections" } }, { type: "collections_grid", props: { items: collectionsItems } }]
+    : page === "collection_detail" && (!manifest?.pages?.collection_detail?.sections?.length)
+      ? [{ type: "collection_detail", props: { items: collectionsItems } }]
+      : (manifest?.pages?.[page]?.sections ?? []);
 
   return (
     <div style={style} className="min-h-screen">
