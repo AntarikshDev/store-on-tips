@@ -4,9 +4,10 @@ import { useStore } from '@/hooks/useStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ChevronRight, Edit2, Check, X, FolderTree, ImagePlus, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, Edit2, Check, X, FolderTree, ImagePlus, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CategoryImage = ({ cat }: { cat: Category }) => {
