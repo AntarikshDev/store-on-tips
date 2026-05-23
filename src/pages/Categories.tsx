@@ -205,6 +205,8 @@ const Categories = () => {
                     )}
                   </div>
 
+                  <CategoryDescription cat={parent} />
+
                   {isExpanded && (
                     <div className="mt-3 ml-6 space-y-2 border-l-2 border-muted pl-4">
                       {subs.map((sub) => (
