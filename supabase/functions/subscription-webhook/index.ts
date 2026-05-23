@@ -121,15 +121,33 @@ Deno.serve(async (req) => {
 
       case 'subscription.charged': {
         const entity = payload.subscription.entity;
-        await supabase.from('subscriptions').upsert({
+        // Apply scheduled downgrade if its effective date has passed
+        const { data: existing } = await supabase.from('subscriptions')
+          .select('pending_plan, pending_plan_effective_at')
+          .eq('store_id', storeId).maybeSingle();
+        let planToApply = resolvedPlan;
+        const upd: any = {
           store_id: storeId,
-          plan: resolvedPlan,
+          plan: planToApply,
           status: 'active',
           razorpay_subscription_id: subscriptionId,
           razorpay_plan_id: entity.plan_id,
           current_period_start: new Date(entity.current_start * 1000).toISOString(),
           current_period_end: new Date(entity.current_end * 1000).toISOString(),
-        }, { onConflict: 'store_id' });
+          // clear lifecycle flags on a successful charge
+          grace_period_end: null,
+          is_blocked: false,
+          expiry_notified_at: null,
+          grace_warning_notified_at: null,
+          blocked_notified_at: null,
+        };
+        if (existing?.pending_plan && existing.pending_plan_effective_at &&
+            new Date(existing.pending_plan_effective_at) <= new Date()) {
+          upd.plan = existing.pending_plan;
+          upd.pending_plan = null;
+          upd.pending_plan_effective_at = null;
+        }
+        await supabase.from('subscriptions').upsert(upd, { onConflict: 'store_id' });
 
         const { data: sub } = await supabase.from('subscriptions')
           .select('id').eq('store_id', storeId).single();
@@ -153,18 +171,17 @@ Deno.serve(async (req) => {
       }
 
       case 'subscription.paused':
-      case 'subscription.pending': {
+      case 'subscription.pending':
+      case 'subscription.halted': {
+        // Start 15-day grace if not already set
+        const { data: cur } = await supabase.from('subscriptions')
+          .select('grace_period_end, current_period_end')
+          .eq('store_id', storeId).maybeSingle();
+        const graceEnd = cur?.grace_period_end ??
+          new Date((cur?.current_period_end ? new Date(cur.current_period_end).getTime() : Date.now()) + 15 * 86400 * 1000).toISOString();
         await supabase.from('subscriptions').update({
           status: 'past_due',
-        }).eq('store_id', storeId);
-        break;
-      }
-
-      case 'subscription.halted': {
-        await supabase.from('subscriptions').update({
-          plan: 'free',
-          status: 'cancelled',
-          cancelled_at: new Date().toISOString(),
+          grace_period_end: graceEnd,
         }).eq('store_id', storeId);
         break;
       }
