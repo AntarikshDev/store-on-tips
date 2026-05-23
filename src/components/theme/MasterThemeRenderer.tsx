@@ -196,7 +196,7 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
     { label: "Contact", page: "contact" },
   ];
   const pageToPath: Record<string, string> = {
-    home: "", shop: "/shop", collections: "/shop", about: "/about", contact: "/contact",
+    home: "", shop: "/shop", collections: "/collections", about: "/about", contact: "/contact",
     journal: "/blog", blog: "/blog", account: "/account", cart: "/cart",
   };
   const links = (ov.nav_links && ov.nav_links.length > 0 ? ov.nav_links : defaultLinks)
