@@ -10,6 +10,7 @@ export interface Category {
   parent_id: string | null;
   sort_order: number;
   image_url: string | null;
+  description: string | null;
   created_at: string;
 }
 
