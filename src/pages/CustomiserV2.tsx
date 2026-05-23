@@ -344,7 +344,8 @@ export default function CustomiserV2() {
           <ScrollArea className="flex-1">
             <div className="px-2 pb-3 space-y-0.5">
               {PAGES.map((p) => {
-                const exists = !!(manifest as any)?.pages?.[p.id];
+                // 'collections' is auto-synthesized from the Categories the seller defines, so it's always available.
+                const exists = p.id === "collections" ? true : !!(manifest as any)?.pages?.[p.id];
                 const edited = !!overrides?.pages?.[p.id];
                 return (
                   <button
