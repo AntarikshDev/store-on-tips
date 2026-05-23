@@ -403,6 +403,17 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
     return <DedicatedThemeView slug={slug || ''} themeId={resolvedThemeId} seo={seo} store={store} />;
   }
 
+  // Classic theme: simple Collections page fallback
+  if (page === 'collections' || page === 'collection_detail') {
+    return (
+      <StorefrontLayout store={store} products={products} footerConfig={footerConfig}>
+        <SEOHead title={`Collections · ${store.name}`} description={store.description || `Shop collections at ${store.name}`} url={`${window.location.origin}/store/${slug}/collections`} />
+        <ClassicCollections slug={slug || ''} storeId={store.id} colors={colors} fonts={fonts} borderRadius={borderRadius} />
+      </StorefrontLayout>
+    );
+  }
+
+
   return (
     <StorefrontLayout store={store} products={products} footerConfig={footerConfig}>
       <SEOHead title={seo.meta_title || store.name} description={seo.meta_description || store.description || `Shop at ${store.name}`} ogImage={seo.og_image || store.banner_url || undefined} url={`${window.location.origin}/store/${slug}`} />
