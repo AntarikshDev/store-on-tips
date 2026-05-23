@@ -21,6 +21,7 @@ import {
 const PAGES = [
   { id: "home", label: "Home" },
   { id: "shop", label: "Shop" },
+  { id: "collections", label: "Collections" },
   { id: "product", label: "Product" },
   { id: "cart", label: "Cart" },
   { id: "checkout", label: "Checkout" },
