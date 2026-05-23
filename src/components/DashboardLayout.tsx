@@ -43,6 +43,9 @@ import { useEffect, useMemo, useState } from 'react';
 import CreditBadge from '@/components/wallet/CreditBadge';
 import { HelpLauncher } from '@/components/HelpLauncher';
 import { useStore } from '@/hooks/useStore';
+import { SubscriptionGate } from '@/components/billing/SubscriptionGate';
+import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
+import { Link as RLink } from 'react-router-dom';
 
 type NavLeaf = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; key: string; children: NavLeaf[] };
@@ -354,7 +357,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         {/* Page content */}
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="p-4 md:p-6">
+          <GraceBanner />
+          <SubscriptionGate>{children}</SubscriptionGate>
+        </div>
         <HelpLauncher />
       </main>
 
@@ -377,6 +383,19 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           );
         })}
       </nav>
+    </div>
+  );
+};
+
+const GraceBanner = () => {
+  const { inGrace, graceDaysLeft } = useSubscriptionAccess();
+  if (!inGrace) return null;
+  return (
+    <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-center justify-between gap-3">
+      <span>
+        Your subscription payment is overdue. <strong>{graceDaysLeft} day{graceDaysLeft === 1 ? '' : 's'} left</strong> to renew before your store is paused.
+      </span>
+      <RLink to="/billing" className="font-semibold underline whitespace-nowrap">Renew now</RLink>
     </div>
   );
 };
