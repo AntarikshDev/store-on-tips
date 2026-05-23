@@ -97,7 +97,7 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
     ["--hf" as any]: `${fonts.heading}, serif`,
   };
 
-  const sections = manifest?.pages?.[page]?.sections ?? [];
+  // (built-in collections synthesized below as renderedSections)
   // New shape: overrides.pages[page].sections[idx]. Legacy: overrides.sections[idx] (home-only).
   const sectionOverrides: Record<string, any> =
     (overrides as any)?.pages?.[page]?.sections ??
