@@ -51,6 +51,7 @@ const ICON_OPTIONS = ["truck", "shield", "refresh", "headphones", "lock", "tag",
 const NAV_PAGE_OPTIONS = [
   { value: "home", label: "Home" },
   { value: "shop", label: "Shop" },
+  { value: "collections", label: "Collections" },
   { value: "about", label: "About" },
   { value: "contact", label: "Contact" },
   { value: "blog", label: "Journal / Blog" },
