@@ -616,7 +616,7 @@ function HeroVideo({ video }: { video: any }) {
   );
 }
 
-function HeroSlider({ slides, slider, dna, shopHref, height, contentAlign, overlay, kenBurns }: any) {
+function HeroSlider({ slides, slider, dna, shopHref, height, contentAlign, overlay, kenBurns, buttons }: any) {
   const list = (slides ?? []).filter((s: any) => s);
   const [idx, setIdx] = useState(0);
   const autoplay = slider?.autoplay !== false;
