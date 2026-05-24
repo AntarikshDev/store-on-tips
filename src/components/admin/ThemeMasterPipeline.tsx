@@ -260,37 +260,113 @@ export default function ThemeMasterPipeline() {
         </div>
       </header>
 
-      {/* Quick ad-hoc generator */}
+      {/* Quick ad-hoc generator — hierarchical professional selector */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wand2 className="h-4 w-4" />Generate a theme right now</CardTitle></CardHeader>
-        <CardContent className="grid md:grid-cols-[1fr,1fr,140px,180px,200px,auto] gap-2">
-          <Input placeholder="Theme name (e.g. Saffron)" value={adhocName} onChange={(e) => setAdhocName(e.target.value)} />
-          <Input placeholder="Vibe (e.g. festive Indian, ornate)" value={adhocVibe} onChange={(e) => setAdhocVibe(e.target.value)} />
-          <select value={adhocVertical} onChange={(e) => { const v = e.target.value; setAdhocVertical(v); const first = briefs.find(b => b.vertical === v); setAdhocSub(first?.subcategory ?? "general"); }} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-            {Array.from(new Set(briefs.map(b => b.vertical))).map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select value={adhocSub} onChange={(e) => setAdhocSub(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-            {briefs.filter(b => b.vertical === adhocVertical).map(b => <option key={b.subcategory} value={b.subcategory}>{b.display_name}</option>)}
-          </select>
-          <select value={adhocLayout} onChange={(e) => setAdhocLayout(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm" title="Layout archetype">
-            <option value="auto">Layout: Auto-pick</option>
-            {layouts.map(l => <option key={l.slug} value={l.slug}>{l.name}</option>)}
-          </select>
-          <Button onClick={generateAdhoc} disabled={busy === "adhoc"}>
-            {busy === "adhoc" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Generate
-          </Button>
-          <div className="md:col-span-6 flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[11px] text-muted-foreground self-center mr-1">Presets:</span>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Heritage"); setAdhocVibe("Indian heritage, handcrafted, earthy tones, premium editorial"); setAdhocVertical("handicraft"); setAdhocSub("handloom"); }}>Heritage</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Saffron"); setAdhocVibe("festive Indian, ornate, warm"); setAdhocVertical("gifts"); setAdhocSub("diwali"); }}>Saffron</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Atelier"); setAdhocVibe("minimal luxury, monochrome, generous whitespace"); setAdhocVertical("jewellery"); setAdhocSub("designer-couture"); }}>Atelier</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Caretrust"); setAdhocVibe("calm clinical trust, soft teal + white, prominent Book Appointment CTA"); setAdhocVertical("services"); setAdhocSub("doctor-clinic"); }}>Caretrust (Doctor)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Pulse24"); setAdhocVibe("24x7 multi-speciality nursing home, department grid, emergency line hero"); setAdhocVertical("services"); setAdhocSub("nursing-home"); }}>Pulse 24 (Nursing Home)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Mirror"); setAdhocVibe("editorial unisex salon, mirror reflections, stylist team, package menu"); setAdhocVertical("services"); setAdhocSub("unisex-salon"); }}>Mirror (Salon)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Fade"); setAdhocVibe("moody men''s barber, leather + brass, beard sculpt portfolio"); setAdhocVertical("services"); setAdhocSub("barber-shop"); }}>Fade (Barber)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Serenity"); setAdhocVibe("serene luxury spa, candle glow, couple suites, gift cards"); setAdhocVertical("services"); setAdhocSub("spa-wellness"); }}>Serenity (Spa)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Doorstep"); setAdhocVibe("home-visit professional, pincode-first hero, travel-fee transparency, slot picker"); setAdhocVertical("services"); setAdhocSub("home-visit-pro"); }}>Doorstep (Home Visit)</Button>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><Wand2 className="h-4 w-4" />Generate a theme right now</CardTitle>
+          <p className="text-xs text-muted-foreground">Pick what merchants you're designing for. Each level narrows the AI brief.</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Row 1 — Name & vibe */}
+          <div className="grid md:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Theme name</Label>
+              <Input placeholder="e.g. Saffron, Caretrust, Mirror" value={adhocName} onChange={(e) => setAdhocName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Vibe / mood (optional)</Label>
+              <Input placeholder="e.g. festive Indian ornate · calm clinical trust" value={adhocVibe} onChange={(e) => setAdhocVibe(e.target.value)} />
+            </div>
           </div>
+
+          {/* Row 2 — Hierarchical taxonomy */}
+          <div className="grid md:grid-cols-4 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">1 · Type</Label>
+              <Select value={adhocKind} onValueChange={(v) => {
+                const k = v as Kind; setAdhocKind(k);
+                const firstV = Object.entries(VERTICAL_META).find(([slug, m]) => m.kind === k && briefs.some(b => b.vertical === slug))?.[0];
+                if (firstV) {
+                  setAdhocVertical(firstV);
+                  setAdhocSub(briefs.find(b => b.vertical === firstV)?.subcategory ?? "general");
+                }
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sale"><span className="inline-flex items-center gap-2"><Store className="h-3.5 w-3.5" /> Sale of Products</span></SelectItem>
+                  <SelectItem value="service"><span className="inline-flex items-center gap-2"><Briefcase className="h-3.5 w-3.5" /> Service / Appointments</span></SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">2 · Industry</Label>
+              <Select value={adhocVertical} onValueChange={(v) => { setAdhocVertical(v); setAdhocSub(briefs.find(b => b.vertical === v)?.subcategory ?? "general"); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Array.from(new Set(briefs.map(b => b.vertical)))
+                    .filter(v => (VERTICAL_META[v]?.kind ?? "sale") === adhocKind)
+                    .map(v => (
+                      <SelectItem key={v} value={v}>{VERTICAL_META[v]?.label ?? v}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                3 · {adhocKind === "service" ? "Profession" : "Merchant Type"}
+              </Label>
+              <Select value={adhocSub} onValueChange={setAdhocSub}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {briefs.filter(b => b.vertical === adhocVertical).map(b => (
+                    <SelectItem key={b.subcategory} value={b.subcategory}>{b.display_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {VERTICAL_META[adhocVertical]?.group && (
+                <p className="text-[10px] text-muted-foreground pl-0.5">{VERTICAL_META[adhocVertical].group}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">4 · Layout</Label>
+              <Select value={adhocLayout} onValueChange={setAdhocLayout}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto-pick (recommended)</SelectItem>
+                  {layouts.map(l => <SelectItem key={l.slug} value={l.slug}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row 3 — Action */}
+          <div className="flex justify-end pt-1">
+            <Button onClick={generateAdhoc} disabled={busy === "adhoc"} size="lg">
+              {busy === "adhoc" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Generate theme
+            </Button>
+          </div>
+
+          {/* Presets */}
+          <details className="pt-2 border-t">
+            <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground">Quick-start presets ({9})</summary>
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {[
+                { name: "Heritage", vibe: "Indian heritage, handcrafted, earthy tones, premium editorial", kind: "sale" as Kind, v: "handicraft", s: "handloom" },
+                { name: "Saffron",  vibe: "festive Indian, ornate, warm",                                    kind: "sale" as Kind, v: "gifts",      s: "diwali" },
+                { name: "Atelier",  vibe: "minimal luxury, monochrome, generous whitespace",                 kind: "sale" as Kind, v: "jewellery",  s: "designer-couture" },
+                { name: "Caretrust", vibe: "calm clinical trust, soft teal + white, prominent Book Appointment CTA", kind: "service" as Kind, v: "services", s: "doctor-clinic", label: "Caretrust (Doctor)" },
+                { name: "Pulse24",   vibe: "24x7 multi-speciality nursing home, department grid, emergency line hero", kind: "service" as Kind, v: "services", s: "nursing-home", label: "Pulse 24 (Nursing Home)" },
+                { name: "Mirror",    vibe: "editorial unisex salon, mirror reflections, stylist team, package menu", kind: "service" as Kind, v: "services", s: "unisex-salon", label: "Mirror (Salon)" },
+                { name: "Fade",      vibe: "moody men's barber, leather + brass, beard sculpt portfolio",     kind: "service" as Kind, v: "services", s: "barber-shop", label: "Fade (Barber)" },
+                { name: "Serenity",  vibe: "serene luxury spa, candle glow, couple suites, gift cards",       kind: "service" as Kind, v: "services", s: "spa-wellness", label: "Serenity (Spa)" },
+                { name: "Doorstep",  vibe: "home-visit professional, pincode-first hero, travel-fee transparency, slot picker", kind: "service" as Kind, v: "services", s: "home-visit-pro", label: "Doorstep (Home Visit)" },
+              ].map(p => (
+                <Button key={p.name} size="sm" variant="outline" type="button" onClick={() => {
+                  setAdhocName(p.name); setAdhocVibe(p.vibe); setAdhocKind(p.kind); setAdhocVertical(p.v); setAdhocSub(p.s);
+                }}>{p.label ?? p.name}</Button>
+              ))}
+            </div>
+          </details>
         </CardContent>
       </Card>
 
