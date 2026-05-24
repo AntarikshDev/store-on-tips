@@ -83,6 +83,17 @@ const navTree: NavEntry[] = [
     ],
   },
   {
+    label: 'Bookings',
+    icon: CalendarClock,
+    key: 'bookings',
+    children: [
+      { label: 'Appointments', icon: CalendarClock, path: '/appointments' },
+      { label: 'Services', icon: HeartHandshake, path: '/services' },
+      { label: 'Doctors / Staff', icon: Stethoscope, path: '/providers' },
+      { label: 'Family Plans', icon: Users, path: '/family-plans' },
+    ],
+  },
+  {
     label: 'Accounts',
     icon: WalletIcon,
     key: 'accounts',
