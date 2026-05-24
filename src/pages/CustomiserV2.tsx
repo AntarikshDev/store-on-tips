@@ -585,6 +585,50 @@ function HeaderInspector({ headerOv, storeName, onChange, onLogoUpload }: { head
         <p className="text-[10px] text-muted-foreground mt-1">PNG/SVG with transparent background works best.</p>
       </div>
 
+      {headerOv.logo_url && (
+        <div className="space-y-3 rounded-md border bg-muted/30 p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs">Fit logo to header height</Label>
+              <p className="text-[10px] text-muted-foreground">Auto-stretches logo to fill header bar.</p>
+            </div>
+            <Switch
+              checked={!!headerOv.logo_fit_header}
+              onCheckedChange={(v) => onChange("logo_fit_header", v)}
+            />
+          </div>
+
+          {!headerOv.logo_fit_header && (
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Logo size</Label>
+                <span className="text-[10px] text-muted-foreground">{Number(headerOv.logo_size) || 40}px</span>
+              </div>
+              <Slider
+                min={20}
+                max={160}
+                step={2}
+                value={[Number(headerOv.logo_size) || 40]}
+                onValueChange={([v]) => onChange("logo_size", v)}
+                className="mt-2"
+              />
+            </div>
+          )}
+
+          <div>
+            <Label className="text-xs">Image fit</Label>
+            <Select value={(headerOv.logo_fit as string) || "contain"} onValueChange={(v) => onChange("logo_fit", v)}>
+              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contain">Contain (no crop)</SelectItem>
+                <SelectItem value="cover">Cover (crop to fill)</SelectItem>
+                <SelectItem value="fill">Fill (stretch)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <Label className="text-xs">Show store name</Label>
