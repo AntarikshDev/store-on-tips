@@ -11,10 +11,61 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Loader2, Play, RefreshCw, SkipForward, Send, ExternalLink,
-  Sparkles, Search, CalendarPlus, Save, Wand2, Plus,
+  Sparkles, Search, CalendarPlus, Save, Wand2, Plus, Store, Briefcase, Filter, X,
 } from "lucide-react";
+
+// ── Industry taxonomy ────────────────────────────────────────────────────────
+// Map vertical → (kind, label, category-group). Verticals that ship services
+// are marked "service"; everything else is "sale". Category groups bundle
+// related professions/merchant types under a friendly umbrella.
+type Kind = "sale" | "service";
+const VERTICAL_META: Record<string, { kind: Kind; label: string; group: string }> = {
+  services:    { kind: "service", label: "Professional Services", group: "Healthcare, Beauty & Home Pros" },
+  food:        { kind: "sale",    label: "Food & Beverage",       group: "Cafés, Restaurants & Packaged Food" },
+  fashion:     { kind: "sale",    label: "Fashion & Apparel",     group: "Clothing, Footwear & Accessories" },
+  jewellery:   { kind: "sale",    label: "Jewellery",             group: "Fine, Designer & Fashion Jewellery" },
+  beauty:      { kind: "sale",    label: "Beauty & Personal Care",group: "Skincare, Haircare & Cosmetics" },
+  health:      { kind: "sale",    label: "Health & Wellness",     group: "Ayurveda, Supplements & Devices" },
+  home:        { kind: "sale",    label: "Home & Living",         group: "Décor, Furniture & Kitchenware" },
+  electronics: { kind: "sale",    label: "Electronics & Gadgets", group: "Mobiles, Audio & Smart Home" },
+  kids:        { kind: "sale",    label: "Kids & Baby",           group: "Toys, Clothing & Essentials" },
+  books:       { kind: "sale",    label: "Books & Stationery",    group: "Reading, Art & Office" },
+  sports:      { kind: "sale",    label: "Sports & Fitness",      group: "Athleisure, Gear & Outdoor" },
+  automotive:  { kind: "sale",    label: "Automotive",            group: "Accessories, Care & EV" },
+  pets:        { kind: "sale",    label: "Pet Care",              group: "Food, Toys & Grooming" },
+  handicraft:  { kind: "sale",    label: "Handicrafts & Art",     group: "Handmade, Folk & Heritage" },
+  gifts:       { kind: "sale",    label: "Gifting & Festive",     group: "Festivals, Weddings & Corporate" },
+  religious:   { kind: "sale",    label: "Religious & Spiritual", group: "Pooja, Idols & Spiritual Goods" },
+  agri:        { kind: "sale",    label: "Agriculture & Farming", group: "Seeds, Tools & Dairy" },
+  b2b:         { kind: "sale",    label: "B2B & Industrial",      group: "Packaging, Safety & Office" },
+  hobby:       { kind: "sale",    label: "Hobby & Collectibles",  group: "Music, Games & Crafts" },
+  general:     { kind: "sale",    label: "General Store",         group: "Mixed catalogue" },
+};
+
+// Search synonyms — typing "nursing" also matches doctor/clinic/hospital themes.
+const SYNONYMS: Record<string, string[]> = {
+  doctor: ["clinic", "nursing", "hospital", "physician", "medical", "health", "care"],
+  nursing: ["doctor", "clinic", "hospital", "medical", "care", "patient"],
+  clinic: ["doctor", "nursing", "hospital", "medical"],
+  dentist: ["dental", "doctor", "clinic"],
+  salon: ["barber", "stylist", "hairdresser", "beauty", "parlour", "spa"],
+  barber: ["salon", "stylist", "hairdresser", "shave"],
+  spa: ["wellness", "massage", "salon", "serenity", "luxury"],
+  cafe: ["coffee", "restaurant", "bakery", "bistro"],
+  restaurant: ["cafe", "dining", "kitchen", "bistro", "menu"],
+  bakery: ["cake", "patisserie", "cafe", "dessert"],
+  jewellery: ["jewelry", "gold", "diamond", "ornament"],
+  boutique: ["fashion", "apparel", "designer"],
+};
+function expandQuery(q: string): string[] {
+  const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const out = new Set<string>(tokens);
+  tokens.forEach((t) => (SYNONYMS[t] ?? []).forEach((s) => out.add(s)));
+  return [...out];
+}
 
 type Slot = { id: string; slot_date: string; category: string | null; status: string; theme_brief: any };
 type Version = { id: string; theme_id: string; version: number; files_manifest: any; created_at: string };
@@ -40,7 +91,10 @@ export default function ThemeMasterPipeline() {
   const [briefs, setBriefs] = useState<Array<{ vertical: string; subcategory: string; display_name: string }>>([]);
   const [layouts, setLayouts] = useState<Array<{ slug: string; name: string; description: string }>>([]);
   const [adhocLayout, setAdhocLayout] = useState<string>("auto");
+  const [adhocKind, setAdhocKind] = useState<Kind>("sale");
   const [searchQuery, setSearchQuery] = useState("");
+  const [libQuery, setLibQuery] = useState("");
+  const [libKind, setLibKind] = useState<"all" | Kind>("all");
   const pollRef = useRef<number | null>(null);
 
   async function loadAll() {
@@ -206,37 +260,113 @@ export default function ThemeMasterPipeline() {
         </div>
       </header>
 
-      {/* Quick ad-hoc generator */}
+      {/* Quick ad-hoc generator — hierarchical professional selector */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Wand2 className="h-4 w-4" />Generate a theme right now</CardTitle></CardHeader>
-        <CardContent className="grid md:grid-cols-[1fr,1fr,140px,180px,200px,auto] gap-2">
-          <Input placeholder="Theme name (e.g. Saffron)" value={adhocName} onChange={(e) => setAdhocName(e.target.value)} />
-          <Input placeholder="Vibe (e.g. festive Indian, ornate)" value={adhocVibe} onChange={(e) => setAdhocVibe(e.target.value)} />
-          <select value={adhocVertical} onChange={(e) => { const v = e.target.value; setAdhocVertical(v); const first = briefs.find(b => b.vertical === v); setAdhocSub(first?.subcategory ?? "general"); }} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-            {Array.from(new Set(briefs.map(b => b.vertical))).map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select value={adhocSub} onChange={(e) => setAdhocSub(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-            {briefs.filter(b => b.vertical === adhocVertical).map(b => <option key={b.subcategory} value={b.subcategory}>{b.display_name}</option>)}
-          </select>
-          <select value={adhocLayout} onChange={(e) => setAdhocLayout(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm" title="Layout archetype">
-            <option value="auto">Layout: Auto-pick</option>
-            {layouts.map(l => <option key={l.slug} value={l.slug}>{l.name}</option>)}
-          </select>
-          <Button onClick={generateAdhoc} disabled={busy === "adhoc"}>
-            {busy === "adhoc" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Generate
-          </Button>
-          <div className="md:col-span-6 flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[11px] text-muted-foreground self-center mr-1">Presets:</span>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Heritage"); setAdhocVibe("Indian heritage, handcrafted, earthy tones, premium editorial"); setAdhocVertical("handicraft"); setAdhocSub("handloom"); }}>Heritage</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Saffron"); setAdhocVibe("festive Indian, ornate, warm"); setAdhocVertical("gifts"); setAdhocSub("diwali"); }}>Saffron</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Atelier"); setAdhocVibe("minimal luxury, monochrome, generous whitespace"); setAdhocVertical("jewellery"); setAdhocSub("designer-couture"); }}>Atelier</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Caretrust"); setAdhocVibe("calm clinical trust, soft teal + white, prominent Book Appointment CTA"); setAdhocVertical("services"); setAdhocSub("doctor-clinic"); }}>Caretrust (Doctor)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Pulse24"); setAdhocVibe("24x7 multi-speciality nursing home, department grid, emergency line hero"); setAdhocVertical("services"); setAdhocSub("nursing-home"); }}>Pulse 24 (Nursing Home)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Mirror"); setAdhocVibe("editorial unisex salon, mirror reflections, stylist team, package menu"); setAdhocVertical("services"); setAdhocSub("unisex-salon"); }}>Mirror (Salon)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Fade"); setAdhocVibe("moody men''s barber, leather + brass, beard sculpt portfolio"); setAdhocVertical("services"); setAdhocSub("barber-shop"); }}>Fade (Barber)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Serenity"); setAdhocVibe("serene luxury spa, candle glow, couple suites, gift cards"); setAdhocVertical("services"); setAdhocSub("spa-wellness"); }}>Serenity (Spa)</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Doorstep"); setAdhocVibe("home-visit professional, pincode-first hero, travel-fee transparency, slot picker"); setAdhocVertical("services"); setAdhocSub("home-visit-pro"); }}>Doorstep (Home Visit)</Button>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><Wand2 className="h-4 w-4" />Generate a theme right now</CardTitle>
+          <p className="text-xs text-muted-foreground">Pick what merchants you're designing for. Each level narrows the AI brief.</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Row 1 — Name & vibe */}
+          <div className="grid md:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Theme name</Label>
+              <Input placeholder="e.g. Saffron, Caretrust, Mirror" value={adhocName} onChange={(e) => setAdhocName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Vibe / mood (optional)</Label>
+              <Input placeholder="e.g. festive Indian ornate · calm clinical trust" value={adhocVibe} onChange={(e) => setAdhocVibe(e.target.value)} />
+            </div>
           </div>
+
+          {/* Row 2 — Hierarchical taxonomy */}
+          <div className="grid md:grid-cols-4 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">1 · Type</Label>
+              <Select value={adhocKind} onValueChange={(v) => {
+                const k = v as Kind; setAdhocKind(k);
+                const firstV = Object.entries(VERTICAL_META).find(([slug, m]) => m.kind === k && briefs.some(b => b.vertical === slug))?.[0];
+                if (firstV) {
+                  setAdhocVertical(firstV);
+                  setAdhocSub(briefs.find(b => b.vertical === firstV)?.subcategory ?? "general");
+                }
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sale"><span className="inline-flex items-center gap-2"><Store className="h-3.5 w-3.5" /> Sale of Products</span></SelectItem>
+                  <SelectItem value="service"><span className="inline-flex items-center gap-2"><Briefcase className="h-3.5 w-3.5" /> Service / Appointments</span></SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">2 · Industry</Label>
+              <Select value={adhocVertical} onValueChange={(v) => { setAdhocVertical(v); setAdhocSub(briefs.find(b => b.vertical === v)?.subcategory ?? "general"); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Array.from(new Set(briefs.map(b => b.vertical)))
+                    .filter(v => (VERTICAL_META[v]?.kind ?? "sale") === adhocKind)
+                    .map(v => (
+                      <SelectItem key={v} value={v}>{VERTICAL_META[v]?.label ?? v}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                3 · {adhocKind === "service" ? "Profession" : "Merchant Type"}
+              </Label>
+              <Select value={adhocSub} onValueChange={setAdhocSub}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {briefs.filter(b => b.vertical === adhocVertical).map(b => (
+                    <SelectItem key={b.subcategory} value={b.subcategory}>{b.display_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {VERTICAL_META[adhocVertical]?.group && (
+                <p className="text-[10px] text-muted-foreground pl-0.5">{VERTICAL_META[adhocVertical].group}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">4 · Layout</Label>
+              <Select value={adhocLayout} onValueChange={setAdhocLayout}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto-pick (recommended)</SelectItem>
+                  {layouts.map(l => <SelectItem key={l.slug} value={l.slug}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row 3 — Action */}
+          <div className="flex justify-end pt-1">
+            <Button onClick={generateAdhoc} disabled={busy === "adhoc"} size="lg">
+              {busy === "adhoc" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}Generate theme
+            </Button>
+          </div>
+
+          {/* Presets */}
+          <details className="pt-2 border-t">
+            <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground">Quick-start presets ({9})</summary>
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {[
+                { name: "Heritage", vibe: "Indian heritage, handcrafted, earthy tones, premium editorial", kind: "sale" as Kind, v: "handicraft", s: "handloom" },
+                { name: "Saffron",  vibe: "festive Indian, ornate, warm",                                    kind: "sale" as Kind, v: "gifts",      s: "diwali" },
+                { name: "Atelier",  vibe: "minimal luxury, monochrome, generous whitespace",                 kind: "sale" as Kind, v: "jewellery",  s: "designer-couture" },
+                { name: "Caretrust", vibe: "calm clinical trust, soft teal + white, prominent Book Appointment CTA", kind: "service" as Kind, v: "services", s: "doctor-clinic", label: "Caretrust (Doctor)" },
+                { name: "Pulse24",   vibe: "24x7 multi-speciality nursing home, department grid, emergency line hero", kind: "service" as Kind, v: "services", s: "nursing-home", label: "Pulse 24 (Nursing Home)" },
+                { name: "Mirror",    vibe: "editorial unisex salon, mirror reflections, stylist team, package menu", kind: "service" as Kind, v: "services", s: "unisex-salon", label: "Mirror (Salon)" },
+                { name: "Fade",      vibe: "moody men's barber, leather + brass, beard sculpt portfolio",     kind: "service" as Kind, v: "services", s: "barber-shop", label: "Fade (Barber)" },
+                { name: "Serenity",  vibe: "serene luxury spa, candle glow, couple suites, gift cards",       kind: "service" as Kind, v: "services", s: "spa-wellness", label: "Serenity (Spa)" },
+                { name: "Doorstep",  vibe: "home-visit professional, pincode-first hero, travel-fee transparency, slot picker", kind: "service" as Kind, v: "services", s: "home-visit-pro", label: "Doorstep (Home Visit)" },
+              ].map(p => (
+                <Button key={p.name} size="sm" variant="outline" type="button" onClick={() => {
+                  setAdhocName(p.name); setAdhocVibe(p.vibe); setAdhocKind(p.kind); setAdhocVertical(p.v); setAdhocSub(p.s);
+                }}>{p.label ?? p.name}</Button>
+              ))}
+            </div>
+          </details>
         </CardContent>
       </Card>
 
@@ -249,12 +379,59 @@ export default function ThemeMasterPipeline() {
         </TabsList>
 
         {/* LIBRARY */}
-        <TabsContent value="library" className="mt-4">
-          {versions.length === 0 ? (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">No themes generated yet. Use "Generate a theme right now" above or plan a batch.</CardContent></Card>
-          ) : (
+        <TabsContent value="library" className="mt-4 space-y-4">
+          {/* Search & filter bar */}
+          <Card>
+            <CardContent className="py-3 flex flex-wrap gap-2 items-center">
+              <div className="relative flex-1 min-w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={libQuery}
+                  onChange={(e) => setLibQuery(e.target.value)}
+                  placeholder="Search themes — try 'nursing', 'salon', 'cafe', 'jewellery'…"
+                  className="pl-8"
+                />
+                {libQuery && (
+                  <button onClick={() => setLibQuery("")} className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <Select value={libKind} onValueChange={(v) => setLibKind(v as any)}>
+                <SelectTrigger className="w-[180px]"><Filter className="h-3.5 w-3.5 mr-1" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All themes</SelectItem>
+                  <SelectItem value="sale">Sale of Products</SelectItem>
+                  <SelectItem value="service">Service / Appointments</SelectItem>
+                </SelectContent>
+              </Select>
+              {libQuery && (
+                <p className="text-[11px] text-muted-foreground basis-full">
+                  Synonyms matched: {expandQuery(libQuery).join(", ")}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {(() => {
+            const tokens = libQuery.trim() ? expandQuery(libQuery) : [];
+            const filtered = versions.filter((t) => {
+              const dna = t.files_manifest?.dna ?? {};
+              const vert = dna.category ?? dna.vertical ?? "";
+              if (libKind !== "all" && (VERTICAL_META[vert]?.kind ?? "sale") !== libKind) return false;
+              if (tokens.length === 0) return true;
+              const hay = `${dna.name ?? ""} ${dna.vibe ?? ""} ${vert} ${dna.subcategory ?? ""} ${t.theme_id}`.toLowerCase();
+              return tokens.some((tok) => hay.includes(tok));
+            });
+            if (versions.length === 0) {
+              return <Card><CardContent className="py-12 text-center text-muted-foreground">No themes generated yet. Use "Generate a theme right now" above or plan a batch.</CardContent></Card>;
+            }
+            if (filtered.length === 0) {
+              return <Card><CardContent className="py-12 text-center text-muted-foreground">No themes match your search. Try a broader keyword.</CardContent></Card>;
+            }
+            return (
             <div className="grid gap-4 md:grid-cols-2">
-              {versions.map((t) => {
+              {filtered.map((t) => {
                 const m = metrics[t.theme_id];
                 const dna = t.files_manifest?.dna ?? {};
                 const palette = dna.palette ?? {};
@@ -315,7 +492,8 @@ export default function ThemeMasterPipeline() {
                 );
               })}
             </div>
-          )}
+            );
+          })()}
         </TabsContent>
 
         {/* CALENDAR */}
