@@ -1274,6 +1274,13 @@ function HeroInspector({ idx, section, sectionOv, onUpdate, onReset, onUploadIma
         </div>
       </div>
 
+      <HeroButtonsPanel
+        buttons={merged.buttons || {}}
+        hasPrimary={!!merged.cta}
+        hasSecondary={!!merged.cta_secondary}
+        onChange={(next: any) => onUpdate(idx, "buttons", next)}
+      />
+
       {["slider", "video", "fullscreen_image", "fixed"].includes(style) && (
         <div className="border-t pt-4 space-y-2">
           <Label className="text-[11px] font-semibold">Overlay</Label>
