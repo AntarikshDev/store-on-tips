@@ -115,6 +115,8 @@ const Providers = lazy(() => import("@/pages/Providers"));
 const Services = lazy(() => import("@/pages/Services"));
 const Appointments = lazy(() => import("@/pages/Appointments"));
 const FamilyPlans = lazy(() => import("@/pages/FamilyPlans"));
+const ProviderPayouts = lazy(() => import("@/pages/ProviderPayouts"));
+const StorefrontBooking = lazy(() => import("@/pages/storefront/StorefrontBooking"));
 
 
 
@@ -221,6 +223,7 @@ const AppRoutes = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/appointments" element={<Appointments />} />
               <Route path="/family-plans" element={<FamilyPlans />} />
+              <Route path="/providers/payouts" element={<ProviderPayouts />} />
             </Route>
 
             <Route path="/store-design" element={<Navigate to="/customise" replace />} />
@@ -275,6 +278,7 @@ const AppRoutes = () => {
             <Route path="/store/:slug/menu/t/:tableToken" element={<StorefrontMenu forceMode="dine_in" />} />
             <Route path="/store/:slug/menu/takeaway" element={<StorefrontMenu forceMode="takeaway" />} />
             <Route path="/store/:slug/menu/delivery" element={<StorefrontMenu forceMode="delivery" />} />
+            <Route path="/store/:slug/book" element={<StorefrontBooking />} />
             <Route path="/track/:code" element={<OrderTracking />} />
             <Route path="/menu" element={<ProtectedRoute><DashboardLayout><Menu /></DashboardLayout></ProtectedRoute>} />
             <Route path="/kitchen" element={<ProtectedRoute><DashboardLayout><Kitchen /></DashboardLayout></ProtectedRoute>} />
