@@ -81,8 +81,10 @@ const LogoUploader = ({ logoUrl, logoName, onSave }: Props) => {
     if (!rawImage || !croppedArea) return;
     setUploading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not signed in');
       const blob = await getCroppedImg(rawImage, croppedArea);
-      const path = `logos/${crypto.randomUUID()}.png`;
+      const path = `${user.id}/logos/${crypto.randomUUID()}.png`;
       const { error } = await supabase.storage
         .from('product-images')
         .upload(path, blob, { contentType: 'image/png' });
@@ -93,8 +95,8 @@ const LogoUploader = ({ logoUrl, logoName, onSave }: Props) => {
       onSave(publicUrl, selectedFileName || 'logo.png');
       setRawImage(null);
       toast.success('Logo uploaded!');
-    } catch {
-      toast.error('Failed to upload logo');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to upload logo');
     } finally {
       setUploading(false);
     }
