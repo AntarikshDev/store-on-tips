@@ -557,7 +557,8 @@ const MasterThemeView = ({ slug, themeId, seo, store, products, page = 'home' }:
       </div>
     );
   }
-  const overrides = (store.settings as any)?.theme_overrides;
+  const overrides = (store.settings as any)?.theme_overrides || {};
+  const headerLogo = overrides?.header?.logo_url ?? overrides?.logo_url ?? store.logo_url ?? "";
   return (
     <>
       <SEOHead
@@ -569,7 +570,11 @@ const MasterThemeView = ({ slug, themeId, seo, store, products, page = 'home' }:
       <MasterThemeRenderer
         manifest={manifest}
         page={page}
-        overrides={{ ...overrides, brand_name: overrides?.brand_name || store.name }}
+        overrides={{
+          ...overrides,
+          brand_name: overrides?.brand_name || store.name,
+          header: { ...(overrides?.header || {}), logo_url: headerLogo },
+        }}
         storeSlug={slug}
         products={products}
         sellerCategories={sellerCategories}

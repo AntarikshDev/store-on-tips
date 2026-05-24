@@ -198,7 +198,7 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
   const logoUrl = ov.logo_url || "";
   const defaultLinks: Array<{ label: string; page: string }> = [
     { label: "Shop", page: "shop" },
-    { label: "Collections", page: "shop" },
+    { label: "Collections", page: "collections" },
     { label: "About", page: "about" },
     { label: "Journal", page: "journal" },
     { label: "Contact", page: "contact" },
