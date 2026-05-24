@@ -43,7 +43,10 @@ const SECTION_LABEL: Record<string, string> = {
   checkout_stepper: "Checkout stepper", journal_strip: "Journal strip",
   journal_list: "Journal list", account_panel: "Account panel",
   contact_form: "Contact form", product_detail: "Product detail",
+  collections_grid: "Collections grid", collection_detail: "Collection detail",
 };
+
+
 
 const TEXT_KEYS = ["title", "sub", "kicker", "cta", "cta_secondary", "body", "email", "phone"];
 const ICON_OPTIONS = ["truck", "shield", "refresh", "headphones", "lock", "tag", "gift", "sparkles"];
@@ -127,10 +130,21 @@ export default function CustomiserV2() {
   }, [overrides, page]);
 
   const isMaster = activeThemeId?.startsWith("theme-");
-  const sections: any[] = useMemo(
-    () => (manifest as any)?.pages?.[page]?.sections ?? [],
-    [manifest, page],
-  );
+  const sections: any[] = useMemo(() => {
+    const manifestSections = (manifest as any)?.pages?.[page]?.sections ?? [];
+    if (manifestSections.length > 0) return manifestSections;
+    // Mirror MasterThemeRenderer's synthesized pages so the seller can edit them.
+    if (page === "collections") {
+      return [
+        { type: "page_title", props: { title: "Collections" } },
+        { type: "collections_grid", props: {} },
+      ];
+    }
+    if (page === "collection_detail") {
+      return [{ type: "collection_detail", props: {} }];
+    }
+    return [];
+  }, [manifest, page]);
   const sectionOverrides: Record<string, any> =
     overrides?.pages?.[page]?.sections ?? {};
 
