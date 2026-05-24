@@ -379,12 +379,59 @@ export default function ThemeMasterPipeline() {
         </TabsList>
 
         {/* LIBRARY */}
-        <TabsContent value="library" className="mt-4">
-          {versions.length === 0 ? (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">No themes generated yet. Use "Generate a theme right now" above or plan a batch.</CardContent></Card>
-          ) : (
+        <TabsContent value="library" className="mt-4 space-y-4">
+          {/* Search & filter bar */}
+          <Card>
+            <CardContent className="py-3 flex flex-wrap gap-2 items-center">
+              <div className="relative flex-1 min-w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={libQuery}
+                  onChange={(e) => setLibQuery(e.target.value)}
+                  placeholder="Search themes — try 'nursing', 'salon', 'cafe', 'jewellery'…"
+                  className="pl-8"
+                />
+                {libQuery && (
+                  <button onClick={() => setLibQuery("")} className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <Select value={libKind} onValueChange={(v) => setLibKind(v as any)}>
+                <SelectTrigger className="w-[180px]"><Filter className="h-3.5 w-3.5 mr-1" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All themes</SelectItem>
+                  <SelectItem value="sale">Sale of Products</SelectItem>
+                  <SelectItem value="service">Service / Appointments</SelectItem>
+                </SelectContent>
+              </Select>
+              {libQuery && (
+                <p className="text-[11px] text-muted-foreground basis-full">
+                  Synonyms matched: {expandQuery(libQuery).join(", ")}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {(() => {
+            const tokens = libQuery.trim() ? expandQuery(libQuery) : [];
+            const filtered = versions.filter((t) => {
+              const dna = t.files_manifest?.dna ?? {};
+              const vert = dna.category ?? dna.vertical ?? "";
+              if (libKind !== "all" && (VERTICAL_META[vert]?.kind ?? "sale") !== libKind) return false;
+              if (tokens.length === 0) return true;
+              const hay = `${dna.name ?? ""} ${dna.vibe ?? ""} ${vert} ${dna.subcategory ?? ""} ${t.theme_id}`.toLowerCase();
+              return tokens.some((tok) => hay.includes(tok));
+            });
+            if (versions.length === 0) {
+              return <Card><CardContent className="py-12 text-center text-muted-foreground">No themes generated yet. Use "Generate a theme right now" above or plan a batch.</CardContent></Card>;
+            }
+            if (filtered.length === 0) {
+              return <Card><CardContent className="py-12 text-center text-muted-foreground">No themes match your search. Try a broader keyword.</CardContent></Card>;
+            }
+            return (
             <div className="grid gap-4 md:grid-cols-2">
-              {versions.map((t) => {
+              {filtered.map((t) => {
                 const m = metrics[t.theme_id];
                 const dna = t.files_manifest?.dna ?? {};
                 const palette = dna.palette ?? {};
