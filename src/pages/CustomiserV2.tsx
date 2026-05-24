@@ -226,7 +226,11 @@ export default function CustomiserV2() {
   };
 
   // ---------- Header / Footer overrides ----------
-  const headerOv = overrides?.header || {};
+  const headerOv = {
+    logo_url: overrides?.logo_url || store?.logo_url || "",
+    brand_name: overrides?.brand_name || "",
+    ...(overrides?.header || {}),
+  };
   const footerOv = overrides?.footer || {};
   const updateHeader = (key: string, value: any) => {
     setOverrides((prev: any) => {
