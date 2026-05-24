@@ -222,9 +222,16 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
   const bg = { background: `${dna.palette?.bg}ee`, borderColor: dna.palette?.border };
   const brandSize = variant === "bold_serif" ? 32 : variant === "minimal_thin" ? 16 : 22;
   const brandStyle: React.CSSProperties = { fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700, fontSize: brandSize, color: dna.palette?.fg, cursor: (storeSlug || onNavigate) ? "pointer" : "default" };
+  const logoSize = Math.max(20, Math.min(160, Number((ov as any).logo_size) || (brandSize + 8)));
+  const logoFit: "contain" | "cover" | "fill" = ((ov as any).logo_fit as any) || "contain";
+  const fitToHeader = !!(ov as any).logo_fit_header;
+  const headerH = variant === "minimal_thin" ? 48 : 64;
+  const logoStyle: React.CSSProperties = fitToHeader
+    ? { height: headerH, maxHeight: headerH, width: "auto", objectFit: logoFit }
+    : { height: logoSize, width: logoFit === "fill" ? logoSize : "auto", maxHeight: 160, objectFit: logoFit };
   const BrandInner = (
     <span className="inline-flex items-center gap-2">
-      {logoUrl && <img src={logoUrl} alt={effectiveBrand} style={{ height: brandSize + 8, maxHeight: 48, width: "auto", objectFit: "contain" }} />}
+      {logoUrl && <img src={logoUrl} alt={effectiveBrand} style={logoStyle} />}
       {showName && <span style={brandStyle}>{effectiveBrand}</span>}
       {!showName && !logoUrl && <span style={brandStyle}>{effectiveBrand}</span>}
     </span>
