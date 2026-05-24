@@ -53,14 +53,17 @@ export default function AdminThemeLivePreview() {
     (async () => {
       const { data: store } = await supabase
         .from("stores")
-        .select("id, name, settings")
+        .select("id, name, settings, logo_url")
         .eq("slug", storeSlug)
         .maybeSingle();
       if (!store) return;
-      const savedOv = (store.settings as any)?.theme_overrides;
-      if (savedOv) {
-        setOverrides((cur: any) => (Object.keys(cur || {}).length ? cur : { ...savedOv, brand_name: savedOv?.brand_name || store.name }));
-      }
+      const savedOv = ((store.settings as any)?.theme_overrides || {}) as any;
+      const headerLogo = savedOv?.header?.logo_url ?? savedOv?.logo_url ?? store.logo_url ?? "";
+      setOverrides((cur: any) => Object.keys(cur || {}).length ? cur : {
+        ...savedOv,
+        brand_name: savedOv?.brand_name || store.name,
+        header: { ...(savedOv?.header || {}), logo_url: headerLogo },
+      });
       const [{ data: prods }, { data: cats }] = await Promise.all([
         supabase.from("products").select("id, title, price, compare_at_price, images, category").eq("store_id", store.id).eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("categories").select("id, name, image_url, description, parent_id, sort_order").eq("store_id", store.id).order("sort_order", { ascending: true }),
