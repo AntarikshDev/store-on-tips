@@ -111,6 +111,11 @@ const AccountsInventory = lazy(() => import("@/pages/accounts/InventoryLedger"))
 const AccountsPnl = lazy(() => import("@/pages/accounts/ProfitLossReport"));
 const AccountsCashBook = lazy(() => import("@/pages/accounts/CashBook"));
 const AccountsGst = lazy(() => import("@/pages/accounts/GstSummary"));
+const Providers = lazy(() => import("@/pages/Providers"));
+const Services = lazy(() => import("@/pages/Services"));
+const Appointments = lazy(() => import("@/pages/Appointments"));
+const FamilyPlans = lazy(() => import("@/pages/FamilyPlans"));
+
 
 
 const queryClient = new QueryClient();
