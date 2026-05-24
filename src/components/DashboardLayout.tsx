@@ -167,20 +167,25 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isFnB = ['food', 'food_beverages', 'food-and-beverages', 'restaurant', 'cafe'].includes(
-    String(store?.category || '').toLowerCase()
-  );
+  const cat = String(store?.category || '').toLowerCase();
+  const isFnB = ['food', 'food_beverages', 'food-and-beverages', 'restaurant', 'cafe'].includes(cat);
+  const isService = ['healthcare', 'beauty_services'].includes(cat);
 
   const filteredNavTree = useMemo<NavEntry[]>(() => {
     const fnbPaths = new Set(['/menu', '/kitchen', '/settings/qr']);
+    const servicePaths = new Set(['/appointments', '/services', '/providers', '/family-plans']);
     return navTree
       .map((entry) => {
         if (!isGroup(entry)) return entry;
-        const children = entry.children.filter((c) => isFnB || !fnbPaths.has(c.path));
+        const children = entry.children.filter((c) => {
+          if (fnbPaths.has(c.path)) return isFnB;
+          if (servicePaths.has(c.path)) return isService;
+          return true;
+        });
         return { ...entry, children };
       })
       .filter((entry) => isGroup(entry) ? entry.children.length > 0 : true);
-  }, [isFnB]);
+  }, [isFnB, isService]);
 
 
   const initiallyOpen = useMemo(() => {
