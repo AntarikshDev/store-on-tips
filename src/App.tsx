@@ -115,6 +115,8 @@ const Providers = lazy(() => import("@/pages/Providers"));
 const Services = lazy(() => import("@/pages/Services"));
 const Appointments = lazy(() => import("@/pages/Appointments"));
 const FamilyPlans = lazy(() => import("@/pages/FamilyPlans"));
+const ProviderPayouts = lazy(() => import("@/pages/ProviderPayouts"));
+const StorefrontBooking = lazy(() => import("@/pages/storefront/StorefrontBooking"));
 
 
 
@@ -221,6 +223,7 @@ const AppRoutes = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/appointments" element={<Appointments />} />
               <Route path="/family-plans" element={<FamilyPlans />} />
+              <Route path="/providers/payouts" element={<ProviderPayouts />} />
             </Route>
 
             <Route path="/store-design" element={<Navigate to="/customise" replace />} />
