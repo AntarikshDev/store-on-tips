@@ -230,6 +230,12 @@ export default function ThemeMasterPipeline() {
             <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Heritage"); setAdhocVibe("Indian heritage, handcrafted, earthy tones, premium editorial"); setAdhocVertical("handicraft"); setAdhocSub("handloom"); }}>Heritage</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Saffron"); setAdhocVibe("festive Indian, ornate, warm"); setAdhocVertical("gifts"); setAdhocSub("diwali"); }}>Saffron</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Atelier"); setAdhocVibe("minimal luxury, monochrome, generous whitespace"); setAdhocVertical("jewellery"); setAdhocSub("designer-couture"); }}>Atelier</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Caretrust"); setAdhocVibe("calm clinical trust, soft teal + white, prominent Book Appointment CTA"); setAdhocVertical("services"); setAdhocSub("doctor-clinic"); }}>Caretrust (Doctor)</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Pulse24"); setAdhocVibe("24x7 multi-speciality nursing home, department grid, emergency line hero"); setAdhocVertical("services"); setAdhocSub("nursing-home"); }}>Pulse 24 (Nursing Home)</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Mirror"); setAdhocVibe("editorial unisex salon, mirror reflections, stylist team, package menu"); setAdhocVertical("services"); setAdhocSub("unisex-salon"); }}>Mirror (Salon)</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Fade"); setAdhocVibe("moody men''s barber, leather + brass, beard sculpt portfolio"); setAdhocVertical("services"); setAdhocSub("barber-shop"); }}>Fade (Barber)</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Serenity"); setAdhocVibe("serene luxury spa, candle glow, couple suites, gift cards"); setAdhocVertical("services"); setAdhocSub("spa-wellness"); }}>Serenity (Spa)</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => { setAdhocName("Doorstep"); setAdhocVibe("home-visit professional, pincode-first hero, travel-fee transparency, slot picker"); setAdhocVertical("services"); setAdhocSub("home-visit-pro"); }}>Doorstep (Home Visit)</Button>
           </div>
         </CardContent>
       </Card>
