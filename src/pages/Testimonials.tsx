@@ -48,8 +48,10 @@ export default function Testimonials() {
     if (!store?.id) return;
     setUploading(true);
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error("Please sign in again before uploading");
       const ext = file.name.split(".").pop();
-      const path = `${store.id}/testimonials/${Date.now()}.${ext}`;
+      const path = `${userData.user.id}/stores/${store.id}/testimonials/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
