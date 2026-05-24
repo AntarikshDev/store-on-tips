@@ -47,10 +47,19 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   });
 }
 
+const ASPECT_OPTIONS: Array<{ label: string; value: number | undefined }> = [
+  { label: 'Free', value: undefined },
+  { label: 'Square 1:1', value: 1 },
+  { label: 'Wide 3:1', value: 3 },
+  { label: 'Banner 4:1', value: 4 },
+  { label: 'Landscape 16:9', value: 16 / 9 },
+];
+
 const LogoUploader = ({ logoUrl, logoName, onSave }: Props) => {
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [aspect, setAspect] = useState<number | undefined>(1);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [uploading, setUploading] = useState(false);
   const persistedFileName = useMemo(() => logoName || getFileNameFromUrl(logoUrl), [logoName, logoUrl]);
@@ -153,24 +162,47 @@ const LogoUploader = ({ logoUrl, logoName, onSave }: Props) => {
                 image={rawImage}
                 crop={crop}
                 zoom={zoom}
-                aspect={1}
+                aspect={aspect}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
                 cropShape="rect"
                 showGrid={false}
+                restrictPosition={false}
+                objectFit="contain"
               />
             )}
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Zoom</Label>
-            <Slider
-              min={1}
-              max={3}
-              step={0.1}
-              value={[zoom]}
-              onValueChange={([v]) => setZoom(v)}
-            />
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Aspect ratio</Label>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {ASPECT_OPTIONS.map((o) => (
+                  <Button
+                    key={o.label}
+                    type="button"
+                    size="sm"
+                    variant={aspect === o.value ? 'default' : 'outline'}
+                    className="h-7 text-[11px]"
+                    onClick={() => setAspect(o.value)}
+                  >
+                    {o.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Zoom</Label>
+              <Slider
+                min={0.5}
+                max={3}
+                step={0.05}
+                value={[zoom]}
+                onValueChange={([v]) => setZoom(v)}
+                className="mt-2"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">Use "Free" to keep the logo's original shape. Resize it in the header inspector after upload.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseCropper}>Cancel</Button>
