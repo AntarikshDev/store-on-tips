@@ -520,16 +520,234 @@ function ProductDetailStub({ p, dna }: any) {
   );
 }
 
+// =============================================================================
+// HERO — Shopify/WordPress-grade flexibility
+// Styles: slider | fixed | half_banner | split | fullscreen_image | video |
+//         magazine | editorial_serif | minimal_left | asymmetric | gradient | centered
+// =============================================================================
+function heightClass(h?: string) {
+  switch (h) {
+    case "short":  return "min-h-[40vh]";
+    case "medium": return "min-h-[60vh]";
+    case "tall":   return "min-h-[80vh]";
+    case "full":   return "min-h-screen";
+    case "auto":   return "";
+    default:       return "";
+  }
+}
+
+function alignClass(pos?: string) {
+  // 9-point grid like "top-left", "center-center", "bottom-right"
+  const [v = "center", h = "center"] = (pos ?? "center-center").split("-");
+  const vMap: Record<string, string> = { top: "items-start", center: "items-center", bottom: "items-end" };
+  const hMap: Record<string, string> = { left: "justify-start text-left", center: "justify-center text-center", right: "justify-end text-right" };
+  return `${vMap[v] ?? "items-center"} ${hMap[h] ?? "justify-center text-center"}`;
+}
+
+function Overlay({ overlay }: { overlay?: any }) {
+  if (!overlay) return <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />;
+  const opacity = typeof overlay.opacity === "number" ? overlay.opacity : 0.45;
+  const color = overlay.color || "#000000";
+  const grad = overlay.gradient;
+  let bg = `${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")}`;
+  let style: React.CSSProperties = { background: bg };
+  if (grad === "bottom") style = { background: `linear-gradient(180deg, transparent 0%, ${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")} 100%)` };
+  else if (grad === "top") style = { background: `linear-gradient(0deg, transparent 0%, ${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")} 100%)` };
+  else if (grad === "radial") style = { background: `radial-gradient(ellipse at center, transparent 30%, ${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")} 100%)` };
+  return <div className="absolute inset-0 pointer-events-none" style={style} />;
+}
+
+function parseYouTube(url: string): string | null {
+  const m = url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function parseVimeo(url: string): string | null {
+  const m = url?.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return m ? m[1] : null;
+}
+
+function HeroVideo({ video }: { video: any }) {
+  const src = video?.src || "";
+  const yt = parseYouTube(src);
+  const vm = parseVimeo(src);
+  if (yt) {
+    return (
+      <iframe
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        src={`https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&controls=0&showinfo=0&modestbranding=1&rel=0&playsinline=1`}
+        allow="autoplay; encrypted-media; picture-in-picture"
+        style={{ border: 0, transform: "scale(1.4)" }}
+      />
+    );
+  }
+  if (vm) {
+    return (
+      <iframe
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        src={`https://player.vimeo.com/video/${vm}?background=1&autoplay=1&loop=1&muted=1`}
+        allow="autoplay; fullscreen"
+        style={{ border: 0 }}
+      />
+    );
+  }
+  if (!src) return null;
+  return (
+    <video
+      className="absolute inset-0 w-full h-full object-cover"
+      src={src}
+      poster={video?.poster}
+      autoPlay
+      muted={video?.muted !== false}
+      loop={video?.loop !== false}
+      playsInline
+    />
+  );
+}
+
+function HeroSlider({ slides, slider, dna, shopHref, height, contentAlign, overlay, kenBurns }: any) {
+  const list = (slides ?? []).filter((s: any) => s);
+  const [idx, setIdx] = useState(0);
+  const autoplay = slider?.autoplay !== false;
+  const interval = Math.max(2000, slider?.interval ?? 5000);
+  const arrows = slider?.arrows !== false;
+  const dots = slider?.dots !== false;
+  const transition = slider?.transition === "slide" ? "slide" : "fade";
+
+  useEffect(() => {
+    if (!autoplay || list.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % list.length), interval);
+    return () => clearInterval(t);
+  }, [autoplay, interval, list.length]);
+
+  if (list.length === 0) return null;
+  const headingFont = { fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 } as React.CSSProperties;
+
+  return (
+    <section className={`relative overflow-hidden ${heightClass(height) || "min-h-[70vh]"}`} style={{ background: dna.palette?.surface }}>
+      {list.map((s: any, i: number) => {
+        const active = i === idx;
+        const style: React.CSSProperties = transition === "fade"
+          ? { opacity: active ? 1 : 0, transition: "opacity 700ms ease" }
+          : { transform: `translateX(${(i - idx) * 100}%)`, transition: "transform 700ms ease" };
+        return (
+          <div key={i} className="absolute inset-0" style={style}>
+            {s.image && (
+              <img
+                src={s.image}
+                alt={s.title ?? ""}
+                className={`absolute inset-0 w-full h-full object-cover ${kenBurns && active ? "animate-[ken-burns_18s_ease-out_infinite]" : ""}`}
+                style={{ objectPosition: s.focal || "50% 50%" }}
+              />
+            )}
+            <Overlay overlay={overlay} />
+            <div className={`relative h-full w-full flex ${alignClass(contentAlign)} px-6`}>
+              <div className="max-w-3xl" style={{ color: "#fff" }}>
+                {s.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-3 opacity-90">{s.kicker}</div>}
+                {s.title && <h1 className="text-4xl md:text-6xl leading-[1.05]" style={headingFont}>{s.title}</h1>}
+                {s.sub && <p className="mt-4 text-base md:text-lg opacity-90 max-w-xl">{s.sub}</p>}
+                {(s.cta || s.cta_secondary) && (
+                  <div className="mt-7 flex gap-3 flex-wrap" style={{ justifyContent: (contentAlign?.endsWith("-center") || !contentAlign) ? "center" : (contentAlign?.endsWith("-right") ? "flex-end" : "flex-start") }}>
+                    {s.cta && <a href={s.cta_href || shopHref} className="px-7 py-3 text-sm font-medium inline-block" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>{s.cta}</a>}
+                    {s.cta_secondary && <a href={s.cta_secondary_href || shopHref} className="px-7 py-3 text-sm font-medium border inline-block" style={{ borderColor: "rgba(255,255,255,0.6)", color: "#fff", borderRadius: "var(--r)" }}>{s.cta_secondary}</a>}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {arrows && list.length > 1 && (
+        <>
+          <button aria-label="Previous slide" onClick={() => setIdx((i) => (i - 1 + list.length) % list.length)} className="absolute left-3 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition">‹</button>
+          <button aria-label="Next slide"     onClick={() => setIdx((i) => (i + 1) % list.length)}                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition">›</button>
+        </>
+      )}
+      {dots && list.length > 1 && (
+        <div className="absolute bottom-5 left-0 right-0 z-10 flex justify-center gap-1.5">
+          {list.map((_: any, i: number) => (
+            <button key={i} aria-label={`Slide ${i+1}`} onClick={() => setIdx(i)} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-white" : "w-1.5 bg-white/60"}`} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Hero({ p, dna, storeSlug }: any) {
   const v = p.style ?? "centered";
   const headingFont = { fontFamily: "var(--hf)", fontWeight: dna.fonts?.heading_weight ?? 700 } as React.CSSProperties;
   const shopHref = storeSlug ? `/store/${storeSlug}/shop` : "#products";
+  const overlay = p.overlay;
+  const effects = p.effects || {};
+  const height = p.height;
+  const contentAlign = p.content_align;
+  const parallax = effects.parallax;
+  const kenBurns = effects.ken_burns;
+
   const Btns = (
     <div className="mt-8 flex gap-3 flex-wrap">
-      <a href={shopHref} className="px-7 py-3 text-sm font-medium inline-block" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>{p.cta}</a>
-      {p.cta_secondary && <a href={shopHref} className="px-7 py-3 text-sm font-medium border inline-block" style={{ borderColor: "var(--bd)", color: "var(--fg)", borderRadius: "var(--r)" }}>{p.cta_secondary}</a>}
+      {p.cta && <a href={p.cta_href || shopHref} className="px-7 py-3 text-sm font-medium inline-block" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>{p.cta}</a>}
+      {p.cta_secondary && <a href={p.cta_secondary_href || shopHref} className="px-7 py-3 text-sm font-medium border inline-block" style={{ borderColor: "var(--bd)", color: "var(--fg)", borderRadius: "var(--r)" }}>{p.cta_secondary}</a>}
     </div>
   );
+
+  // --- SLIDER ---------------------------------------------------------------
+  if (v === "slider") {
+    const slides = (p.slides && p.slides.length > 0)
+      ? p.slides
+      : [{ image: p.image, title: p.title, sub: p.sub, kicker: p.kicker, cta: p.cta, cta_href: p.cta_href, cta_secondary: p.cta_secondary, cta_secondary_href: p.cta_secondary_href }];
+    return <HeroSlider slides={slides} slider={p.slider} dna={dna} shopHref={shopHref} height={height} contentAlign={contentAlign} overlay={overlay} kenBurns={kenBurns} />;
+  }
+
+  // --- VIDEO BACKGROUND -----------------------------------------------------
+  if (v === "video") {
+    return (
+      <section className={`relative overflow-hidden ${heightClass(height) || "min-h-[80vh]"}`} style={{ background: "#000" }}>
+        <HeroVideo video={p.video} />
+        <Overlay overlay={overlay} />
+        <div className={`relative h-full w-full flex ${alignClass(contentAlign)} px-6 py-24`} style={{ color: "#fff" }}>
+          <div className="max-w-3xl">
+            {p.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-3 opacity-90">{p.kicker}</div>}
+            {p.title && <h1 className="text-5xl md:text-7xl leading-[1.05]" style={headingFont}>{p.title}</h1>}
+            {p.sub && <p className="mt-5 text-lg opacity-90 max-w-xl">{p.sub}</p>}
+            {Btns}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // --- HALF BANNER ----------------------------------------------------------
+  if (v === "half_banner") {
+    return (
+      <section className="grid md:grid-cols-2" style={{ background: dna.palette?.surface, minHeight: "40vh" }}>
+        <div className="px-6 md:px-12 py-12 md:py-16 flex flex-col justify-center">
+          {p.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-3" style={{ color: dna.palette?.accent }}>{p.kicker}</div>}
+          <h1 className="text-3xl md:text-5xl leading-tight" style={headingFont}>{p.title}</h1>
+          {p.sub && <p className="mt-3 text-base" style={{ color: dna.palette?.muted }}>{p.sub}</p>}
+          {Btns}
+        </div>
+        <div className="min-h-[260px]">{p.image && <img src={p.image} className="w-full h-full object-cover" style={{ objectPosition: p.focal || "50% 50%" }} />}</div>
+      </section>
+    );
+  }
+
+  // --- GRADIENT (no image) --------------------------------------------------
+  if (v === "gradient") {
+    return (
+      <section className={`relative overflow-hidden ${heightClass(height) || "min-h-[60vh]"}`} style={{ background: `linear-gradient(135deg, ${dna.palette?.primary} 0%, ${dna.palette?.accent} 100%)`, color: dna.palette?.primary_fg || "#fff" }}>
+        <div className={`relative h-full w-full flex ${alignClass(contentAlign)} px-6 py-24`}>
+          <div className="max-w-3xl">
+            {p.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-3 opacity-90">{p.kicker}</div>}
+            {p.title && <h1 className="text-5xl md:text-7xl leading-[1.05]" style={headingFont}>{p.title}</h1>}
+            {p.sub && <p className="mt-5 text-lg opacity-90 max-w-xl">{p.sub}</p>}
+            {Btns}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (v === "split") {
     return (
       <section className="grid md:grid-cols-2" style={{ background: dna.palette?.surface }}>
@@ -539,7 +757,7 @@ function Hero({ p, dna, storeSlug }: any) {
           {p.sub && <p className="mt-5 text-lg" style={{ color: dna.palette?.muted }}>{p.sub}</p>}
           {Btns}
         </div>
-        <div className="min-h-[400px]">{p.image && <img src={p.image} className="w-full h-full object-cover" />}</div>
+        <div className="min-h-[400px]">{p.image && <img src={p.image} className="w-full h-full object-cover" style={{ objectPosition: p.focal || "50% 50%" }} />}</div>
       </section>
     );
   }
@@ -556,23 +774,30 @@ function Hero({ p, dna, storeSlug }: any) {
             {Btns}
           </div>
         </div>
-        {p.image && <img src={p.image} className="mt-12 w-full aspect-[21/9] object-cover" style={{ borderRadius: "var(--r)" }} />}
+        {p.image && <img src={p.image} className="mt-12 w-full aspect-[21/9] object-cover" style={{ borderRadius: "var(--r)", objectPosition: p.focal || "50% 50%" }} />}
       </section>
     );
   }
-  if (v === "fullscreen_image") {
+  if (v === "fullscreen_image" || v === "fixed") {
+    const h = heightClass(height) || (v === "fixed" ? "min-h-[60vh]" : "min-h-[80vh]");
     return (
-      <section className="relative h-[80vh] min-h-[500px] overflow-hidden">
-        {p.image && <img src={p.image} className="absolute inset-0 w-full h-full object-cover" />}
-        <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} />
-        <div className="relative h-full flex items-center justify-center text-center px-6">
-          <div style={{ color: "#fff" }}>
+      <section className={`relative overflow-hidden ${h}`}>
+        {p.image && (
+          <div className={`absolute inset-0 ${parallax ? "bg-fixed" : ""}`}>
+            <img
+              src={p.image}
+              className={`absolute inset-0 w-full h-full object-cover ${kenBurns ? "animate-[ken-burns_18s_ease-out_infinite]" : ""}`}
+              style={{ objectPosition: p.focal || "50% 50%" }}
+            />
+          </div>
+        )}
+        <Overlay overlay={overlay} />
+        <div className={`relative h-full w-full flex ${alignClass(contentAlign || "center-center")} px-6 py-24`} style={{ color: "#fff" }}>
+          <div className="max-w-3xl">
             {p.kicker && <div className="text-xs uppercase tracking-[0.4em] mb-4 opacity-80">{p.kicker}</div>}
-            <h1 className="text-5xl md:text-7xl max-w-4xl mx-auto" style={headingFont}>{p.title}</h1>
-            {p.sub && <p className="mt-5 max-w-xl mx-auto opacity-90">{p.sub}</p>}
-            <div className="mt-8 flex gap-3 justify-center">
-              <a href={shopHref} className="px-7 py-3 text-sm inline-block" style={{ background: "var(--p)", color: "var(--pf)", borderRadius: "var(--r)" }}>{p.cta}</a>
-            </div>
+            <h1 className="text-5xl md:text-7xl" style={headingFont}>{p.title}</h1>
+            {p.sub && <p className="mt-5 opacity-90 max-w-xl">{p.sub}</p>}
+            {Btns}
           </div>
         </div>
       </section>
@@ -591,7 +816,7 @@ function Hero({ p, dna, storeSlug }: any) {
   if (v === "asymmetric") {
     return (
       <section className="relative overflow-hidden" style={{ background: dna.palette?.surface }}>
-        <div className="absolute -right-20 -top-10 w-2/3 h-full">{p.image && <img src={p.image} className="w-full h-full object-cover" style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)" }} />}</div>
+        <div className="absolute -right-20 -top-10 w-2/3 h-full">{p.image && <img src={p.image} className="w-full h-full object-cover" style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)", objectPosition: p.focal || "50% 50%" }} />}</div>
         <div className="relative max-w-6xl mx-auto px-6 py-32 md:py-40">
           {p.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-4" style={{ color: dna.palette?.accent }}>{p.kicker}</div>}
           <h1 className="text-5xl md:text-7xl max-w-xl" style={headingFont}>{p.title}</h1>
@@ -601,9 +826,10 @@ function Hero({ p, dna, storeSlug }: any) {
       </section>
     );
   }
+  // centered (default)
   return (
-    <section className="relative overflow-hidden" style={{ background: dna.palette?.surface }}>
-      {p.image && <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60" />}
+    <section className={`relative overflow-hidden ${heightClass(height)}`} style={{ background: dna.palette?.surface }}>
+      {p.image && <img src={p.image} alt="" className={`absolute inset-0 w-full h-full object-cover opacity-60 ${kenBurns ? "animate-[ken-burns_18s_ease-out_infinite]" : ""}`} style={{ objectPosition: p.focal || "50% 50%" }} />}
       <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${dna.palette?.bg}00, ${dna.palette?.bg}cc)` }} />
       <div className="relative max-w-6xl mx-auto px-6 py-32 md:py-40">
         {p.kicker && <div className="text-xs uppercase tracking-[0.3em] mb-4" style={{ color: dna.palette?.accent }}>{p.kicker}</div>}
