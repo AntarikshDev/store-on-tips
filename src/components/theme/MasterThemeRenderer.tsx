@@ -78,6 +78,11 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
   const radius = dna.radius ?? "8px";
   const headerStyle = manifest?.header_style ?? dna.layout?.header_style ?? "classic";
   const brandName = overrides?.brand_name || dna.name;
+  const headerOv = {
+    logo_url: (overrides as any)?.logo_url || "",
+    brand_name: (overrides as any)?.brand_name || "",
+    ...((overrides as any)?.header || {}),
+  };
 
   useMemo(() => { loadFont(fonts.heading); loadFont(fonts.body); }, [fonts.heading, fonts.body]);
 
@@ -129,7 +134,7 @@ export default function MasterThemeRenderer({ manifest, page = "home", overrides
   return (
     <div style={style} className="min-h-screen">
       <div data-section-anchor="header" style={{ scrollMarginTop: 80 }}>
-        <Header dna={dna} brandName={brandName} variant={headerStyle} storeSlug={storeSlug} onNavigate={onNavigate} headerOv={overrides?.header} />
+        <Header dna={dna} brandName={brandName} variant={headerStyle} storeSlug={storeSlug} onNavigate={onNavigate} headerOv={headerOv} />
       </div>
       {renderedSections.map((s: any, i: number) => {
         // Merge overrides on top of manifest props.
@@ -198,7 +203,7 @@ function Header({ dna, brandName, variant = "classic", storeSlug, onNavigate, he
   const logoUrl = ov.logo_url || "";
   const defaultLinks: Array<{ label: string; page: string }> = [
     { label: "Shop", page: "shop" },
-    { label: "Collections", page: "shop" },
+    { label: "Collections", page: "collections" },
     { label: "About", page: "about" },
     { label: "Journal", page: "journal" },
     { label: "Contact", page: "contact" },
