@@ -107,6 +107,113 @@ const themeTool = {
   },
 };
 
+// =============================================================================
+// SERVICE INDUSTRY TOOL — for doctor / clinic / salon / spa / home-visit themes.
+// Produces full service-vertical DNA: providers, service menu, packages,
+// clinic hours, faqs. Still satisfies the marketplace manifest contract.
+// =============================================================================
+const serviceTool = {
+  type: "function",
+  function: {
+    name: "build_service_theme",
+    description: "Produce a complete service-industry theme (doctor, clinic, salon, spa, home-visit professional) with providers, service menu, packages, clinic hours, faqs.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string" }, tagline: { type: "string" }, vibe: { type: "string" },
+        palette: {
+          type: "object",
+          properties: {
+            primary: { type: "string" }, primary_fg: { type: "string" }, accent: { type: "string" },
+            bg: { type: "string" }, surface: { type: "string" }, fg: { type: "string" },
+            muted: { type: "string" }, border: { type: "string" },
+          },
+          required: ["primary","primary_fg","accent","bg","surface","fg","muted","border"],
+          additionalProperties: false,
+        },
+        fonts: {
+          type: "object",
+          properties: { heading: { type: "string" }, body: { type: "string" }, heading_weight: { type: "integer" } },
+          required: ["heading","body","heading_weight"], additionalProperties: false,
+        },
+        radius: { type: "string", enum: ["0px","4px","8px","12px","20px","9999px"] },
+        hero: {
+          type: "object",
+          properties: {
+            kicker: { type: "string" }, title: { type: "string" }, sub: { type: "string" },
+            cta: { type: "string", description: "Primary CTA, e.g. 'Book appointment'" },
+            cta_secondary: { type: "string", description: "Secondary CTA, e.g. 'View services'" },
+            image_prompt: { type: "string", description: "Premium interior or treatment-room photograph prompt, no text" },
+          },
+          required: ["kicker","title","sub","cta","cta_secondary","image_prompt"], additionalProperties: false,
+        },
+        usps: { type: "array", minItems: 4, maxItems: 4, items: { type: "object", properties: { icon: { type: "string", enum: ["shield","headphones","sparkles","gift","lock","tag","truck","refresh"] }, title: { type: "string" }, sub: { type: "string" } }, required: ["icon","title","sub"], additionalProperties: false } },
+        departments: { type: "array", minItems: 4, maxItems: 4, description: "Departments / specialities (Cardiology, Hair, Bridal, etc.)", items: { type: "object", properties: { name: { type: "string" }, image_prompt: { type: "string" } }, required: ["name","image_prompt"], additionalProperties: false } },
+        providers: {
+          type: "array", minItems: 3, maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Respectful Indian name with appropriate prefix (Dr., etc.)" },
+              role: { type: "string" }, qualifications: { type: "string" },
+              experience: { type: "string" }, bio: { type: "string" },
+              specialties: { type: "array", maxItems: 4, items: { type: "string" } },
+              image_prompt: { type: "string", description: "Professional Indian portrait, appropriate attire, warm soft lighting, neutral background, no text" },
+            },
+            required: ["name","role","qualifications","experience","bio","specialties","image_prompt"],
+            additionalProperties: false,
+          },
+        },
+        services: {
+          type: "array", minItems: 6, maxItems: 8,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" }, category: { type: "string" },
+              price: { type: "number" }, compare_at: { type: "number" },
+              duration_min: { type: "integer" }, description: { type: "string" },
+              badge: { type: "string" },
+              includes: { type: "array", maxItems: 5, items: { type: "string" } },
+            },
+            required: ["name","category","price","compare_at","duration_min","description","badge","includes"],
+            additionalProperties: false,
+          },
+        },
+        packages: {
+          type: "array", minItems: 3, maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" }, price: { type: "number" },
+              total_visits: { type: "integer" }, validity_days: { type: "integer" },
+              badge: { type: "string" },
+              includes: { type: "array", minItems: 3, maxItems: 6, items: { type: "string" } },
+            },
+            required: ["name","price","total_visits","validity_days","badge","includes"],
+            additionalProperties: false,
+          },
+        },
+        clinic_hours: {
+          type: "object",
+          properties: {
+            title: { type: "string" }, address: { type: "string" }, phone: { type: "string" }, note: { type: "string" },
+            hours: { type: "array", minItems: 7, maxItems: 7, items: { type: "object", properties: { day: { type: "string" }, open: { type: "string" }, close: { type: "string" }, closed: { type: "boolean" } }, required: ["day","open","close","closed"], additionalProperties: false } },
+          },
+          required: ["title","address","phone","note","hours"], additionalProperties: false,
+        },
+        faqs: { type: "array", minItems: 4, maxItems: 6, items: { type: "object", properties: { q: { type: "string" }, a: { type: "string" } }, required: ["q","a"], additionalProperties: false } },
+        story: { type: "object", properties: { title: { type: "string" }, body: { type: "string" } }, required: ["title","body"], additionalProperties: false },
+        testimonials: { type: "array", minItems: 3, maxItems: 3, items: { type: "object", properties: { quote: { type: "string" }, author: { type: "string" }, location: { type: "string" } }, required: ["quote","author","location"], additionalProperties: false } },
+        newsletter: { type: "object", properties: { title: { type: "string" }, sub: { type: "string" }, cta: { type: "string" } }, required: ["title","sub","cta"], additionalProperties: false },
+        footer: { type: "object", properties: { tagline: { type: "string" }, columns: { type: "array", items: { type: "object", properties: { title: { type: "string" }, links: { type: "array", items: { type: "string" } } }, required: ["title","links"], additionalProperties: false } } }, required: ["tagline","columns"], additionalProperties: false },
+        about: { type: "object", properties: { title: { type: "string" }, mission: { type: "string" }, values: { type: "array", items: { type: "string" } } }, required: ["title","mission","values"], additionalProperties: false },
+      },
+      required: ["name","tagline","vibe","palette","fonts","radius","hero","usps","departments","providers","services","packages","clinic_hours","faqs","story","testimonials","newsletter","footer","about"],
+      additionalProperties: false,
+    },
+  },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const t0 = Date.now();
