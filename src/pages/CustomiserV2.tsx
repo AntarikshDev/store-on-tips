@@ -196,8 +196,10 @@ export default function CustomiserV2() {
   ) => {
     if (!store?.id) return;
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error("Please sign in again before uploading");
       const ext = file.name.split(".").pop();
-      const path = `${store.id}/theme-overrides/${page}-${idx}-${Date.now()}.${ext}`;
+      const path = `${userData.user.id}/stores/${store.id}/theme-overrides/${page}-${idx}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
@@ -312,8 +314,10 @@ export default function CustomiserV2() {
   const uploadLogo = async (file: File) => {
     if (!store?.id) return;
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error("Please sign in again before uploading");
       const ext = file.name.split(".").pop();
-      const path = `${store.id}/logo/header-${Date.now()}.${ext}`;
+      const path = `${userData.user.id}/stores/${store.id}/logo/header-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
