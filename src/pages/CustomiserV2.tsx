@@ -946,3 +946,335 @@ function PaletteInspector({ paletteOv, onChangeColor, onApplyPreset, onReset }: 
     </div>
   );
 }
+
+// ---------- Hero Inspector — Shopify/WordPress-grade controls ----------
+const HERO_STYLES: Array<{ value: string; label: string; hint: string }> = [
+  { value: "slider",           label: "Slider / Carousel",  hint: "Multiple slides with autoplay" },
+  { value: "fixed",            label: "Fixed Banner",        hint: "Single full-bleed image" },
+  { value: "half_banner",      label: "Half Banner",         hint: "Compact, text + image side-by-side" },
+  { value: "split",            label: "Split",               hint: "Big text left, image right" },
+  { value: "fullscreen_image", label: "Full-screen Image",   hint: "Cinematic 80vh hero" },
+  { value: "video",            label: "Video Background",    hint: "MP4 / YouTube / Vimeo" },
+  { value: "magazine",         label: "Magazine / Editorial", hint: "Oversized headline + caption" },
+  { value: "editorial_serif",  label: "Editorial Italic",    hint: "Italic serif headline" },
+  { value: "minimal_left",     label: "Minimal Left",        hint: "Text-only, no image" },
+  { value: "asymmetric",       label: "Asymmetric",          hint: "Diagonal image cut" },
+  { value: "gradient",         label: "Gradient",            hint: "Brand gradient, no image" },
+  { value: "centered",         label: "Centered (default)",  hint: "Classic centered hero" },
+];
+
+const HEIGHT_OPTIONS = [
+  { value: "auto",   label: "Auto" },
+  { value: "short",  label: "Short" },
+  { value: "medium", label: "Medium" },
+  { value: "tall",   label: "Tall" },
+  { value: "full",   label: "Full" },
+];
+
+const ALIGN_GRID = [
+  "top-left",    "top-center",    "top-right",
+  "center-left", "center-center", "center-right",
+  "bottom-left", "bottom-center", "bottom-right",
+];
+
+function HeroInspector({ idx, section, sectionOv, onUpdate, onReset, onUploadImage, onColorChange, onResetColors, previewUrl }: any) {
+  const defaults = section?.props ?? {};
+  const merged = { ...defaults, ...sectionOv };
+  const style = merged.style ?? "centered";
+  const slides: any[] = merged.slides ?? [];
+  const slider = merged.slider ?? { autoplay: true, interval: 5000, transition: "fade", arrows: true, dots: true };
+  const overlay = merged.overlay ?? { color: "#000000", opacity: 0.45, gradient: "none" };
+  const effects = merged.effects ?? {};
+  const video = merged.video ?? {};
+  const height = merged.height ?? "auto";
+  const contentAlign = merged.content_align ?? "center-center";
+
+  const setSlider = (k: string, v: any) => onUpdate(idx, "slider", { ...slider, [k]: v });
+  const setOverlay = (k: string, v: any) => onUpdate(idx, "overlay", { ...overlay, [k]: v });
+  const setEffects = (k: string, v: any) => onUpdate(idx, "effects", { ...effects, [k]: v });
+  const setVideo = (k: string, v: any) => onUpdate(idx, "video", { ...video, [k]: v });
+  const setSlide = (i: number, patch: any) => {
+    const next = [...slides];
+    next[i] = { ...(next[i] || {}), ...patch };
+    onUpdate(idx, "slides", next);
+  };
+  const addSlide = () => onUpdate(idx, "slides", [...slides, { title: `Slide ${slides.length + 1}`, sub: "", cta: "Shop now", image: "" }]);
+  const removeSlide = (i: number) => onUpdate(idx, "slides", slides.filter((_, j) => j !== i));
+  const moveSlide = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= slides.length) return;
+    const next = [...slides];
+    [next[i], next[j]] = [next[j], next[i]];
+    onUpdate(idx, "slides", next);
+  };
+
+  return (
+    <div className="p-4 space-y-5">
+      <div>
+        <Label className="text-xs">Choose Style</Label>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Switch the entire hero layout — the form below updates to match.</p>
+        <Select value={style} onValueChange={(v) => onUpdate(idx, "style", v)}>
+          <SelectTrigger className="h-9 text-sm mt-1.5"><SelectValue /></SelectTrigger>
+          <SelectContent className="max-h-80">
+            {HERO_STYLES.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                <div className="flex flex-col">
+                  <span className="text-sm">{s.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{s.hint}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {style === "slider" && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Slides ({slides.length})</Label>
+            <Button size="sm" variant="outline" onClick={addSlide} className="h-7 text-xs"><Plus className="h-3 w-3 mr-1" /> Add slide</Button>
+          </div>
+          {slides.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">No slides yet. Click <strong>Add slide</strong> to start your carousel.</p>
+          )}
+          {slides.map((s, i) => (
+            <div key={i} className="border rounded-md p-3 space-y-2 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium">Slide {i + 1}</span>
+                <div className="flex gap-0.5">
+                  <button onClick={() => moveSlide(i, -1)} disabled={i === 0} className="p-1 disabled:opacity-30"><ArrowUp className="h-3 w-3" /></button>
+                  <button onClick={() => moveSlide(i, 1)} disabled={i === slides.length - 1} className="p-1 disabled:opacity-30"><ArrowDown className="h-3 w-3" /></button>
+                  <button onClick={() => removeSlide(i)} className="p-1 text-destructive"><Trash2 className="h-3 w-3" /></button>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-16 h-16 rounded border bg-background overflow-hidden flex items-center justify-center shrink-0">
+                  {s.image ? <img src={s.image} className="w-full h-full object-cover" /> : <ImageIcon className="h-4 w-4 text-muted-foreground" />}
+                </div>
+                <Button size="sm" variant="outline" asChild className="h-7 text-xs">
+                  <label className="cursor-pointer">
+                    <Upload className="h-3 w-3 mr-1" /> {s.image ? "Replace" : "Upload"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(idx, f, { slideIndex: i, key: "image" }); }} />
+                  </label>
+                </Button>
+              </div>
+              <Input value={s.kicker ?? ""} placeholder="Kicker" onChange={(e) => setSlide(i, { kicker: e.target.value })} className="h-7 text-xs" />
+              <Input value={s.title ?? ""}  placeholder="Headline" onChange={(e) => setSlide(i, { title:  e.target.value })} className="h-7 text-xs" />
+              <Textarea value={s.sub ?? ""} placeholder="Sub headline" rows={2} onChange={(e) => setSlide(i, { sub: e.target.value })} className="text-xs" />
+              <div className="grid grid-cols-2 gap-1.5">
+                <Input value={s.cta ?? ""}      placeholder="CTA label" onChange={(e) => setSlide(i, { cta: e.target.value })}      className="h-7 text-xs" />
+                <Input value={s.cta_href ?? ""} placeholder="CTA link"  onChange={(e) => setSlide(i, { cta_href: e.target.value })} className="h-7 text-xs" />
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Input value={s.cta_secondary ?? ""}      placeholder="2nd CTA"  onChange={(e) => setSlide(i, { cta_secondary: e.target.value })}      className="h-7 text-xs" />
+                <Input value={s.cta_secondary_href ?? ""} placeholder="2nd link" onChange={(e) => setSlide(i, { cta_secondary_href: e.target.value })} className="h-7 text-xs" />
+              </div>
+            </div>
+          ))}
+
+          <div className="border rounded-md p-3 space-y-2.5">
+            <Label className="text-[11px] font-semibold">Slider behaviour</Label>
+            <div className="flex items-center justify-between">
+              <span className="text-xs">Autoplay</span>
+              <Switch checked={slider.autoplay !== false} onCheckedChange={(v) => setSlider("autoplay", v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs">Interval</span>
+              <Select value={String(slider.interval ?? 5000)} onValueChange={(v) => setSlider("interval", Number(v))}>
+                <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[3000, 4000, 5000, 7000, 10000].map((n) => <SelectItem key={n} value={String(n)}>{n / 1000}s</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs">Transition</span>
+              <Select value={slider.transition ?? "fade"} onValueChange={(v) => setSlider("transition", v)}>
+                <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fade">Fade</SelectItem>
+                  <SelectItem value="slide">Slide</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs">Show arrows</span>
+              <Switch checked={slider.arrows !== false} onCheckedChange={(v) => setSlider("arrows", v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs">Show dots</span>
+              <Switch checked={slider.dots !== false} onCheckedChange={(v) => setSlider("dots", v)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {style === "video" && (
+        <div className="space-y-2 border-t pt-4">
+          <Label className="text-xs">Video source</Label>
+          <p className="text-[10px] text-muted-foreground">Paste a YouTube / Vimeo URL, or upload an MP4.</p>
+          <Input value={video.src ?? ""} placeholder="https://youtube.com/watch?v=… or https://vimeo.com/…" onChange={(e) => setVideo("src", e.target.value)} className="h-8 text-xs" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild className="h-8 text-xs">
+              <label className="cursor-pointer">
+                <Upload className="h-3 w-3 mr-1" /> Upload MP4
+                <input type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(idx, f, { videoKey: "src" }); }} />
+              </label>
+            </Button>
+            <Button size="sm" variant="outline" asChild className="h-8 text-xs">
+              <label className="cursor-pointer">
+                <ImageIcon className="h-3 w-3 mr-1" /> Poster
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(idx, f, { videoKey: "poster" }); }} />
+              </label>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!["slider", "video", "minimal_left", "gradient"].includes(style) && (
+        <div className="border-t pt-4">
+          <Label className="text-xs">Hero image</Label>
+          <div className="mt-1.5 flex items-start gap-3">
+            <div className="w-20 h-20 rounded-md border bg-muted overflow-hidden flex items-center justify-center shrink-0">
+              {merged.image
+                ? <img src={merged.image} alt="" className="w-full h-full object-cover" />
+                : <ImageIcon className="h-5 w-5 text-muted-foreground" />}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Button size="sm" variant="outline" asChild>
+                <label className="cursor-pointer">
+                  <Upload className="mr-1 h-3.5 w-3.5" /> Replace
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(idx, f); }} />
+                </label>
+              </Button>
+              {merged.image && <Button size="sm" variant="outline" onClick={() => onUpdate(idx, "image", "")}><Trash2 className="mr-1 h-3.5 w-3.5" /> Remove</Button>}
+            </div>
+          </div>
+          <div className="mt-2">
+            <Label className="text-[10px]">Focal point (object-position)</Label>
+            <Input value={merged.focal ?? ""} placeholder="50% 50%" onChange={(e) => onUpdate(idx, "focal", e.target.value)} className="h-7 text-xs mt-0.5" />
+          </div>
+        </div>
+      )}
+
+      {style !== "slider" && (
+        <div className="border-t pt-4 space-y-2">
+          <Label className="text-[11px] font-semibold">Content</Label>
+          <Input value={merged.kicker ?? ""} placeholder="Kicker" onChange={(e) => onUpdate(idx, "kicker", e.target.value)} className="h-8 text-xs" />
+          <Input value={merged.title ?? ""}  placeholder="Headline" onChange={(e) => onUpdate(idx, "title",  e.target.value)} className="h-8 text-xs" />
+          <Textarea rows={2} value={merged.sub ?? ""} placeholder="Sub headline" onChange={(e) => onUpdate(idx, "sub", e.target.value)} className="text-xs" />
+          <div className="grid grid-cols-2 gap-1.5">
+            <Input value={merged.cta ?? ""}      placeholder="CTA label" onChange={(e) => onUpdate(idx, "cta",      e.target.value)} className="h-7 text-xs" />
+            <Input value={merged.cta_href ?? ""} placeholder="CTA link"  onChange={(e) => onUpdate(idx, "cta_href", e.target.value)} className="h-7 text-xs" />
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <Input value={merged.cta_secondary ?? ""}      placeholder="2nd CTA"  onChange={(e) => onUpdate(idx, "cta_secondary",      e.target.value)} className="h-7 text-xs" />
+            <Input value={merged.cta_secondary_href ?? ""} placeholder="2nd link" onChange={(e) => onUpdate(idx, "cta_secondary_href", e.target.value)} className="h-7 text-xs" />
+          </div>
+        </div>
+      )}
+
+      <div className="border-t pt-4 space-y-3">
+        <Label className="text-[11px] font-semibold">Layout</Label>
+        <div>
+          <Label className="text-[10px]">Height</Label>
+          <div className="grid grid-cols-5 gap-1 mt-1">
+            {HEIGHT_OPTIONS.map((h) => (
+              <button
+                key={h.value}
+                onClick={() => onUpdate(idx, "height", h.value)}
+                className={`text-[10px] py-1.5 rounded border ${height === h.value ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+              >
+                {h.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label className="text-[10px]">Content position</Label>
+          <div className="grid grid-cols-3 gap-1 mt-1 max-w-[140px]">
+            {ALIGN_GRID.map((a) => (
+              <button
+                key={a}
+                onClick={() => onUpdate(idx, "content_align", a)}
+                className={`aspect-square rounded border text-[9px] ${contentAlign === a ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                title={a}
+              >
+                ●
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {["slider", "video", "fullscreen_image", "fixed"].includes(style) && (
+        <div className="border-t pt-4 space-y-2">
+          <Label className="text-[11px] font-semibold">Overlay</Label>
+          <div className="flex items-center gap-2">
+            <Label className="text-[10px] w-16">Color</Label>
+            <input type="color" value={overlay.color ?? "#000000"} onChange={(e) => setOverlay("color", e.target.value)} className="h-7 w-10 rounded border cursor-pointer" />
+            <Input value={overlay.color ?? "#000000"} onChange={(e) => setOverlay("color", e.target.value)} className="h-7 text-[11px] font-mono flex-1" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-[10px] w-16">Opacity</Label>
+            <input type="range" min={0} max={0.9} step={0.05} value={overlay.opacity ?? 0.45} onChange={(e) => setOverlay("opacity", Number(e.target.value))} className="flex-1" />
+            <span className="text-[10px] w-8 text-right">{Math.round((overlay.opacity ?? 0.45) * 100)}%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-[10px] w-16">Gradient</Label>
+            <Select value={overlay.gradient ?? "none"} onValueChange={(v) => setOverlay("gradient", v)}>
+              <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Solid</SelectItem>
+                <SelectItem value="bottom">Fade from bottom</SelectItem>
+                <SelectItem value="top">Fade from top</SelectItem>
+                <SelectItem value="radial">Radial vignette</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      <div className="border-t pt-4 space-y-2">
+        <Label className="text-[11px] font-semibold">Effects</Label>
+        <div className="flex items-center justify-between">
+          <span className="text-xs">Ken Burns zoom</span>
+          <Switch checked={!!effects.ken_burns} onCheckedChange={(v) => setEffects("ken_burns", v)} />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs">Parallax (fixed bg)</span>
+          <Switch checked={!!effects.parallax} onCheckedChange={(v) => setEffects("parallax", v)} />
+        </div>
+      </div>
+
+      <div className="pt-3 border-t space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs flex items-center gap-1.5"><Palette className="h-3 w-3" /> Section colors</Label>
+          {sectionOv?.colors && (
+            <button onClick={() => onResetColors(idx)} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"><RotateCcw className="h-3 w-3" /> reset</button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {COLOR_KEYS.map(({ key, label }) => {
+            const val = sectionOv?.colors?.[key] ?? "";
+            return (
+              <div key={key} className="space-y-1">
+                <Label className="text-[10px]">{label}</Label>
+                <div className="flex gap-1 items-center">
+                  <input type="color" value={val || "#000000"} onChange={(e) => onColorChange(idx, key, e.target.value)} className="h-7 w-7 rounded border cursor-pointer shrink-0" />
+                  <Input value={val} onChange={(e) => onColorChange(idx, key, e.target.value)} placeholder="theme" className="h-7 text-[11px] font-mono" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="pt-2 border-t">
+        <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+          <ExternalLink className="h-3 w-3" /> Open preview in new tab
+        </a>
+      </div>
+    </div>
+  );
+}
