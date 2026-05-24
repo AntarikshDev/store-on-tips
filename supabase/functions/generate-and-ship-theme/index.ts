@@ -107,6 +107,113 @@ const themeTool = {
   },
 };
 
+// =============================================================================
+// SERVICE INDUSTRY TOOL — for doctor / clinic / salon / spa / home-visit themes.
+// Produces full service-vertical DNA: providers, service menu, packages,
+// clinic hours, faqs. Still satisfies the marketplace manifest contract.
+// =============================================================================
+const serviceTool = {
+  type: "function",
+  function: {
+    name: "build_service_theme",
+    description: "Produce a complete service-industry theme (doctor, clinic, salon, spa, home-visit professional) with providers, service menu, packages, clinic hours, faqs.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string" }, tagline: { type: "string" }, vibe: { type: "string" },
+        palette: {
+          type: "object",
+          properties: {
+            primary: { type: "string" }, primary_fg: { type: "string" }, accent: { type: "string" },
+            bg: { type: "string" }, surface: { type: "string" }, fg: { type: "string" },
+            muted: { type: "string" }, border: { type: "string" },
+          },
+          required: ["primary","primary_fg","accent","bg","surface","fg","muted","border"],
+          additionalProperties: false,
+        },
+        fonts: {
+          type: "object",
+          properties: { heading: { type: "string" }, body: { type: "string" }, heading_weight: { type: "integer" } },
+          required: ["heading","body","heading_weight"], additionalProperties: false,
+        },
+        radius: { type: "string", enum: ["0px","4px","8px","12px","20px","9999px"] },
+        hero: {
+          type: "object",
+          properties: {
+            kicker: { type: "string" }, title: { type: "string" }, sub: { type: "string" },
+            cta: { type: "string", description: "Primary CTA, e.g. 'Book appointment'" },
+            cta_secondary: { type: "string", description: "Secondary CTA, e.g. 'View services'" },
+            image_prompt: { type: "string", description: "Premium interior or treatment-room photograph prompt, no text" },
+          },
+          required: ["kicker","title","sub","cta","cta_secondary","image_prompt"], additionalProperties: false,
+        },
+        usps: { type: "array", minItems: 4, maxItems: 4, items: { type: "object", properties: { icon: { type: "string", enum: ["shield","headphones","sparkles","gift","lock","tag","truck","refresh"] }, title: { type: "string" }, sub: { type: "string" } }, required: ["icon","title","sub"], additionalProperties: false } },
+        departments: { type: "array", minItems: 4, maxItems: 4, description: "Departments / specialities (Cardiology, Hair, Bridal, etc.)", items: { type: "object", properties: { name: { type: "string" }, image_prompt: { type: "string" } }, required: ["name","image_prompt"], additionalProperties: false } },
+        providers: {
+          type: "array", minItems: 3, maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Respectful Indian name with appropriate prefix (Dr., etc.)" },
+              role: { type: "string" }, qualifications: { type: "string" },
+              experience: { type: "string" }, bio: { type: "string" },
+              specialties: { type: "array", maxItems: 4, items: { type: "string" } },
+              image_prompt: { type: "string", description: "Professional Indian portrait, appropriate attire, warm soft lighting, neutral background, no text" },
+            },
+            required: ["name","role","qualifications","experience","bio","specialties","image_prompt"],
+            additionalProperties: false,
+          },
+        },
+        services: {
+          type: "array", minItems: 6, maxItems: 8,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" }, category: { type: "string" },
+              price: { type: "number" }, compare_at: { type: "number" },
+              duration_min: { type: "integer" }, description: { type: "string" },
+              badge: { type: "string" },
+              includes: { type: "array", maxItems: 5, items: { type: "string" } },
+            },
+            required: ["name","category","price","compare_at","duration_min","description","badge","includes"],
+            additionalProperties: false,
+          },
+        },
+        packages: {
+          type: "array", minItems: 3, maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" }, price: { type: "number" },
+              total_visits: { type: "integer" }, validity_days: { type: "integer" },
+              badge: { type: "string" },
+              includes: { type: "array", minItems: 3, maxItems: 6, items: { type: "string" } },
+            },
+            required: ["name","price","total_visits","validity_days","badge","includes"],
+            additionalProperties: false,
+          },
+        },
+        clinic_hours: {
+          type: "object",
+          properties: {
+            title: { type: "string" }, address: { type: "string" }, phone: { type: "string" }, note: { type: "string" },
+            hours: { type: "array", minItems: 7, maxItems: 7, items: { type: "object", properties: { day: { type: "string" }, open: { type: "string" }, close: { type: "string" }, closed: { type: "boolean" } }, required: ["day","open","close","closed"], additionalProperties: false } },
+          },
+          required: ["title","address","phone","note","hours"], additionalProperties: false,
+        },
+        faqs: { type: "array", minItems: 4, maxItems: 6, items: { type: "object", properties: { q: { type: "string" }, a: { type: "string" } }, required: ["q","a"], additionalProperties: false } },
+        story: { type: "object", properties: { title: { type: "string" }, body: { type: "string" } }, required: ["title","body"], additionalProperties: false },
+        testimonials: { type: "array", minItems: 3, maxItems: 3, items: { type: "object", properties: { quote: { type: "string" }, author: { type: "string" }, location: { type: "string" } }, required: ["quote","author","location"], additionalProperties: false } },
+        newsletter: { type: "object", properties: { title: { type: "string" }, sub: { type: "string" }, cta: { type: "string" } }, required: ["title","sub","cta"], additionalProperties: false },
+        footer: { type: "object", properties: { tagline: { type: "string" }, columns: { type: "array", items: { type: "object", properties: { title: { type: "string" }, links: { type: "array", items: { type: "string" } } }, required: ["title","links"], additionalProperties: false } } }, required: ["tagline","columns"], additionalProperties: false },
+        about: { type: "object", properties: { title: { type: "string" }, mission: { type: "string" }, values: { type: "array", items: { type: "string" } } }, required: ["title","mission","values"], additionalProperties: false },
+      },
+      required: ["name","tagline","vibe","palette","fonts","radius","hero","usps","departments","providers","services","packages","clinic_hours","faqs","story","testimonials","newsletter","footer","about"],
+      additionalProperties: false,
+    },
+  },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const t0 = Date.now();
@@ -135,6 +242,172 @@ Deno.serve(async (req) => {
     }
     const category: string = cb ? `${cb.vertical}${cb.subcategory ? "/" + cb.subcategory : ""}` : rawCategory;
     const briefBlock = cb ? `\n\nCATEGORY BRIEF\nDisplay: ${cb.display_name}\nDirection: ${cb.prompt_addendum}\nPalette hints: ${cb.palette_hints ?? "n/a"}\nTone & vocabulary: ${cb.vocabulary ?? "n/a"}\nImage style: ${cb.image_style ?? "n/a"}\nPreferred section order (use unless a clearly better one fits the vibe): ${(cb.section_priority || []).join(", ")}` : "";
+
+    // =========================================================================
+    // SERVICE INDUSTRY BRANCH — doctor/clinic/salon/spa/home-visit themes.
+    // Builds rich service DNA (providers, services, packages, hours, faqs) and
+    // renders booking-first storefront pages instead of generic catalog.
+    // =========================================================================
+    if (vert === "services") {
+      const svcSys = `You design premium booking-first websites for Indian service businesses (doctors, clinics, salons, spas, home-visit pros) sold via Pic To Cart. Every theme must feel trustworthy, calm and unmistakably built for THIS profession — not a generic shop. Real Google Fonts. Tight palette. INR pricing. Realistic Indian names, qualifications, addresses.${briefBlock}`;
+      const svcUser = `Build a complete theme for "${briefName}". Sub-vertical: ${sub ?? cb?.subcategory ?? "general service"}. Vibe: ${brief.vibe ?? cb?.display_name ?? "calm, professional"}. Fill EVERY field. Providers: 3 Indian professionals with real-sounding qualifications. Services: 6-8 bookable services with duration_min (15-120) and INR price. Packages: 3 prepaid bundles. Clinic_hours: all 7 days. FAQs: 4-6 questions a real customer would ask before booking. Image prompts must be detailed photographic descriptions, no text overlay.`;
+      const svcRes = await callAI("google/gemini-2.5-flash", {
+        messages: [{ role: "system", content: svcSys }, { role: "user", content: svcUser }],
+        tools: [serviceTool],
+        tool_choice: { type: "function", function: { name: "build_service_theme" } },
+      }, "generate-and-ship-theme");
+      const svcCall = svcRes.data.choices?.[0]?.message?.tool_calls?.[0];
+      if (!svcCall) throw new Error("AI did not return service theme blueprint");
+      const sdna = JSON.parse(svcCall.function.arguments);
+
+      // Generate images: hero + 4 department tiles + 3 provider portraits.
+      const svcImgPrompts: string[] = [
+        `${sdna.hero.image_prompt}. Cinematic, ${sdna.vibe} aesthetic, 16:9, premium interior or treatment-room photograph, warm soft light, no text.`,
+        ...sdna.departments.map((d: any) => `${d.image_prompt}. ${sdna.vibe} aesthetic, 1:1 crop, premium professional photo, no text.`),
+        ...sdna.providers.map((pr: any) => `${pr.image_prompt}. Premium professional portrait of an Indian ${pr.role}, ${sdna.vibe} aesthetic, soft studio lighting, 4:5 portrait, no text.`),
+      ];
+      const svcImgRes = await Promise.all(svcImgPrompts.map((pp) => genImage(pp, "generate-and-ship-theme")));
+      const imageCostTotal = svcImgRes.reduce((s, r) => s + r.cost, 0);
+      const imageCount = svcImgRes.filter((r) => r.url).length;
+      const heroUrl = svcImgRes[0].url;
+      sdna.departments.forEach((d: any, i: number) => { d.image = svcImgRes[1 + i].url; });
+      sdna.providers.forEach((pr: any, i: number) => { pr.image = svcImgRes[1 + sdna.departments.length + i].url; });
+
+      // Map services → products + departments → categories so legacy sections render.
+      const productsCompat = sdna.services.map((s: any) => ({
+        name: s.name, price: s.price, compare_at: s.compare_at, badge: s.badge,
+        image: heroUrl, description: s.description, duration_min: s.duration_min,
+      }));
+      const categoriesCompat = sdna.departments;
+
+      const dna = {
+        ...sdna,
+        // Compatibility aliases for the marketplace renderer + validator.
+        products: productsCompat,
+        categories: categoriesCompat,
+        layout: {
+          hero_style: "fullscreen_image",
+          category_style: "grid_4",
+          product_style: "grid_clean",
+          header_style: "classic",
+          density: "balanced",
+          section_order: ["hero","usp_strip","provider_team","service_menu","service_packages","clinic_hours","story","testimonials","faqs","newsletter"],
+        },
+      };
+
+      const homeSections = [
+        { type: "hero", props: { ...dna.hero, image: heroUrl, style: "fullscreen_image" } },
+        { type: "usp_strip", props: { items: dna.usps } },
+        { type: "provider_team", props: { title: "Meet our team", subtitle: "Experienced, certified and patient-first.", items: dna.providers } },
+        { type: "service_menu", props: { title: "Services & pricing", subtitle: "Transparent pricing, instant booking.", items: dna.services } },
+        { type: "category_grid", props: { title: "Specialities", items: dna.categories, style: "grid_4" } },
+        { type: "service_packages", props: { title: "Save with packages", subtitle: "Prepaid bundles for regular visits.", items: dna.packages } },
+        { type: "product_grid", props: { title: "Most booked this month", items: dna.products.slice(0, 6), style: "grid_clean" } },
+        { type: "clinic_hours", props: dna.clinic_hours },
+        { type: "story", props: { ...dna.story, image: heroUrl } },
+        { type: "testimonials", props: { items: dna.testimonials } },
+        { type: "faqs", props: { title: "Patient questions", items: dna.faqs } },
+        { type: "journal_strip", props: { title: "Health & wellness journal", limit: 3 } },
+        { type: "newsletter", props: dna.newsletter },
+      ];
+
+      const manifest = {
+        version: 2,
+        kind: "service",
+        dna,
+        layout: dna.layout,
+        layout_slug: layoutSlug,
+        layout_archetype: archetype ? { slug: archetype.slug, name: archetype.name, editor_schema: archetype.editor_schema, image_ratios: archetype.image_ratios, motion_language: archetype.motion_language } : null,
+        hero_image: heroUrl,
+        pages: {
+          auth: { sections: [
+            { type: "signup",          props: { title: `Create your ${dna.name} account`, cta: "Sign up" } },
+            { type: "signin",          props: { title: `Welcome back to ${dna.name}`, cta: "Sign in" } },
+            { type: "forgot_password", props: { title: "Reset your password", cta: "Send reset link" } },
+            { type: "reset_password",  props: { title: "Choose a new password", cta: "Update password" } },
+          ] },
+          home: { sections: homeSections },
+          shop: { sections: [
+            { type: "page_title", props: { title: "Our services" } },
+            { type: "service_menu", props: { title: "Choose a service", items: dna.services } },
+            { type: "booking_widget", props: { title: "Ready to book?", cta: "Book appointment" } },
+            { type: "product_grid", props: { title: "Browse all", items: dna.products, style: "grid_clean" } },
+          ] },
+          product: { sections: [
+            { type: "service_detail", props: { service: dna.services[0], image: heroUrl } },
+            { type: "booking_widget", props: { title: "Book this service" } },
+            { type: "product_detail", props: { product: dna.products[0], image: heroUrl } },
+          ] },
+          cart: { sections: [
+            { type: "line_items", props: {} },
+            { type: "cart_summary", props: { cta: "Confirm booking" } },
+          ] },
+          checkout: { sections: [
+            { type: "checkout_stepper", props: { steps: ["details", "slot", "payment", "confirm"] } },
+          ] },
+          journal: { sections: [
+            { type: "page_title", props: { title: "Journal" } },
+            { type: "journal_list", props: { limit: 12 } },
+          ] },
+          about: { sections: [
+            { type: "page_title", props: { title: dna.about.title } },
+            { type: "story",      props: { title: dna.about.title, body: dna.about.mission, image: heroUrl } },
+            { type: "provider_team", props: { title: "Our team", items: dna.providers } },
+            { type: "values",     props: { items: dna.about.values } },
+          ] },
+          contact: { sections: [
+            { type: "page_title",  props: { title: "Visit & contact" } },
+            { type: "clinic_hours", props: dna.clinic_hours },
+            { type: "contact_form", props: { email: "hello@store.in", phone: dna.clinic_hours?.phone ?? "+91 98xxx xxxxx" } },
+          ] },
+          account: { sections: [
+            { type: "account_panel",      props: { tabs: ["appointments", "packages", "family", "profile"] } },
+            { type: "appointments_panel", props: { title: "My appointments", subtitle: "Upcoming visits, history and active packages." } },
+          ] },
+        },
+        navigation: [
+          { label: "Services", to: "/shop" },
+          { label: "Team",     to: "/about" },
+          { label: "Book",     to: "/book" },
+          { label: "Contact",  to: "/contact" },
+        ],
+        footer: dna.footer,
+        header_style: "classic",
+        density: "balanced",
+      };
+
+      const validation = validateManifest(manifest);
+      if (!validation.ok) {
+        console.error("service manifest validation failed", validation.missing);
+        return json({ ok: false, error: "Manifest incomplete", missing: validation.missing }, 422);
+      }
+
+      const { count: sCount } = await supabase.from("theme_master_versions").select("id", { count: "exact", head: true }).eq("theme_id", themeId);
+      await supabase.from("theme_master_versions").insert({ theme_id: themeId, version: (sCount ?? 0) + 1, files_manifest: manifest });
+
+      const lovableUrl = `${Deno.env.get("PUBLIC_SITE_URL") ?? ""}/admin/themes/preview/${themeId}`;
+      await supabase.from("theme_master_projects").upsert({
+        theme_id: themeId, name: dna.name || themeId, description: dna.tagline || "",
+        category, preview_image: heroUrl, lovable_project_url: lovableUrl || null,
+        client_patch_prompt: `Service theme ${dna.name} (${dna.vibe}). Sub: ${sub ?? "general"}.`,
+        is_active: true,
+      }, { onConflict: "theme_id" });
+
+      await supabase.from("master_theme_deliveries").update({ layout_slug: layoutSlug }).eq("master_id", themeId);
+
+      const totalCost = Number(((svcRes.cost ?? 0) + imageCostTotal).toFixed(4));
+      await supabase.from("theme_master_metrics").upsert({
+        theme_id: themeId, total_cost_inr: totalCost, image_count: imageCount,
+        reuse_hits: 0, shipped_to_pictocart: true,
+        pictocart_response: { status: 200, body: "auto-published service theme" },
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "theme_id" });
+
+      if (body.calendar_id) await supabase.from("theme_release_calendar").update({ status: "shipped" }).eq("id", body.calendar_id);
+      await supabase.from("theme_settings").update({ last_generation_at: new Date().toISOString() }).eq("id", 1);
+
+      return json({ ok: true, theme_id: themeId, shipped: true, kind: "service", total_cost_inr: totalCost, manifest });
+    }
 
     // Load layout archetype. If none specified, AI-pick from category brief best-fit.
     let layoutSlug: string | null = brief.layout_slug ?? null;
