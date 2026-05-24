@@ -433,6 +433,7 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           customer_user_id: string | null
+          en_route_at: string | null
           family_group_id: string | null
           gst: number | null
           id: string
@@ -440,6 +441,7 @@ export type Database = {
           notes_customer: string | null
           notes_internal: string | null
           order_id: string | null
+          package_balance_id: string | null
           payment_mode: string | null
           payment_status: string | null
           price: number | null
@@ -453,6 +455,7 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"]
           store_id: string
           total: number | null
+          travel_fee: number | null
           updated_at: string
         }
         Insert: {
@@ -466,6 +469,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_user_id?: string | null
+          en_route_at?: string | null
           family_group_id?: string | null
           gst?: number | null
           id?: string
@@ -473,6 +477,7 @@ export type Database = {
           notes_customer?: string | null
           notes_internal?: string | null
           order_id?: string | null
+          package_balance_id?: string | null
           payment_mode?: string | null
           payment_status?: string | null
           price?: number | null
@@ -486,6 +491,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["appointment_status"]
           store_id: string
           total?: number | null
+          travel_fee?: number | null
           updated_at?: string
         }
         Update: {
@@ -499,6 +505,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_user_id?: string | null
+          en_route_at?: string | null
           family_group_id?: string | null
           gst?: number | null
           id?: string
@@ -506,6 +513,7 @@ export type Database = {
           notes_customer?: string | null
           notes_internal?: string | null
           order_id?: string | null
+          package_balance_id?: string | null
           payment_mode?: string | null
           payment_status?: string | null
           price?: number | null
@@ -519,6 +527,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["appointment_status"]
           store_id?: string
           total?: number | null
+          travel_fee?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1003,6 +1012,60 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: []
+      }
+      customer_package_balances: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          customer_phone: string | null
+          customer_user_id: string | null
+          expires_at: string | null
+          id: string
+          package_id: string
+          store_id: string
+          updated_at: string
+          visits_left: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          package_id: string
+          store_id: string
+          updated_at?: string
+          visits_left?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          package_id?: string
+          store_id?: string
+          updated_at?: string
+          visits_left?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_package_balances_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_package_balances_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -2660,6 +2723,67 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_commissions: {
+        Row: {
+          amount: number
+          appointment_id: string | null
+          base_amount: number
+          commission_pct: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payout_status: string
+          provider_id: string
+          store_id: string
+        }
+        Insert: {
+          amount?: number
+          appointment_id?: string | null
+          base_amount?: number
+          commission_pct?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payout_status?: string
+          provider_id: string
+          store_id: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string | null
+          base_amount?: number
+          commission_pct?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payout_status?: string
+          provider_id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_commissions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_commissions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_commissions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_schedules: {
         Row: {
           created_at: string
@@ -3098,6 +3222,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          appointment_id: string | null
           body: string | null
           created_at: string | null
           id: string
@@ -3108,12 +3233,14 @@ export type Database = {
           moderation_notes: string | null
           moderation_status: string
           product_id: string
+          provider_id: string | null
           rating: number
           store_id: string
           title: string | null
           user_id: string
         }
         Insert: {
+          appointment_id?: string | null
           body?: string | null
           created_at?: string | null
           id?: string
@@ -3124,12 +3251,14 @@ export type Database = {
           moderation_notes?: string | null
           moderation_status?: string
           product_id: string
+          provider_id?: string | null
           rating: number
           store_id: string
           title?: string | null
           user_id: string
         }
         Update: {
+          appointment_id?: string | null
           body?: string | null
           created_at?: string | null
           id?: string
@@ -3140,6 +3269,7 @@ export type Database = {
           moderation_notes?: string | null
           moderation_status?: string
           product_id?: string
+          provider_id?: string | null
           rating?: number
           store_id?: string
           title?: string | null
@@ -3209,6 +3339,56 @@ export type Database = {
           },
         ]
       }
+      service_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          included_service_ids: string[] | null
+          is_active: boolean | null
+          name: string
+          price: number
+          store_id: string
+          total_visits: number
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          included_service_ids?: string[] | null
+          is_active?: boolean | null
+          name: string
+          price?: number
+          store_id: string
+          total_visits?: number
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          included_service_ids?: string[] | null
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          store_id?: string
+          total_visits?: number
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_packages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_providers: {
         Row: {
           accepts_home_visit: boolean | null
@@ -3218,12 +3398,18 @@ export type Database = {
           created_at: string
           experience_years: number | null
           gender: string | null
+          home_base_lat: number | null
+          home_base_lng: number | null
+          home_visit_pincodes: string[] | null
+          home_visit_radius_km: number | null
           id: string
           is_active: boolean | null
           languages: string[] | null
           max_families_cap: number | null
           name: string
           photo_url: string | null
+          rating_avg: number | null
+          rating_count: number | null
           registration_number: string | null
           role_label: string | null
           sort_order: number | null
@@ -3240,12 +3426,18 @@ export type Database = {
           created_at?: string
           experience_years?: number | null
           gender?: string | null
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          home_visit_pincodes?: string[] | null
+          home_visit_radius_km?: number | null
           id?: string
           is_active?: boolean | null
           languages?: string[] | null
           max_families_cap?: number | null
           name: string
           photo_url?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
           registration_number?: string | null
           role_label?: string | null
           sort_order?: number | null
@@ -3262,12 +3454,18 @@ export type Database = {
           created_at?: string
           experience_years?: number | null
           gender?: string | null
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          home_visit_pincodes?: string[] | null
+          home_visit_radius_km?: number | null
           id?: string
           is_active?: boolean | null
           languages?: string[] | null
           max_families_cap?: number | null
           name?: string
           photo_url?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
           registration_number?: string | null
           role_label?: string | null
           sort_order?: number | null
@@ -3296,6 +3494,7 @@ export type Database = {
           duration_min: number
           gst_pct: number | null
           home_visit_addon: number | null
+          home_visit_enabled: boolean | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -3317,6 +3516,7 @@ export type Database = {
           duration_min?: number
           gst_pct?: number | null
           home_visit_addon?: number | null
+          home_visit_enabled?: boolean | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -3338,6 +3538,7 @@ export type Database = {
           duration_min?: number
           gst_pct?: number | null
           home_visit_addon?: number | null
+          home_visit_enabled?: boolean | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -4858,6 +5059,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      family_plan_slots_left: { Args: { _plan_id: string }; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       get_order_by_tracking: {
         Args: { tracking_code: string }
