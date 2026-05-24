@@ -175,7 +175,11 @@ export default function CustomiserV2() {
     toast.success(`Reset all changes on ${page}`);
   };
 
-  const uploadImage = async (idx: number, file: File, key: "image" | "logo_url" = "image") => {
+  const uploadImage = async (
+    idx: number,
+    file: File,
+    target: "image" | "logo_url" | { slideIndex: number; key?: string } | { videoKey: "poster" | "src" } = "image",
+  ) => {
     if (!store?.id) return;
     try {
       const ext = file.name.split(".").pop();
@@ -183,8 +187,22 @@ export default function CustomiserV2() {
       const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
-      if (key === "logo_url") updateHeader("logo_url", data.publicUrl);
-      else updateField(idx, "image", data.publicUrl);
+      const url = data.publicUrl;
+      if (target === "logo_url") {
+        updateHeader("logo_url", url);
+      } else if (typeof target === "object" && "slideIndex" in target) {
+        // Update a single slide's image inside the slides array
+        const cur = (overrides?.pages?.[page]?.sections?.[idx]?.slides
+          ?? sections[idx]?.props?.slides ?? []) as any[];
+        const next = [...cur];
+        next[target.slideIndex] = { ...(next[target.slideIndex] || {}), [target.key || "image"]: url };
+        updateField(idx, "slides", next);
+      } else if (typeof target === "object" && "videoKey" in target) {
+        const cur = overrides?.pages?.[page]?.sections?.[idx]?.video ?? sections[idx]?.props?.video ?? {};
+        updateField(idx, "video", { ...cur, [target.videoKey]: url, provider: "upload" });
+      } else {
+        updateField(idx, "image", url);
+      }
       toast.success("Image updated");
     } catch (e: any) {
       toast.error(e?.message || "Upload failed");
