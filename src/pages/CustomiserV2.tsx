@@ -427,7 +427,7 @@ export default function CustomiserV2() {
 
       <div className="flex flex-1 min-h-0">
         {/* Left: Pages + Sections */}
-        <aside className="w-44 border-r flex flex-col">
+        <aside className="border-r flex flex-col shrink-0" style={{ width: leftWidth }}>
           <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Pages</div>
           <ScrollArea className="flex-1">
             <div className="px-2 pb-3 space-y-0.5">
