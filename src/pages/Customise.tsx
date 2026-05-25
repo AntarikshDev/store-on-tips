@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { usePremiumThemePurchase } from '@/hooks/usePremiumThemePurchase';
 import { applyMasterTheme } from '@/lib/applyMasterTheme';
+import { getPremiumTrialStatus } from '@/lib/premiumThemeTrial';
 
 const Customise = () => {
   const { store, setStore, refetchStore } = useStore();
