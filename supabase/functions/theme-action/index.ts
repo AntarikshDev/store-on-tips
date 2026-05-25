@@ -8,13 +8,16 @@ const AUTH = { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"
 
 async function requireAdmin(req: Request): Promise<boolean> {
   const auth = req.headers.get("Authorization");
-  if (!auth) return false;
-  const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return false;
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+  if (!auth) { console.warn("theme-action: no Authorization header"); return false; }
+  const token = auth.replace(/^Bearer\s+/i, "");
+  const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
+  if (userErr || !user) { console.warn("theme-action: getUser failed", userErr?.message); return false; }
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+  if (error) console.warn("theme-action: role lookup error", error.message);
+  if (!data) console.warn("theme-action: user not admin", user.id);
   return !!data;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
