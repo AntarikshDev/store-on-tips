@@ -213,6 +213,10 @@ const Customise = () => {
             <FooterEditor config={footerConfig} onChange={setFooterConfig} />
           </TabsContent>
 
+          <TabsContent value="ticker">
+            <PromoTickerEditor config={promoTicker} onChange={setPromoTicker} />
+          </TabsContent>
+
           <TabsContent value="features">
             <Card>
               <CardHeader>
