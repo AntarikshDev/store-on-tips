@@ -348,7 +348,7 @@ export default function CustomiserV2() {
   const save = async () => {
     if (!store) return;
     setSaving(true);
-    const newSettings = { ...settings, theme_overrides: overrides };
+    const newSettings = { ...settings, theme_overrides: overrides, promo_ticker: promoTicker };
     const { error } = await supabase.from("stores").update({ settings: newSettings }).eq("id", store.id);
     if (error) toast.error("Failed to save");
     else {
