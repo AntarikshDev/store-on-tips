@@ -293,13 +293,13 @@ const Onboarding = () => {
             .from('stores').select('settings').eq('id', store.id).maybeSingle();
           const currentSettings = (freshStore?.settings as any) || (store.settings as any) || {};
 
-          // Tag pending premium theme so dashboard + customise show the paywall
+          // Tag pending premium theme so dashboard + customise show the paywall.
+          // Merchants get a 14-day free trial of any premium theme — after that
+          // the Customiser locks and a storefront ticker urges them to pay.
           const purchased: string[] = currentSettings.purchased_themes || [];
           if (isPremiumMaster && !purchased.includes(data.selectedThemeId)) {
-            currentSettings.pending_premium_theme = {
-              theme_id: data.selectedThemeId,
-              selected_at: new Date().toISOString(),
-            };
+            const { buildPendingPremiumTheme } = await import('@/lib/premiumThemeTrial');
+            currentSettings.pending_premium_theme = buildPendingPremiumTheme(data.selectedThemeId);
           }
 
           if (!currentSettings.homepage_sections?.length) {
