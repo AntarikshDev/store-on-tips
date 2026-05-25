@@ -67,7 +67,11 @@ const Customise = () => {
     },
   });
   const purchasedThemes: string[] = settings.purchased_themes || [];
-  const isLocked = isMasterTheme && !!themeMeta?.is_premium && !purchasedThemes.includes(activeThemeName);
+  // Free-trial check: merchants get 14 days of Customiser access on a premium theme.
+  const pendingPremium = (settings as any)?.pending_premium_theme;
+  const trial = getPremiumTrialStatus(pendingPremium);
+  const inTrial = !!pendingPremium && pendingPremium.theme_id === activeThemeName && trial.active;
+  const isLocked = isMasterTheme && !!themeMeta?.is_premium && !purchasedThemes.includes(activeThemeName) && !inTrial;
   const { purchase, loading: paying } = usePremiumThemePurchase();
 
   const handleUnlock = async () => {
