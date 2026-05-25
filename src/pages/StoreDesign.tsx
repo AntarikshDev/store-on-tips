@@ -7,6 +7,8 @@ import HomepageBuilder, { type HomepageSection } from '@/components/store-design
 import ThemeMarketplace from '@/components/store-design/ThemeMarketplace';
 import HeaderEditor, { DEFAULT_HEADER, type HeaderConfig } from '@/components/store-design/HeaderEditor';
 import FooterEditor, { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
+import PromoTickerEditor, { DEFAULT_PROMO_TICKER } from '@/components/store-design/PromoTickerEditor';
+import type { PromoTickerConfig } from '@/components/storefront/PromoTicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
