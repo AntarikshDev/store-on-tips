@@ -532,8 +532,17 @@ export default function CustomiserV2() {
           </div>
         </main>
 
+        {/* Drag handle — right panel */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          onMouseDown={startDrag("right")}
+          className="w-1 cursor-col-resize bg-border/40 hover:bg-primary/60 active:bg-primary transition-colors shrink-0"
+          title="Drag to resize"
+        />
+
         {/* Right: Inspector */}
-        <aside className="w-80 border-l flex flex-col">
+        <aside className="border-l flex flex-col shrink-0" style={{ width: rightWidth }}>
           <InspectorHeader selected={selected} headerOv={headerOv} footerOv={footerOv} sections={sections} sectionOverrides={sectionOverrides}
             onResetHeader={resetHeader} onResetFooter={resetFooter} onResetSection={resetSection} />
           <ScrollArea className="flex-1">
