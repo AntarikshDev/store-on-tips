@@ -114,14 +114,15 @@ const AdminUsers = () => {
           const store = storeSlugMap.get(meta.store_slug || aliasStoreSlug);
           const rawRoles = roleMap.get(auth.id) || ['customer'];
           const roles = Array.from(new Set([...rawRoles.filter((r) => r !== 'seller'), 'customer']));
+          const cust = customerMap.get(auth.id);
           return {
             id: auth.id,
             user_id: auth.id,
-            full_name: meta.full_name || null,
-            phone: meta.phone || null,
+            full_name: meta.full_name || cust?.name || null,
+            phone: meta.phone || cust?.phone || null,
             avatar_url: meta.avatar_url || null,
             created_at: auth.created_at,
-            email: meta.customer_email || (aliasStoreSlug ? auth.email?.split('@')[0]?.replace('-at-', '@') : auth.email) || null,
+            email: meta.customer_email || cust?.email || (aliasStoreSlug ? auth.email?.split('@')[0]?.replace('-at-', '@') : auth.email) || null,
             last_sign_in_at: auth.last_sign_in_at || null,
             email_confirmed_at: auth.email_confirmed_at || null,
             roles,
