@@ -12,12 +12,14 @@ import BottomNav from './BottomNav';
 import SearchOverlay from './SearchOverlay';
 import StorefrontFooter from './StorefrontFooter';
 import StorefrontAssistant from './StorefrontAssistant';
+import PremiumTrialTicker from './PremiumTrialTicker';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 
 interface Props {
   children: ReactNode;
   store: {
     id?: string;
+    user_id?: string | null;
     name: string;
     slug: string;
     logo_url?: string | null;
@@ -101,6 +103,8 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: colors.background, color: colors.text, fontFamily: fonts.body }}>
+      {/* Owner-only premium-theme free-trial countdown */}
+      <PremiumTrialTicker storeId={store.id} storeUserId={store.user_id} settings={store.settings} />
       {/* Navigation */}
       <header className="sticky top-0 z-50 border-b backdrop-blur-sm" style={{ borderColor: colors.secondary + '80', backgroundColor: colors.card + 'ee' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
