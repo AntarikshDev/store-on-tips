@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import CreditBadge from '@/components/wallet/CreditBadge';
 import { HelpLauncher } from '@/components/HelpLauncher';
+import GlobalSearch from '@/components/GlobalSearch';
 import { useStore } from '@/hooks/useStore';
 import { SubscriptionGate } from '@/components/billing/SubscriptionGate';
 import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
