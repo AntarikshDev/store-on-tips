@@ -5,14 +5,16 @@ import HomepageBuilder, { type HomepageSection } from '@/components/store-design
 import HeaderEditor, { DEFAULT_HEADER, type HeaderConfig } from '@/components/store-design/HeaderEditor';
 import FooterEditor, { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 import ThemeSectionsEditor from '@/components/store-design/ThemeSectionsEditor';
+import PromoTickerEditor, { DEFAULT_PROMO_TICKER } from '@/components/store-design/PromoTickerEditor';
+import type { PromoTickerConfig } from '@/components/storefront/PromoTicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { LayoutDashboard, PanelTop, PanelBottom, ToggleLeft, Lock, ExternalLink, Sparkles, Crown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LayoutDashboard, PanelTop, PanelBottom, ToggleLeft, Lock, ExternalLink, Sparkles, Crown, Megaphone } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { usePremiumThemePurchase } from '@/hooks/usePremiumThemePurchase';
 import { applyMasterTheme } from '@/lib/applyMasterTheme';
@@ -21,11 +23,14 @@ import { getPremiumTrialStatus } from '@/lib/premiumThemeTrial';
 const Customise = () => {
   const { store, setStore, refetchStore } = useStore();
   const [saving, setSaving] = useState(false);
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const settings = (store?.settings || {}) as any;
 
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>(settings.homepage_sections || []);
   const [headerConfig, setHeaderConfig] = useState<HeaderConfig>({ ...DEFAULT_HEADER, ...(settings.header || {}) });
   const [footerConfig, setFooterConfig] = useState<FooterConfig>({ ...DEFAULT_FOOTER, ...(settings.footer || {}) });
+  const [promoTicker, setPromoTicker] = useState<PromoTickerConfig>({ ...DEFAULT_PROMO_TICKER, ...(settings.promo_ticker || {}) });
   const [showAllProductsGrid, setShowAllProductsGrid] = useState<boolean>(settings.show_all_products_grid !== false);
   const [themeOverrides, setThemeOverrides] = useState<any>(settings.theme_overrides || {});
   const [features, setFeatures] = useState({
@@ -42,6 +47,7 @@ const Customise = () => {
     setHomepageSections(s.homepage_sections || []);
     setHeaderConfig({ ...DEFAULT_HEADER, ...(s.header || {}) });
     setFooterConfig({ ...DEFAULT_FOOTER, ...(s.footer || {}) });
+    setPromoTicker({ ...DEFAULT_PROMO_TICKER, ...(s.promo_ticker || {}) });
     setShowAllProductsGrid(s.show_all_products_grid !== false);
     setThemeOverrides(s.theme_overrides || {});
     setFeatures({
@@ -96,6 +102,7 @@ const Customise = () => {
       homepage_sections: homepageSections,
       header: headerConfig,
       footer: footerConfig,
+      promo_ticker: promoTicker,
       show_all_products_grid: showAllProductsGrid,
       theme_overrides: themeOverrides,
       features,
@@ -163,12 +170,13 @@ const Customise = () => {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue={isMasterTheme ? 'theme' : 'homepage'} className="mt-6">
+        <Tabs defaultValue={tabParam || (isMasterTheme ? 'theme' : 'homepage')} className="mt-6">
           <TabsList className="flex flex-wrap h-auto gap-1">
             {isMasterTheme && <TabsTrigger value="theme"><Sparkles className="mr-1 h-3.5 w-3.5" /> Theme Sections</TabsTrigger>}
             <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
             <TabsTrigger value="header"><PanelTop className="mr-1 h-3.5 w-3.5" /> Header</TabsTrigger>
             <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
+            <TabsTrigger value="ticker"><Megaphone className="mr-1 h-3.5 w-3.5" /> Promo Ticker</TabsTrigger>
             <TabsTrigger value="features"><ToggleLeft className="mr-1 h-3.5 w-3.5" /> Features</TabsTrigger>
           </TabsList>
 
@@ -203,6 +211,10 @@ const Customise = () => {
 
           <TabsContent value="footer">
             <FooterEditor config={footerConfig} onChange={setFooterConfig} />
+          </TabsContent>
+
+          <TabsContent value="ticker">
+            <PromoTickerEditor config={promoTicker} onChange={setPromoTicker} />
           </TabsContent>
 
           <TabsContent value="features">
