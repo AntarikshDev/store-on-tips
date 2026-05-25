@@ -569,6 +569,8 @@ function InspectorHeader({ selected, headerOv, footerOv, sections, sectionOverri
     if (Object.keys(footerOv).length > 0) {
       resetBtn = <Button size="sm" variant="ghost" onClick={onResetFooter}><RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset</Button>;
     }
+  } else if (selected?.kind === "ticker") {
+    title = "Promo Ticker";
   } else if (selected?.kind === "section") {
     const s = sections[selected.index];
     title = SECTION_LABEL[s?.type] || s?.type || "Section";
