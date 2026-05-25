@@ -13,6 +13,7 @@ import SearchOverlay from './SearchOverlay';
 import StorefrontFooter from './StorefrontFooter';
 import StorefrontAssistant from './StorefrontAssistant';
 import PremiumTrialTicker from './PremiumTrialTicker';
+import PromoTicker from './PromoTicker';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 
 interface Props {
