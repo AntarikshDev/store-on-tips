@@ -170,12 +170,13 @@ const Customise = () => {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue={isMasterTheme ? 'theme' : 'homepage'} className="mt-6">
+        <Tabs defaultValue={tabParam || (isMasterTheme ? 'theme' : 'homepage')} className="mt-6">
           <TabsList className="flex flex-wrap h-auto gap-1">
             {isMasterTheme && <TabsTrigger value="theme"><Sparkles className="mr-1 h-3.5 w-3.5" /> Theme Sections</TabsTrigger>}
             <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
             <TabsTrigger value="header"><PanelTop className="mr-1 h-3.5 w-3.5" /> Header</TabsTrigger>
             <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
+            <TabsTrigger value="ticker"><Megaphone className="mr-1 h-3.5 w-3.5" /> Promo Ticker</TabsTrigger>
             <TabsTrigger value="features"><ToggleLeft className="mr-1 h-3.5 w-3.5" /> Features</TabsTrigger>
           </TabsList>
 
