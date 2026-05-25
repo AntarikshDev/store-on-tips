@@ -262,6 +262,10 @@ const StoreDesign = () => {
             <TabsContent value="footer">
               <FooterEditor config={footerConfig} onChange={setFooterConfig} />
             </TabsContent>
+
+            <TabsContent value="ticker">
+              <PromoTickerEditor config={promoTicker} onChange={setPromoTicker} />
+            </TabsContent>
           </Tabs>
         </div>
 
