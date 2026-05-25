@@ -369,7 +369,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center justify-center md:justify-start">
+            <GlobalSearch />
+          </div>
           <CreditBadge />
           <Link to="/profile">
             <Button variant="ghost" size="icon" className="rounded-full">
