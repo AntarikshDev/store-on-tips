@@ -70,6 +70,7 @@ type Selection =
   | { kind: "section"; index: number }
   | { kind: "header" }
   | { kind: "footer" }
+  | { kind: "ticker" }
   | { kind: "palette" };
 
 const PALETTE_PRESETS: Array<{ name: string; colors: Record<string, string> }> = [
