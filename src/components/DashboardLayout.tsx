@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import CreditBadge from '@/components/wallet/CreditBadge';
 import { HelpLauncher } from '@/components/HelpLauncher';
+import GlobalSearch from '@/components/GlobalSearch';
 import { useStore } from '@/hooks/useStore';
 import { SubscriptionGate } from '@/components/billing/SubscriptionGate';
 import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
@@ -368,7 +369,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center justify-center md:justify-start">
+            <GlobalSearch />
+          </div>
           <CreditBadge />
           <Link to="/profile">
             <Button variant="ghost" size="icon" className="rounded-full">
