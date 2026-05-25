@@ -102,6 +102,7 @@ const Customise = () => {
       homepage_sections: homepageSections,
       header: headerConfig,
       footer: footerConfig,
+      promo_ticker: promoTicker,
       show_all_products_grid: showAllProductsGrid,
       theme_overrides: themeOverrides,
       features,
