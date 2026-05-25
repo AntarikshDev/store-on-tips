@@ -514,6 +514,15 @@ export default function CustomiserV2() {
               <FooterInspector footerOv={footerOv} onChange={updateFooter} />
             )}
 
+            {selected?.kind === "ticker" && (
+              <div className="p-3">
+                <PromoTickerEditor config={promoTicker} onChange={setPromoTicker} />
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Click <span className="font-semibold">Save</span> in the top bar to publish the ticker to your live storefront.
+                </p>
+              </div>
+            )}
+
             {selected?.kind === "palette" && (
               <PaletteInspector
                 paletteOv={paletteOv}
