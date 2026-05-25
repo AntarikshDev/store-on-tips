@@ -64,7 +64,7 @@ const ENTRIES: Entry[] = [
   { group: 'Storefront', label: 'Themes', path: '/themes', icon: Palette, keywords: 'theme template design premium free skin' },
   { group: 'Storefront', label: 'Customise Store', path: '/customise', icon: SettingsIcon, keywords: 'design editor colors fonts homepage builder layout' },
   { group: 'Storefront', label: 'Store Design', path: '/store-design', icon: Palette, keywords: 'design header footer ticker promo banner sections' },
-  { group: 'Storefront', label: 'Promo Ticker', path: '/store-design?tab=ticker', icon: Megaphone, keywords: 'ticker marquee announcement promo bar offer banner' },
+  { group: 'Storefront', label: 'Promo Ticker', path: '/promo-ticker', icon: Megaphone, keywords: 'ticker marquee announcement promo bar offer banner' },
   { group: 'Storefront', label: 'Policies & Pages', path: '/policies', icon: FileText, keywords: 'terms privacy refund shipping policy pages legal' },
   { group: 'Storefront', label: 'Store Analytics', path: '/analytics', icon: TrendingUp, keywords: 'analytics traffic conversion funnel insights' },
 

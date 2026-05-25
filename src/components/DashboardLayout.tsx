@@ -131,7 +131,7 @@ const navTree: NavEntry[] = [
     children: [
       { label: 'Themes', icon: Palette, path: '/themes' },
       { label: 'Store Design', icon: SettingsIcon, path: '/customise' },
-      { label: 'Promo Ticker', icon: Megaphone, path: '/customise?tab=ticker' },
+      { label: 'Promo Ticker', icon: Megaphone, path: '/promo-ticker' },
       { label: 'Policies & Pages', icon: FileText, path: '/policies' },
       { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     ],
