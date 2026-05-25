@@ -23,11 +23,14 @@ import { getPremiumTrialStatus } from '@/lib/premiumThemeTrial';
 const Customise = () => {
   const { store, setStore, refetchStore } = useStore();
   const [saving, setSaving] = useState(false);
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const settings = (store?.settings || {}) as any;
 
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>(settings.homepage_sections || []);
   const [headerConfig, setHeaderConfig] = useState<HeaderConfig>({ ...DEFAULT_HEADER, ...(settings.header || {}) });
   const [footerConfig, setFooterConfig] = useState<FooterConfig>({ ...DEFAULT_FOOTER, ...(settings.footer || {}) });
+  const [promoTicker, setPromoTicker] = useState<PromoTickerConfig>({ ...DEFAULT_PROMO_TICKER, ...(settings.promo_ticker || {}) });
   const [showAllProductsGrid, setShowAllProductsGrid] = useState<boolean>(settings.show_all_products_grid !== false);
   const [themeOverrides, setThemeOverrides] = useState<any>(settings.theme_overrides || {});
   const [features, setFeatures] = useState({
