@@ -7,6 +7,8 @@ import HomepageBuilder, { type HomepageSection } from '@/components/store-design
 import ThemeMarketplace from '@/components/store-design/ThemeMarketplace';
 import HeaderEditor, { DEFAULT_HEADER, type HeaderConfig } from '@/components/store-design/HeaderEditor';
 import FooterEditor, { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
+import PromoTickerEditor, { DEFAULT_PROMO_TICKER } from '@/components/store-design/PromoTickerEditor';
+import type { PromoTickerConfig } from '@/components/storefront/PromoTicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom, Package } from 'lucide-react';
+import { Check, Crown, Palette, Eye, Sparkles, LayoutDashboard, PanelTop, PanelBottom, Package, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const StoreDesign = () => {
@@ -35,6 +37,7 @@ const StoreDesign = () => {
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>(storeSettings.homepage_sections || []);
   const [headerConfig, setHeaderConfig] = useState<HeaderConfig>({ ...DEFAULT_HEADER, ...(storeSettings.header || {}) });
   const [footerConfig, setFooterConfig] = useState<FooterConfig>({ ...DEFAULT_FOOTER, ...(storeSettings.footer || {}) });
+  const [promoTicker, setPromoTicker] = useState<PromoTickerConfig>({ ...DEFAULT_PROMO_TICKER, ...(storeSettings.promo_ticker || {}) });
   const [showAllProductsGrid, setShowAllProductsGrid] = useState<boolean>(storeSettings.show_all_products_grid !== false);
   const [hydratedStoreId, setHydratedStoreId] = useState<string | null>(null);
 
@@ -52,6 +55,7 @@ const StoreDesign = () => {
     setHomepageSections(nextSettings.homepage_sections || []);
     setHeaderConfig({ ...DEFAULT_HEADER, ...(nextSettings.header || {}) });
     setFooterConfig({ ...DEFAULT_FOOTER, ...(nextSettings.footer || {}) });
+    setPromoTicker({ ...DEFAULT_PROMO_TICKER, ...(nextSettings.promo_ticker || {}) });
     setShowAllProductsGrid(nextSettings.show_all_products_grid !== false);
     setHydratedStoreId(store.id);
   }, [store, hydratedStoreId]);
@@ -90,6 +94,7 @@ const StoreDesign = () => {
       homepage_sections: homepageSections,
       header: headerConfig,
       footer: footerConfig,
+      promo_ticker: promoTicker,
       show_all_products_grid: showAllProductsGrid,
     };
 
@@ -147,6 +152,7 @@ const StoreDesign = () => {
               <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
               <TabsTrigger value="header"><PanelTop className="mr-1 h-3.5 w-3.5" /> Header</TabsTrigger>
               <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
+              <TabsTrigger value="ticker"><Megaphone className="mr-1 h-3.5 w-3.5" /> Ticker</TabsTrigger>
             </TabsList>
 
             <TabsContent value="packs" className="space-y-4">
@@ -255,6 +261,10 @@ const StoreDesign = () => {
 
             <TabsContent value="footer">
               <FooterEditor config={footerConfig} onChange={setFooterConfig} />
+            </TabsContent>
+
+            <TabsContent value="ticker">
+              <PromoTickerEditor config={promoTicker} onChange={setPromoTicker} />
             </TabsContent>
           </Tabs>
         </div>
