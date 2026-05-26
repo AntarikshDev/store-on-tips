@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   Users,
   Megaphone,
+  Flame,
   Settings as SettingsIcon,
   Sparkles,
   Star,
