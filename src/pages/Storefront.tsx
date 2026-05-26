@@ -13,6 +13,7 @@ import StorefrontLayout, { resolveTheme } from '@/components/storefront/Storefro
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
+import ProductCardActions from '@/components/storefront/ProductCardActions';
 import AnimatedSection from '@/components/storefront/AnimatedSection';
 import WishlistButton from '@/components/storefront/WishlistButton';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
@@ -488,6 +489,8 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
                     {product.compare_at_price && product.compare_at_price > product.price && <span className="text-[10px] md:text-xs line-through opacity-40">₹{Number(product.compare_at_price).toLocaleString('en-IN')}</span>}
                   </div>
                   <ProductShareButtons productTitle={product.title} productUrl={`/store/${slug}/product/${product.id}`} productImage={product.images?.[0]} primaryColor={colors.primary} />
+                  <ProductCardActions storeSlug={slug!} product={product} primaryColor={colors.primary} primaryFg="#fff" borderRadius={borderRadius} />
+
                 </div>
               </Link>
             ))}

@@ -4,6 +4,7 @@ import { Truck, Shield, RefreshCw, Headphones, Lock, Tag, Gift, Sparkles, Star, 
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { supabase } from "@/integrations/supabase/client";
+import ProductCardActions from "@/components/storefront/ProductCardActions";
 
 /**
  * Manifest-driven theme renderer. Single source of truth for both the
@@ -1514,17 +1515,28 @@ function ProductBlock({ p, dna, storeSlug, page }: any) {
       {Empty}
       <div className={`grid grid-cols-2 ${cols} gap-6`}>
         {items.map((pr: any, i: number) => (
-          <Link to={linkFor(pr)} key={i} className="group">
-            <div className="aspect-square mb-3 overflow-hidden relative" style={{ background: dna.palette?.surface, borderRadius: "var(--r)" }}>
-              {pr.image && <img src={pr.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />}
-              {pr.badge && <span className="absolute top-2 left-2 text-[10px] px-2 py-1 uppercase tracking-wider z-10" style={{ background: dna.palette?.accent, color: dna.palette?.bg, borderRadius: "var(--r)" }}>{pr.badge}</span>}
-            </div>
-            <div className="text-sm font-medium">{pr.name}</div>
-            <div className="mt-1 text-sm flex gap-2">
-              <span>₹{pr.price}</span>
-              {pr.compare_at > pr.price && <span className="line-through" style={{ color: dna.palette?.muted }}>₹{pr.compare_at}</span>}
-            </div>
-          </Link>
+          <div key={i} className="group">
+            <Link to={linkFor(pr)} className="block">
+              <div className="aspect-square mb-3 overflow-hidden relative" style={{ background: dna.palette?.surface, borderRadius: "var(--r)" }}>
+                {pr.image && <img src={pr.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />}
+                {pr.badge && <span className="absolute top-2 left-2 text-[10px] px-2 py-1 uppercase tracking-wider z-10" style={{ background: dna.palette?.accent, color: dna.palette?.bg, borderRadius: "var(--r)" }}>{pr.badge}</span>}
+              </div>
+              <div className="text-sm font-medium">{pr.name}</div>
+              <div className="mt-1 text-sm flex gap-2">
+                <span>₹{pr.price}</span>
+                {pr.compare_at > pr.price && <span className="line-through" style={{ color: dna.palette?.muted }}>₹{pr.compare_at}</span>}
+              </div>
+            </Link>
+            {storeSlug && pr.id && (
+              <ProductCardActions
+                storeSlug={storeSlug}
+                product={{ id: pr.id, title: pr.name, price: pr.price, image: pr.image }}
+                primaryColor={dna.palette?.primary}
+                primaryFg={dna.palette?.primary_fg}
+                borderRadius={dna.radius ?? "8px"}
+              />
+            )}
+          </div>
         ))}
       </div>
     </section>
