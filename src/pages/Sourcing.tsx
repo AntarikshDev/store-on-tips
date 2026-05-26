@@ -345,31 +345,16 @@ export default function Sourcing() {
 }
 
 function ProductDrawer({ product, onClose, storeId }: { product: SourcingProduct | null; onClose: () => void; storeId: string | null }) {
-  const [unlocked, setUnlocked] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [marginPct, setMarginPct] = useState(60);
 
-  useEffect(() => { setUnlocked(null); setMarginPct(60); }, [product?.id]);
+  useEffect(() => { setMarginPct(60); }, [product?.id]);
 
   if (!product) return null;
 
   const retail = product.price_min ? Math.round(product.price_min * (1 + marginPct / 100)) : null;
-
-  async function reveal() {
-    if (!storeId) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("sourcing-reveal-contact", {
-        body: { store_id: storeId, product_id: product!.id },
-      });
-      if (error) throw error;
-      if (data?.error === "INSUFFICIENT_CREDITS") { toast.error("Not enough credits"); return; }
-      setUnlocked(data.supplier);
-      toast.success(data.already_unlocked ? "Already unlocked" : "Contact unlocked!");
-    } catch (e: any) { toast.error(e.message); }
-    finally { setBusy(false); }
-  }
+  void busy; void setBusy;
 
   async function importToStore() {
     if (!storeId) return;
