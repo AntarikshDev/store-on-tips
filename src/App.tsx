@@ -34,6 +34,7 @@ const ProductForm = lazy(() => import("@/pages/ProductForm"));
 const Customise = lazy(() => import("@/pages/CustomiserV2"));
 const CustomiseLegacy = lazy(() => import("@/pages/Customise"));
 const PromoTickerPage = lazy(() => import("@/pages/PromoTicker"));
+const Sourcing = lazy(() => import("@/pages/Sourcing"));
 const AdminThemeLivePreview = lazy(() => import("@/pages/admin/AdminThemeLivePreview"));
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
 const CodSettings = lazy(() => import("@/pages/CodSettings"));
