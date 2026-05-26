@@ -34,6 +34,7 @@ const ProductForm = lazy(() => import("@/pages/ProductForm"));
 const Customise = lazy(() => import("@/pages/CustomiserV2"));
 const CustomiseLegacy = lazy(() => import("@/pages/Customise"));
 const PromoTickerPage = lazy(() => import("@/pages/PromoTicker"));
+const Sourcing = lazy(() => import("@/pages/Sourcing"));
 const AdminThemeLivePreview = lazy(() => import("@/pages/admin/AdminThemeLivePreview"));
 const PaymentSettings = lazy(() => import("@/pages/PaymentSettings"));
 const CodSettings = lazy(() => import("@/pages/CodSettings"));
@@ -196,6 +197,7 @@ const AppRoutes = () => {
               <Route path="/customise" element={<Customise />} />
               <Route path="/customise/legacy" element={<CustomiseLegacy />} />
               <Route path="/promo-ticker" element={<PromoTickerPage />} />
+              <Route path="/sourcing" element={<Sourcing />} />
               <Route path="/settings/payments" element={<PaymentSettings />} />
               <Route path="/settings/cod" element={<CodSettings />} />
               <Route path="/settings/shipping" element={<ShippingSettings />} />

@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   Users,
   Megaphone,
+  Flame,
   Settings as SettingsIcon,
   Sparkles,
   Star,
@@ -60,6 +61,7 @@ const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
 
 const navTree: NavEntry[] = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { label: 'Source Products 🔥', icon: Flame, path: '/sourcing' },
   {
     label: 'Catalog',
     icon: Package,
