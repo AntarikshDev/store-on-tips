@@ -217,7 +217,7 @@ export default function Sourcing() {
         </div>
         <h1 className="text-2xl md:text-4xl font-bold mb-1">SourceIndia 🇮🇳</h1>
         <p className="text-white/90 text-sm md:text-base">
-          Discover viral wholesale products from IndiaMART, JustDial &amp; trusted suppliers — import in one click.
+          Discover viral wholesale products from trusted Indian suppliers — import in one click.
         </p>
 
         <div className="mt-5 flex flex-col md:flex-row gap-2 bg-white rounded-xl p-2 shadow-xl">
