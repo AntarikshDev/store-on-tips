@@ -274,8 +274,8 @@ const OrderList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((order) => (
-                  <TableRow key={order.id} data-tour={selected.size === 0 ? 'orders-row' : undefined} className={cn(selected.has(order.id) && 'bg-accent/30')}>
+                {filtered.map((order, idx) => (
+                  <TableRow key={order.id} data-tour={idx === 0 ? 'orders-row' : undefined} className={cn(selected.has(order.id) && 'bg-accent/30')}>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selected.has(order.id)}
