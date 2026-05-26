@@ -345,7 +345,6 @@ export default function Sourcing() {
 }
 
 function ProductDrawer({ product, onClose, storeId }: { product: SourcingProduct | null; onClose: () => void; storeId: string | null }) {
-  const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [marginPct, setMarginPct] = useState(60);
 
@@ -354,7 +353,6 @@ function ProductDrawer({ product, onClose, storeId }: { product: SourcingProduct
   if (!product) return null;
 
   const retail = product.price_min ? Math.round(product.price_min * (1 + marginPct / 100)) : null;
-  void busy; void setBusy;
 
   async function importToStore() {
     if (!storeId) return;
