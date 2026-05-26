@@ -398,7 +398,6 @@ function ProductDrawer({ product, onClose, storeId }: { product: SourcingProduct
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{product.source.toUpperCase()}</Badge>
             {product.category && <Badge variant="outline">{product.category}</Badge>}
             <Badge className="bg-orange-100 text-orange-700 border-orange-200">
               <Sparkles className="w-3 h-3 mr-1" /> Score {Math.round(product.ai_score)}
