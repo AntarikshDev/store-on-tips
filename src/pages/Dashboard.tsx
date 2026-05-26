@@ -133,15 +133,16 @@ const Dashboard = () => {
       )}
 
       {/* Smart contextual actions */}
-      <SmartActions
-        data-tour="smart-actions"
-        pendingOrders={stats.pendingCount}
-        productCount={products.length}
-        lowStockCount={lowStockCount}
-        hasCustomDomain={!!settings.custom_domain}
-        hasShipping={!!settings.shipping_enabled}
-        isPublished={!!store?.is_published}
-      />
+      <div data-tour="smart-actions">
+        <SmartActions
+          pendingOrders={stats.pendingCount}
+          productCount={products.length}
+          lowStockCount={lowStockCount}
+          hasCustomDomain={!!settings.custom_domain}
+          hasShipping={!!settings.shipping_enabled}
+          isPublished={!!store?.is_published}
+        />
+      </div>
 
       {/* AI Wallet */}
       <div data-tour="wallet-card"><WalletCard /></div>
