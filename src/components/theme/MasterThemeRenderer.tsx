@@ -4,6 +4,7 @@ import { Truck, Shield, RefreshCw, Headphones, Lock, Tag, Gift, Sparkles, Star, 
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { supabase } from "@/integrations/supabase/client";
+import ProductCardActions from "@/components/storefront/ProductCardActions";
 
 /**
  * Manifest-driven theme renderer. Single source of truth for both the
