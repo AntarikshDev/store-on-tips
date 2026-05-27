@@ -25,6 +25,7 @@ import { captureReferralFromUrl } from '@/lib/referralCookie';
 import LiveStatsBar from '@/components/landing/LiveStatsBar';
 import EverySolutionGrid from '@/components/landing/EverySolutionGrid';
 import FeaturesMegaMenu from '@/components/landing/FeaturesMegaMenu';
+import LiveThemeShowcase from '@/components/landing/LiveThemeShowcase';
 
 
 /* ─── Intersection Observer hook for scroll animations ─── */
