@@ -22,6 +22,9 @@ import SEOHead from '@/components/storefront/SEOHead';
 import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 import { captureReferralFromUrl } from '@/lib/referralCookie';
+import LiveStatsBar from '@/components/landing/LiveStatsBar';
+import EverySolutionGrid from '@/components/landing/EverySolutionGrid';
+import FeaturesMegaMenu from '@/components/landing/FeaturesMegaMenu';
 
 
 /* ─── Intersection Observer hook for scroll animations ─── */
