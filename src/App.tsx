@@ -120,6 +120,9 @@ const Appointments = lazy(() => import("@/pages/Appointments"));
 const FamilyPlans = lazy(() => import("@/pages/FamilyPlans"));
 const ProviderPayouts = lazy(() => import("@/pages/ProviderPayouts"));
 const StorefrontBooking = lazy(() => import("@/pages/storefront/StorefrontBooking"));
+const FeatureDetail = lazy(() => import("@/pages/features/FeatureDetail"));
+const ThemeMarketplacePublic = lazy(() => import("@/pages/marketplace/ThemeMarketplace"));
+const ThemeMarketplaceDetail = lazy(() => import("@/pages/marketplace/ThemeDetail"));
 
 
 
@@ -164,6 +167,9 @@ const AppRoutes = () => {
             <Route path="/q/:slug" element={<QRRedirect />} />
             <Route path="/investors" element={<Investors />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/features/:slug" element={<FeatureDetail />} />
+            <Route path="/marketplace" element={<ThemeMarketplacePublic />} />
+            <Route path="/marketplace/:slug" element={<ThemeMarketplaceDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route

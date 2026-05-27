@@ -22,6 +22,9 @@ import SEOHead from '@/components/storefront/SEOHead';
 import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 import { captureReferralFromUrl } from '@/lib/referralCookie';
+import LiveStatsBar from '@/components/landing/LiveStatsBar';
+import EverySolutionGrid from '@/components/landing/EverySolutionGrid';
+import FeaturesMegaMenu from '@/components/landing/FeaturesMegaMenu';
 
 
 /* ─── Intersection Observer hook for scroll animations ─── */
@@ -287,12 +290,16 @@ const LandingPage = () => {
 
 
             {/* Desktop Links */}
-            <div className="hidden md:flex items-center gap-8">
-              {['features', 'how-it-works', 'pricing', 'themes'].map(id => (
+            <div className="hidden md:flex items-center gap-6">
+              <FeaturesMegaMenu scrolled={scrolled} />
+              {['how-it-works', 'pricing'].map(id => (
                 <button key={id} onClick={() => scrollTo(id)} className={`text-sm font-medium capitalize transition-colors hover:text-indigo-500 ${scrolled ? 'text-slate-600' : 'text-white/80 hover:text-white'}`}>
                   {id.replace('-', ' ')}
                 </button>
               ))}
+              <Link to="/marketplace" className={`text-sm font-medium transition-colors hover:text-indigo-500 ${scrolled ? 'text-slate-600' : 'text-white/80 hover:text-white'}`}>
+                Themes
+              </Link>
             </div>
 
             {/* CTA */}
@@ -376,21 +383,8 @@ const LandingPage = () => {
                 </button>
               </div>
 
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-6 sm:gap-8 justify-center lg:justify-start text-white/60 text-sm">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-emerald-400" />
-                  <span><span className="text-white font-bold"><Counter end={10000} suffix="+" /></span> Stores</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-violet-400" />
-                  <span><span className="text-white font-bold"><Counter end={50} suffix="+" /></span> Categories</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-indigo-400" />
-                  <span className="text-white font-bold">₹0 Setup</span>
-                </div>
-              </div>
+              {/* Live platform stats */}
+              <LiveStatsBar />
             </div>
 
             {/* Right - Shuffling Website Deck */}
@@ -422,6 +416,11 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* ─── EVERY SOLUTION GRID — "what to sell + where to sell" ─── */}
+      <EverySolutionGrid />
+
+
+
       {/* ─── HOW IT WORKS ─── */}
       <section
         id="how-it-works"
@@ -433,7 +432,7 @@ const LandingPage = () => {
             <div className="text-center mb-12 sm:mb-16">
               <span className="inline-block px-4 py-1 rounded-full bg-orange-50 text-orange-600 text-sm font-semibold mb-4">The Merchant Journey</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4">
-                From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">7 Steps</span>
+                From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">5 Steps</span>
               </h2>
               <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
                 Every screen you'll see, in the order you'll see them. No surprises, no setup calls, no developer needed.
