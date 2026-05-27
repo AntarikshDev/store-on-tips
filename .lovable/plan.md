@@ -1,109 +1,121 @@
-# Guided Onboarding Tour — Full Merchant Handholding
+# Landing Page v2 — Plan
 
-A first-time user walkthrough that lights up every important control on every dashboard/settings page with a tooltip whose arrow points **precisely** at the element it describes. Users can skip, replay from Help, or resume where they left off.
+A full marketing rebuild around four pillars: **(1)** a tighter 5-step merchant journey, **(2)** a live "Stores Live" counter sourced from real data, **(3)** a public ThemeForest-style theme marketplace, and **(4)** a Features mega-dropdown showing real merchant-portal screenshots. Plus a complete features catalog ("Now what to sell, where to sell — every solution") covering every shipping product feature.
 
-## Approach
+---
 
-Use **driver.js** (lightweight, ~10kb, no deps, MIT). It supports:
-- Precise SVG-cutout highlight around a real DOM element (arrow always pinned to the anchor — no drift)
-- Step-by-step popovers with Next / Back / Skip / Done
-- Per-route tours (start on mount when not yet completed)
-- Auto-scrolls element into view, repositions on resize/scroll
+## 1. Hero — Live Store Counter
 
-Why not Shopify-style custom popover? driver.js already solves arrow precision, viewport collision and scroll-locking — building this from scratch is weeks of edge-case work.
+Replace the static "10,000+ merchants" stat with **real-time numbers** pulled from the backend.
 
-## Architecture
+- New edge function `get-public-stats` returns:
+  - `stores_live` — count of `stores` where `is_published = true`
+  - `products_listed` — count of `products` where `is_active = true`
+  - `orders_processed` — count of `orders` (lifetime)
+  - `themes_available` — count of `theme_master_projects` where `is_active = true`
+- Cached 60s in-memory; called with anon key (no auth needed).
+- Hero shows three pulsing-dot live counters: **Stores Live · Products Listed · Orders Processed**, with the existing `Counter` component animating from 0 to fetched value.
+- Adds a small "LIVE" badge with a pulsing emerald dot to convey real-time.
+- Rest everything will be untouched in the hero section. changing of card with glare should not be disturbed. 
+
+---
+
+## 2. Merchant Journey — Shortened from 7 → 5 Steps
+
+Update `src/lib/merchantJourney.ts` to the new flow that matches actual onboarding:
 
 ```text
-src/tours/
-  TourProvider.tsx        // wraps app, exposes useTour()
-  useRouteTour.ts         // hook: starts tour for current pathname if unseen
-  registry.ts             // pathname -> Tour definition
-  tours/
-    dashboard.ts
-    products-list.ts
-    product-form.ts       // post-AI: "Now fill inventory", "Set variants"...
-    orders.ts
-    order-detail.ts
-    customise.ts
-    store-design.ts
-    themes.ts
-    shipping.ts
-    payments.ts
-    cod.ts
-    domain.ts
-    seo.ts
-    email-branding.ts
-    coupons.ts
-    categories.ts
-    blog.ts
-    customers.ts
-    analytics.ts
-    sourcing.ts
-    wallet.ts
-    accounts.ts           // covers cash book, khata, expenses, GST, P&L, suppliers, inventory ledger
-    onboarding.ts         // overlay on each wizard step
+01 — Sign Up Free
+02 — Tell Us About Your Store   (name, language, contact)
+03 — Choose Your Category       (with subcategories)
+04 — Pick a Theme               (auto-suggested from category)
+05 — Your Store Goes Live       (one-tap publish + share)
 ```
 
-Each tour = array of `{ element: '[data-tour="..."]', title, description, side, align }`.
+- Keep the existing image+bullets card layout on the landing page; the section heading changes from "in 7 Steps" to **"in 5 Steps"**.
+- The 7-step `HowItWorks.tsx` page is kept as a deeper "Behind the scenes" reference and de-emphasized in nav.
+- New copy emphasizes "auto-chosen theme" surprise to amaze first-time visitors.
 
-## Anchoring (precision arrow)
+---
 
-Add `data-tour="<id>"` attributes directly on the target element in each page — never on a wrapper, so the arrow lands on the exact button/input. Examples:
+## 3. Features Mega-Menu (Header Dropdown)
 
-- `HeroGreeting` "Add product with AI" → `data-tour="hero-add-product"`
-- `Dashboard` View store ribbon → `data-tour="dash-view-store"`
-- `ProductForm` inventory field → `data-tour="product-inventory"`, variants section → `data-tour="product-variants"`, shipping weight → `data-tour="product-shipping"`, SEO accordion → `data-tour="product-seo"`
-- `OrderList` first row actions → `data-tour="order-row-actions"`
-- `ShippingSettings` Shiprocket creds card → `data-tour="ship-credentials"`
-- `PaymentSettings` Razorpay key field → `data-tour="pay-razorpay-key"`
-- `DomainSettings` DNS records table → `data-tour="domain-dns"`
-- …(one per highlighted step across the listed pages)
+The "Features" link in the landing nav becomes a **stylish 4-column dropdown** (CSS-only hover/focus, mobile = full-sheet) grouped by pillar, each row paired with a real merchant-portal screenshot thumbnail on hover.
 
-driver.js receives the selector string, queries it live, and renders the SVG overlay around the element's bounding box, so the pointer arrow is always correctly aligned even after scroll/resize.
+Groups & items (all link to a dedicated `/features/[slug]` page):
 
-## Persistence
+- **Sell**: Snap-to-Product AI · Product Variants · Categories & Collections · Inventory & Low-Stock alerts · Digital Products
+- **Source**: **Source India** (B2B product sourcing) · Bulk CSV Import · Supplier Khata
+- **Design**: Theme Marketplace · Drag-and-Drop Builder · Custom Logo & Banner · Google Fonts · Custom Domain
+- **Sell Channels**: Storefront PWA · WhatsApp Share · QR Codes · Blog & SEO · Email Newsletter
+- **Operate**: Razorpay / UPI / COD · Shiprocket Shipping · GST Invoices · Coupons & Discounts · Reviews & Ratings
+- **Grow**: AI Engagement Report · Analytics Dashboard · Abandoned Cart Recovery · Weekly Digest · Pica2 AI Assistant
 
-`tour_progress` table:
-```sql
-user_id uuid pk, tour_key text pk, completed_at timestamptz, skipped boolean
-```
-RLS: user can read/write own rows. Hook `useRouteTour` checks this before auto-starting; "Replay tour" button in Help page wipes the row.
+Each `/features/[slug]` page uses a shared `FeatureDetailLayout` (hero · "What it does" · annotated screenshots from the merchant portal · "How to enable" CTA → onboarding). Screenshots will be captured fresh from the live portal and stored under `src/assets/features/`.
 
-Fallback before the row syncs: `localStorage["tour:<key>"] = "done"` for instant UX.
+---
 
-## Special flows
+## 4. "Every Solution" Catalog Section
 
-1. **Onboarding wizard** — each of the 7 steps gets a 1–2 step intro tour (e.g. StepUploadImage: "Tap to upload — AI will write title, price, description"). Tours are step-scoped, not route-scoped.
-2. **ProductForm after AI fill** — when AI completion event fires, trigger `product-form-postai` tour that walks: Inventory → Variants → Shipping weight → SEO → Save. Exactly the "Fill the inventory / left spaces" example from the request.
-3. **Empty states** — if OrderList has 0 orders, run the "share your store" tour variant instead of order-row tour.
-4. **Mobile** — driver.js handles small viewports; popovers auto-flip side. Bottom-nav steps use `side: top`.
+A new landing section titled **"Now what to sell, and where to sell — we have every solution."**
 
-## Help/Replay
+A 3×4 bento grid of capability cards, each with icon + 2-line description + "Learn more →" linking to the features page above. Cards:
 
-`src/pages/Help.tsx` gets a "Take the tour again" section listing every tour with a Replay button (clears progress + navigates + starts).
+1. **Source India** — Find verified manufacturers & wholesale catalogs
+2. **AI Product Listings** — Photo → title, description, price, SEO in 5s
+3. **50+ Premium Themes** — Industry-tuned, mobile-first, swap anytime
+4. **WhatsApp & Instagram** — One-tap share cards with rich OG previews
+5. **Custom Domain + SSL** — yourbrand.in in 5 minutes
+6. **All Payments** — Razorpay, UPI, COD, direct payouts
+7. **Shiprocket Shipping** — 29,000+ pincodes, 17+ couriers
+8. **GST-Ready Invoices** — Auto HSN, bulk export for CA
+9. **Coupons & Loyalty** — Usage caps, min-order rules
+10. **Reviews with Photos** — Verified-purchase badges
+11. **Blog + Newsletter** — Built-in CMS, subscriber manager
+12. **AI Growth Coach** — Weekly score 0-100 + roadmap
 
-## Files to create
+---
 
-- `src/tours/TourProvider.tsx`, `useRouteTour.ts`, `registry.ts`, 20+ tour definition files
-- `supabase/migrations/<ts>_tour_progress.sql`
-- Add `<TourProvider>` in `src/App.tsx`
-- Add `useRouteTour()` call inside `DashboardShell` and inside `Onboarding.tsx` step renderer
+## 5. Theme Marketplace — ThemeForest Style
 
-## Files to edit (add `data-tour` anchors only — zero logic change)
+A new public route `**/themes**` (replaces current minimal Themes page for public viewing) modeled on themeforest.net.
 
-Dashboard.tsx, HeroGreeting.tsx, SmartActions.tsx, ProductList.tsx, ProductForm.tsx, OrderList.tsx, OrderDetail.tsx, Customise.tsx, StoreDesign.tsx, Themes.tsx, ShippingSettings.tsx, PaymentSettings.tsx, CodSettings.tsx, DomainSettings.tsx, SEOSettings.tsx, EmailBrandingSettings.tsx, CouponList.tsx, Categories.tsx, BlogPosts.tsx, Customers.tsx, StoreAnalytics.tsx, Sourcing.tsx, Wallet.tsx, accounts/* (7 files), Onboarding step components (8 files), DashboardLayout.tsx (sidebar item anchors), Help.tsx.
+Sections:
 
-## Dependency
+- **Hero**: search bar + "Browse 50+ themes built for Indian sellers" + filter pills (Fashion, Food, Electronics, Beauty, Handicraft, Services, Books)
+- **Top filters bar**: Category · Price (Free / Premium) · Style (Minimal / Bold / Luxury) · Sort (Trending / Newest / Most Sold)
+- **Theme grid**: 3-column cards with: preview image, name, category badge, ★ rating (placeholder until reviews), price (Free or ₹500 Crown badge), "Live Preview" + "Use This Theme" CTAs
+- **Theme detail page** `/themes/:slug`: full-page hero with large preview, 5 page-by-page screenshots (Home/Category/Product/Cart/Checkout), feature list, "Use this theme" → routes to signup with `?theme=slug` so onboarding auto-selects it
+- **Auto-select on signup**: `Onboarding.tsx` reads `?theme=` from URL and pre-fills `selectedThemeId`, jumping straight past the theme step → 5-step flow feels like 4 steps for marketplace visitors (the "amaze" moment).
+- Marketplace data pulled from existing `theme_master_projects` table — no schema change required.
+- Page is SEO-optimized (per theme: title, meta, OG image from `preview_image`) for future standalone promotion.
 
-`bun add driver.js` (≈10kb gz, MIT).
+---
 
-## Out of scope
+## 6. Technical Notes
 
-- Storefront customer pages (request is about merchant handholding)
-- Admin panel (super-admin only, not a "new user")
+- **New edge function**: `get-public-stats` (`verify_jwt = false`, 60s cache). Uses service role only to `count` published stores/products/orders/themes.
+- **New routes** in `src/App.tsx`:
+  - `/themes` (public marketplace, lazy)
+  - `/themes/:slug` (theme detail)
+  - `/features/:slug` (12+ feature detail pages, single dynamic component)
+- **New components**:
+  - `src/components/landing/LiveStatsBar.tsx`
+  - `src/components/landing/FeaturesMegaMenu.tsx`
+  - `src/components/landing/EverySolutionGrid.tsx`
+  - `src/pages/marketplace/ThemeMarketplace.tsx`
+  - `src/pages/marketplace/ThemeDetail.tsx`
+  - `src/pages/features/FeatureDetail.tsx` + `featureCatalog.ts` (data)
+- **Edits**:
+  - `src/lib/merchantJourney.ts` → cut to 5 steps
+  - `src/pages/LandingPage.tsx` → swap stats, add mega menu, add solution grid, link new sections, change "7 Steps" → "5 Steps"
+  - `src/pages/Onboarding.tsx` → read `?theme=` query and preselect
+- **No DB migration** required for v1; feature screenshots will be added to `src/assets/features/` as we capture them (placeholder gradients in interim).
 
-## Open questions
+---
 
-1. Auto-start every tour on first visit, or surface a single "Start guided tour" banner on the dashboard that opens them on demand? (default: auto-start once per page, dismissible)
-2. Allow language localization now or English-only for v1? (default: English only)
+## Out of Scope (for this pass)
+
+- Real theme ratings/reviews system (uses static placeholder)
+- Building all 25+ feature detail pages with real screenshots (we ship the layout + 6-8 pages with placeholders; the rest reuse the layout with copy until screenshots are captured)
+- Theme purchase flow changes (existing premium-theme purchase keeps working)
