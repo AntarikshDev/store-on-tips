@@ -383,21 +383,8 @@ const LandingPage = () => {
                 </button>
               </div>
 
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-6 sm:gap-8 justify-center lg:justify-start text-white/60 text-sm">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-emerald-400" />
-                  <span><span className="text-white font-bold"><Counter end={10000} suffix="+" /></span> Stores</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-violet-400" />
-                  <span><span className="text-white font-bold"><Counter end={50} suffix="+" /></span> Categories</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-indigo-400" />
-                  <span className="text-white font-bold">₹0 Setup</span>
-                </div>
-              </div>
+              {/* Live platform stats */}
+              <LiveStatsBar />
             </div>
 
             {/* Right - Shuffling Website Deck */}
