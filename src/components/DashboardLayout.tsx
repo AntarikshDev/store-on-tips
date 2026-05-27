@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import PicToCartLogo from '@/components/PicToCartLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import {
