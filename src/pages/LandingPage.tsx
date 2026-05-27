@@ -427,7 +427,7 @@ const LandingPage = () => {
             <div className="text-center mb-12 sm:mb-16">
               <span className="inline-block px-4 py-1 rounded-full bg-orange-50 text-orange-600 text-sm font-semibold mb-4">The Merchant Journey</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4">
-                From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">7 Steps</span>
+                From Sign-Up to First Sale — in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">5 Steps</span>
               </h2>
               <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
                 Every screen you'll see, in the order you'll see them. No surprises, no setup calls, no developer needed.
