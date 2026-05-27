@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, SkipForward, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { THEME_TEMPLATES } from '@/lib/themes';
 import { getReferralCode, clearReferralCookie } from '@/lib/referralCookie';
+import PicToCartLogo from '@/components/PicToCartLogo';
 
 import StepStoreName from '@/components/onboarding/StepStoreName';
 import StepCategory from '@/components/onboarding/StepCategory';
@@ -324,9 +325,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex flex-col">
       {/* Header */}
       <header className="border-b border-border/50 px-6 py-4 flex items-center gap-3 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-lg shadow-primary/20">
-          {data.storeName ? data.storeName[0].toUpperCase() : 'S'}
-        </div>
+        <PicToCartLogo size={40} />
         <div>
           <span className="font-semibold text-foreground block leading-tight">
             {data.storeName || 'Set up your store'}

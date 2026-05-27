@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import PicToCartLogo from '@/components/PicToCartLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import {
@@ -262,14 +263,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       >
         {/* Logo */}
         <div className={cn('flex h-14 items-center border-b border-sidebar-border px-4', collapsed && 'justify-center')}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0">
-            P
-          </div>
-          {!collapsed && (
-            <span className="ml-2 font-semibold text-sidebar-foreground truncate">
-              Pic to Cart
-            </span>
-          )}
+          <PicToCartLogo size={32} withWordmark={!collapsed} wordmarkClassName="text-sidebar-foreground text-sm" />
         </div>
 
         {/* Nav */}

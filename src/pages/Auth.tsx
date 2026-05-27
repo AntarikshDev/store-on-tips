@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Store, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import PicToCartLogo from '@/components/PicToCartLogo';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -71,9 +72,7 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center bg-secondary/30 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Store className="h-6 w-6" />
-          </div>
+          <PicToCartLogo size={64} className="mx-auto" />
           <CardTitle className="text-2xl font-bold">
             {isForgotPassword
               ? 'Reset Password'
