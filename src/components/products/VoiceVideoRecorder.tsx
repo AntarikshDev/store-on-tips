@@ -88,7 +88,8 @@ const VoiceVideoRecorder = ({ videoUrl, onMerged }: Props) => {
         'out.mp4',
       ]);
       const out = await ffmpeg.readFile('out.mp4');
-      const mergedBlob = new Blob([out as Uint8Array], { type: 'video/mp4' });
+      const bytes = out instanceof Uint8Array ? new Uint8Array(out) : new TextEncoder().encode(out as string);
+      const mergedBlob = new Blob([bytes], { type: 'video/mp4' });
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
