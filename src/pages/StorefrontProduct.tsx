@@ -67,7 +67,7 @@ const StorefrontProduct = () => {
   const productImages = (product.images as string[]) || [];
   const { average, count } = getAverageRating(reviews);
   const isOutOfStock = product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0;
-  const variants = (Array.isArray(product.variants) ? product.variants : []) as VariantOption[];
+  const variants = (Array.isArray(product.variants) ? product.variants : []) as unknown as VariantOption[];
   const aiData = (product.ai_generated_data || {}) as Record<string, any>;
   const productVideos: string[] = Array.isArray(aiData.product_videos) ? aiData.product_videos : [];
   const highlights = aiData.highlights as string[] | undefined;
@@ -174,51 +174,84 @@ const StorefrontProduct = () => {
           <div className="product-slide-in-left">
             {/* Mobile swiper */}
             <div className="md:hidden">
-              <ProductImageSwiper images={images} title={product.title} colors={colors} borderRadius={borderRadius} />
+              <ProductImageSwiper images={images} videos={videos} title={product.title} colors={colors} borderRadius={borderRadius} />
             </div>
-            {/* Desktop: Thumbnail rail + main image */}
+            {/* Desktop: Thumbnail rail + main media */}
             <div className="hidden md:flex gap-3">
-              {images.length > 1 && (
+              {(images.length + videos.length) > 1 && (
                 <div className="flex flex-col gap-2 w-16 shrink-0">
-                  {images.map((img, i) => (
+                  {[...videos.map((url) => ({ type: 'video' as const, url })), ...images.map((url) => ({ type: 'image' as const, url }))].map((item, i) => (
                     <button
                       key={i}
                       onMouseEnter={() => setSelectedImage(i)}
                       onClick={() => setSelectedImage(i)}
-                      className="w-16 h-16 overflow-hidden border-2 transition-all duration-200"
+                      className="w-16 h-16 overflow-hidden border-2 transition-all duration-200 relative bg-muted"
                       style={{
                         borderRadius: `${borderRadius / 2}px`,
                         borderColor: i === selectedImage ? colors.primary : colors.secondary,
                         opacity: i === selectedImage ? 1 : 0.6,
                       }}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      {item.type === 'image' ? (
+                        <img src={item.url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <>
+                          <video src={item.url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                          <Play className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow fill-white/80" />
+                        </>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
               <div
-                className="flex-1 aspect-square overflow-hidden relative cursor-crosshair"
+                className="flex-1 aspect-[4/5] overflow-hidden relative flex items-center justify-center"
                 style={{ backgroundColor: colors.secondary, borderRadius: `${borderRadius}px` }}
-                onMouseEnter={() => setImageZoom(true)}
-                onMouseLeave={() => setImageZoom(false)}
+                onMouseEnter={(e) => {
+                  setImageZoom(true);
+                  const v = e.currentTarget.querySelector('video');
+                  if (v) { v.muted = false; v.play().catch(() => {}); }
+                }}
+                onMouseLeave={(e) => {
+                  setImageZoom(false);
+                  const v = e.currentTarget.querySelector('video');
+                  if (v) { v.pause(); v.currentTime = 0; }
+                }}
                 onMouseMove={handleMouseMove}
               >
-                {images[selectedImage] ? (
-                  <img
-                    src={images[selectedImage]}
-                    alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-300"
-                    style={{
-                      transform: imageZoom ? 'scale(2)' : 'scale(1)',
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sm opacity-30">No image</div>
-                )}
+                {(() => {
+                  const merged = [...videos.map((url) => ({ type: 'video' as const, url })), ...images.map((url) => ({ type: 'image' as const, url }))];
+                  const current = merged[selectedImage] || merged[0];
+                  if (!current) {
+                    return <div className="w-full h-full flex items-center justify-center text-sm opacity-30">No image</div>;
+                  }
+                  if (current.type === 'video') {
+                    return (
+                      <video
+                        src={current.url}
+                        className="w-full h-full object-contain bg-black"
+                        muted
+                        playsInline
+                        loop
+                        preload="metadata"
+                        controls
+                      />
+                    );
+                  }
+                  return (
+                    <img
+                      src={current.url}
+                      alt={product.title}
+                      className="w-full h-full object-contain transition-transform duration-300"
+                      style={{
+                        transform: imageZoom ? 'scale(1.8)' : 'scale(1)',
+                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      }}
+                    />
+                  );
+                })()}
                 {discount > 0 && (
-                  <span className="absolute top-3 left-3 px-2 py-1 text-xs font-bold rounded" style={{ backgroundColor: '#16a34a', color: '#fff' }}>
+                  <span className="absolute top-3 left-3 px-2 py-1 text-xs font-bold rounded z-10" style={{ backgroundColor: '#16a34a', color: '#fff' }}>
                     {discount}% OFF
                   </span>
                 )}
