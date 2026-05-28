@@ -6,6 +6,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useSubscription, PLAN_LIMITS } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import ImageUploader from '@/components/products/ImageUploader';
+import VideoUploader from '@/components/products/VideoUploader';
+import VoiceVideoRecorder from '@/components/products/VoiceVideoRecorder';
 import VariantMatrix, { type VariantOption } from '@/components/products/VariantMatrix';
 import ProductTypeFields, { PRODUCT_TYPES, getDefaultProductType, type ProductType } from '@/components/products/ProductTypeFields';
 import ProductPreviewCard from '@/components/products/ProductPreviewCard';
@@ -45,6 +47,7 @@ const ProductForm = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [productVideos, setProductVideos] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantOption[]>([]);
   const [inventoryCount, setInventoryCount] = useState('0');
   const [costPrice, setCostPrice] = useState('');
@@ -89,7 +92,8 @@ const ProductForm = () => {
       setSeoDescription(existingProduct.seo_description || '');
       if (aiData.product_type) setProductType(aiData.product_type as ProductType);
       if (aiData.highlights) setHighlights(aiData.highlights);
-      const { product_type, highlights: _, product_hint: _hint, ...rest } = aiData;
+      if (Array.isArray(aiData.product_videos)) setProductVideos(aiData.product_videos);
+      const { product_type, highlights: _h, product_hint: _hint, product_videos: _pv, ...rest } = aiData;
       setTypeMetadata(rest);
     }
   }, [existingProduct]);
@@ -163,7 +167,7 @@ const ProductForm = () => {
       is_active: asDraft ? false : isActive,
       seo_title: seoTitle || null,
       seo_description: seoDescription || null,
-      ai_generated_data: { product_type: productType, highlights, product_hint: productHint || undefined, ...typeMetadata } as any,
+      ai_generated_data: { product_type: productType, highlights, product_hint: productHint || undefined, product_videos: productVideos, ...typeMetadata } as any,
     };
 
     try {
