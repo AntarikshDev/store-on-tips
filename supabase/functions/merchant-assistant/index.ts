@@ -24,8 +24,9 @@ Deno.serve(async (req) => {
       return json({ error: 'Unauthorized' }, 401);
     }
 
+    const SARVAM_API_KEY = Deno.env.get('SARVAM_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('Missing LOVABLE_API_KEY');
+    if (!SARVAM_API_KEY && !LOVABLE_API_KEY) throw new Error('Missing SARVAM_API_KEY / LOVABLE_API_KEY');
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
