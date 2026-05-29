@@ -200,6 +200,29 @@ const ChatPane = () => {
     },
   });
 
+  const [language, setLanguage] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'hi-IN';
+    return localStorage.getItem(LS_LANG) || 'hi-IN';
+  });
+  const [voice, setVoice] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'shubh';
+    return localStorage.getItem(LS_VOICE) || 'shubh';
+  });
+  const [ttsOn, setTtsOn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem(LS_TTS) !== '0';
+  });
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenIdRef = useRef<string | null>(null);
+
+  useEffect(() => { localStorage.setItem(LS_LANG, language); }, [language]);
+  useEffect(() => { localStorage.setItem(LS_VOICE, voice); }, [voice]);
+  useEffect(() => { localStorage.setItem(LS_TTS, ttsOn ? '1' : '0'); }, [ttsOn]);
+
   const { data: messages = [], isLoading: msgsLoading } = useQuery({
     queryKey: ['mct-messages', activeId],
     enabled: !!activeId,
@@ -214,10 +237,38 @@ const ChatPane = () => {
     },
   });
 
+  const speak = async (text: string) => {
+    try {
+      setSpeaking(true);
+      const { data, error } = await supabase.functions.invoke('sarvam-tts', {
+        body: { text: text.replace(/[*_`#>\[\]()]/g, '').slice(0, 1500), language, speaker: voice },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const b64 = (data as any)?.audio_base64;
+      if (!b64) throw new Error('No audio');
+      const url = `data:audio/wav;base64,${b64}`;
+      const audio = new Audio(url);
+      audioElRef.current?.pause();
+      audioElRef.current = audio;
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => setSpeaking(false);
+      await audio.play();
+    } catch (e: any) {
+      setSpeaking(false);
+      console.warn('TTS failed', e?.message);
+    }
+  };
+
+  const stopSpeaking = () => {
+    try { audioElRef.current?.pause(); } catch {}
+    setSpeaking(false);
+  };
+
   const sendMut = useMutation({
     mutationFn: async (msg: string) => {
       const { data, error } = await supabase.functions.invoke('merchant-assistant', {
-        body: { thread_id: activeId, message: msg },
+        body: { thread_id: activeId, message: msg, language },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -231,6 +282,7 @@ const ChatPane = () => {
       }
       qc.invalidateQueries({ queryKey: ['mct-threads'] });
       qc.invalidateQueries({ queryKey: ['mct-messages', data.thread_id] });
+      if (ttsOn) speak(data.reply);
     },
     onError: (err: any) => toast.error(err?.message || 'Assistant failed'),
   });
@@ -256,6 +308,19 @@ const ChatPane = () => {
 
   useEffect(() => { textareaRef.current?.focus(); }, [activeId]);
 
+  // Auto-speak newly loaded assistant message when switching threads
+  useEffect(() => {
+    if (!ttsOn || !messages?.length) return;
+    const last = messages[messages.length - 1];
+    if (last?.role === 'assistant' && last.id !== lastSpokenIdRef.current) {
+      lastSpokenIdRef.current = last.id;
+      // don't auto-speak historical loads — only when last is recent (<10s)
+      if (Date.now() - new Date(last.created_at).getTime() < 10_000) {
+        speak(last.content);
+      }
+    }
+  }, [messages, ttsOn]);
+
   const startNew = () => {
     const next = new URLSearchParams(params);
     next.delete('at');
@@ -264,11 +329,57 @@ const ChatPane = () => {
     textareaRef.current?.focus();
   };
 
-  const send = () => {
-    const msg = input.trim();
+  const send = (override?: string) => {
+    const msg = (override ?? input).trim();
     if (!msg || sendMut.isPending) return;
     setInput('');
+    stopSpeaking();
     sendMut.mutate(msg);
+  };
+
+  const startRecording = async () => {
+    try {
+      stopSpeaking();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        if (blob.size < 800) { setTranscribing(false); return; }
+        setTranscribing(true);
+        try {
+          const buf = await blob.arrayBuffer();
+          let binary = '';
+          const bytes = new Uint8Array(buf);
+          for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+          const b64 = btoa(binary);
+          const { data, error } = await supabase.functions.invoke('sarvam-stt', {
+            body: { audio_base64: b64, mime: rec.mimeType || 'audio/webm', language },
+          });
+          if (error) throw error;
+          if ((data as any)?.error) throw new Error((data as any).error);
+          const text = ((data as any)?.transcript || '').trim();
+          if (text) send(text);
+        } catch (e: any) {
+          toast.error(e?.message || 'Could not transcribe audio');
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      mediaRecRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch (e: any) {
+      toast.error('Microphone permission needed');
+    }
+  };
+
+  const stopRecording = () => {
+    try { mediaRecRef.current?.stop(); } catch {}
+    setRecording(false);
   };
 
   const optimisticMessages: Array<{ role: string; content: string; pending?: boolean }> = [...messages];
@@ -276,12 +387,21 @@ const ChatPane = () => {
     optimisticMessages.push({ role: 'user', content: sendMut.variables, pending: true });
   }
 
-  const quickPrompts = [
-    'What is the most important thing to fix in my store right now?',
-    'Why am I not getting any orders?',
-    'How do I enable Razorpay?',
-    'Help me ship my pending orders.',
-  ];
+  const quickPromptsByLang: Record<string, string[]> = {
+    'hi-IN': [
+      'मेरी दुकान में अभी सबसे ज़रूरी क्या ठीक करना है?',
+      'मुझे ऑर्डर क्यों नहीं मिल रहे?',
+      'Razorpay कैसे चालू करूँ?',
+      'पेंडिंग ऑर्डर शिप करने में मदद करो।',
+    ],
+    'en-IN': [
+      'What is the most important thing to fix in my store right now?',
+      'Why am I not getting any orders?',
+      'How do I enable Razorpay?',
+      'Help me ship my pending orders.',
+    ],
+  };
+  const quickPrompts = quickPromptsByLang[language] || quickPromptsByLang['en-IN'];
 
   return (
     <div className="flex h-full min-h-0">
