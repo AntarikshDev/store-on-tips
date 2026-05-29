@@ -24,8 +24,9 @@ Deno.serve(async (req) => {
       return json({ error: 'Unauthorized' }, 401);
     }
 
+    const SARVAM_API_KEY = Deno.env.get('SARVAM_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('Missing LOVABLE_API_KEY');
+    if (!SARVAM_API_KEY && !LOVABLE_API_KEY) throw new Error('Missing SARVAM_API_KEY / LOVABLE_API_KEY');
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -90,20 +91,33 @@ Deno.serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(ctx);
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Primary: Sarvam (multilingual, India-first). Fallback: Lovable AI Gateway.
+    const useSarvam = !!SARVAM_API_KEY;
+    const endpoint = useSarvam
+      ? 'https://api.sarvam.ai/v1/chat/completions'
+      : 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (useSarvam) {
+      headers['api-subscription-key'] = SARVAM_API_KEY!;
+      headers['Authorization'] = `Bearer ${SARVAM_API_KEY}`;
+    } else {
+      headers['Authorization'] = `Bearer ${LOVABLE_API_KEY}`;
+    }
+    const modelName = useSarvam ? 'sarvam-m' : 'google/gemini-3-flash-preview';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: modelName,
+        temperature: 0.5,
         messages: [{ role: 'system', content: systemPrompt }, ...messages],
       }),
     });
 
     if (!res.ok) {
       const txt = await res.text();
+      console.error('[merchant-assistant] AI error', res.status, txt);
       if (res.status === 429) return json({ error: 'Rate limited. Try again in a moment.' }, 429);
       if (res.status === 402) return json({ error: 'AI credits exhausted. Please add credits.' }, 402);
       throw new Error(`AI gateway: ${res.status} ${txt}`);
@@ -212,7 +226,7 @@ async function loadMerchantContext(admin: any, userId: string) {
 
 function buildSystemPrompt(ctx: any): string {
   if (!ctx.store) {
-    return `You are PicToCart's merchant support assistant. This user has not finished creating a store yet. Warmly guide them to complete the 7-step onboarding wizard at /onboarding (Store name → Category → Logo → AI Product → Theme → Payment Setup → Go Live). Keep replies under 5 sentences. Use markdown bullets when listing steps. Always answer in the language the user writes in (English or Hindi).`;
+    return `You are PicToCart's merchant support assistant. This user has not finished creating a store yet. Warmly guide them to complete the 7-step onboarding wizard at /onboarding (Store name → Category → Logo → AI Product → Theme → Payment Setup → Go Live). Keep replies under 5 sentences. Use markdown bullets when listing steps. ALWAYS reply in the same language and script the merchant writes in — fully supports English, हिन्दी, Hinglish, বাংলা, தமிழ், తెలుగు, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ, and اردو. Keep route names like /onboarding in English.`;
   }
 
   const isFoodService = ['food', 'grocery'].includes((ctx.store.category || '').toLowerCase());
@@ -233,7 +247,7 @@ Standard ship-to-customer workflow. Use Shiprocket via /shipping-settings and ge
 ## Your style
 - Warm, concise, action-oriented. 2–6 sentences unless asked for detail.
 - Use markdown: short bullets, **bold** for actions, inline links like [Payment Settings](/payment-settings).
-- Answer in the language the user writes (English or Hindi/Hinglish).
+- **Multilingual (India-first).** Detect the language the merchant writes in and ALWAYS reply in the SAME language and script. Fully supported: English, हिन्दी (Hindi), Hinglish, বাংলা (Bengali), தமிழ் (Tamil), తెలుగు (Telugu), मराठी (Marathi), ગુજરાતી (Gujarati), ಕನ್ನಡ (Kannada), മലയാളം (Malayalam), ਪੰਜਾਬੀ (Punjabi), ଓଡ଼ିଆ (Odia), اردو (Urdu). Keep dashboard route names (e.g. /payment-settings) and brand words in English even when the rest of the reply is in another language.
 - If something is broken, name the **exact dashboard page** to fix it.
 
 ${businessModeBlock}
