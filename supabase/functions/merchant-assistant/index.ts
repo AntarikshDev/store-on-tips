@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       .filter((m: any) => m.role === 'user' || m.role === 'assistant')
       .map((m: any) => ({ role: m.role, content: m.content }));
 
-    const systemPrompt = buildSystemPrompt(ctx);
+    const systemPrompt = buildSystemPrompt(ctx, body.language);
 
     // Primary: Sarvam (multilingual, India-first). Fallback: Lovable AI Gateway.
     const useSarvam = !!SARVAM_API_KEY;
