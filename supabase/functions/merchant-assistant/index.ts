@@ -303,5 +303,5 @@ ${isFoodService
 ## Merchant snapshot (JSON)
 ${JSON.stringify(ctx, null, 2)}
 
-Always cite the snapshot when answering, and never invent numbers that aren't there. If data is missing, say so and ask the merchant to confirm.`;
+Always cite the snapshot when answering, and never invent numbers that aren't there. If data is missing, say so and ask the merchant to confirm.${langInstr}`;
 }
