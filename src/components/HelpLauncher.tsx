@@ -445,6 +445,35 @@ const ChatPane = () => {
 
       {/* Conversation */}
       <div className="flex-1 min-w-0 flex flex-col">
+        {/* Language / Voice toolbar */}
+        <div className="border-b px-3 py-2 flex items-center gap-2 bg-muted/20 shrink-0 flex-wrap">
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Language</span>
+          <Select value={language} onValueChange={setLanguage}>
+            <SelectTrigger className="h-7 w-[110px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((l) => <SelectItem key={l.code} value={l.code} className="text-xs">{l.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground ml-1">Voice</span>
+          <Select value={voice} onValueChange={setVoice}>
+            <SelectTrigger className="h-7 w-[100px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {VOICES.map((v) => <SelectItem key={v} value={v} className="text-xs capitalize">{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <button
+            onClick={() => { if (speaking) stopSpeaking(); setTtsOn(!ttsOn); }}
+            className={cn(
+              'ml-auto inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border',
+              ttsOn ? 'bg-primary/10 text-primary border-primary/30' : 'text-muted-foreground',
+            )}
+            aria-label="Toggle voice output"
+          >
+            {ttsOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            {speaking ? 'Speaking…' : ttsOn ? 'Voice on' : 'Voice off'}
+          </button>
+        </div>
+
         <ScrollArea className="flex-1" ref={scrollRef as any}>
           <div className="p-4 space-y-4">
             {!activeId && optimisticMessages.length === 0 && (
@@ -479,6 +508,12 @@ const ChatPane = () => {
                 ) : (
                   <div className="max-w-[90%] text-sm prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                    <button
+                      onClick={() => speak(m.content)}
+                      className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                    >
+                      <Volume2 className="h-3 w-3" /> Play
+                    </button>
                   </div>
                 )}
               </div>
@@ -504,16 +539,27 @@ const ChatPane = () => {
                   send();
                 }
               }}
-              placeholder="Ask anything about your store…"
+              placeholder={recording ? 'Listening…' : transcribing ? 'Transcribing…' : 'Ask anything · type or tap mic'}
               className="min-h-[44px] max-h-32 resize-none text-sm"
               rows={1}
-              disabled={sendMut.isPending}
+              disabled={sendMut.isPending || recording || transcribing}
             />
-            <Button onClick={send} disabled={!input.trim() || sendMut.isPending} size="icon" className="shrink-0">
+            <Button
+              type="button"
+              onClick={recording ? stopRecording : startRecording}
+              disabled={sendMut.isPending || transcribing}
+              size="icon"
+              variant={recording ? 'destructive' : 'outline'}
+              className="shrink-0"
+              aria-label={recording ? 'Stop recording' : 'Start voice input'}
+            >
+              {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+            <Button type="button" onClick={() => send()} disabled={!input.trim() || sendMut.isPending} size="icon" className="shrink-0">
               {sendMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5">Enter to send · Shift+Enter for newline. AI may make mistakes.</p>
+          <p className="text-[10px] text-muted-foreground mt-1.5">Enter to send · Shift+Enter for newline · Mic for voice. AI may make mistakes.</p>
         </div>
       </div>
     </div>
