@@ -91,20 +91,33 @@ Deno.serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(ctx);
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Primary: Sarvam (multilingual, India-first). Fallback: Lovable AI Gateway.
+    const useSarvam = !!SARVAM_API_KEY;
+    const endpoint = useSarvam
+      ? 'https://api.sarvam.ai/v1/chat/completions'
+      : 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (useSarvam) {
+      headers['api-subscription-key'] = SARVAM_API_KEY!;
+      headers['Authorization'] = `Bearer ${SARVAM_API_KEY}`;
+    } else {
+      headers['Authorization'] = `Bearer ${LOVABLE_API_KEY}`;
+    }
+    const modelName = useSarvam ? 'sarvam-m' : 'google/gemini-3-flash-preview';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: modelName,
+        temperature: 0.5,
         messages: [{ role: 'system', content: systemPrompt }, ...messages],
       }),
     });
 
     if (!res.ok) {
       const txt = await res.text();
+      console.error('[merchant-assistant] AI error', res.status, txt);
       if (res.status === 429) return json({ error: 'Rate limited. Try again in a moment.' }, 429);
       if (res.status === 402) return json({ error: 'AI credits exhausted. Please add credits.' }, 402);
       throw new Error(`AI gateway: ${res.status} ${txt}`);
