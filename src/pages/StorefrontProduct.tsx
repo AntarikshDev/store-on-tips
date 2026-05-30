@@ -45,6 +45,19 @@ const StorefrontProduct = () => {
     }
   }, [store?.id, product?.id, product?.price, track]);
 
+  // Compute variant-aware media BEFORE any early return so hook order stays stable.
+  const productImages = (product?.images as string[]) || [];
+  const variants = (Array.isArray(product?.variants) ? product?.variants : []) as unknown as VariantOption[];
+  const aiData = (product?.ai_generated_data || {}) as Record<string, any>;
+  const productVideos: string[] = Array.isArray(aiData.product_videos) ? aiData.product_videos : [];
+  const variantImages = pickVariantImages(variants, selectedVariants);
+  const variantVideos = pickVariantVideos(variants, selectedVariants);
+  const images = variantImages.length > 0 ? variantImages : productImages;
+  const videos = variantVideos.length > 0 ? variantVideos : productVideos;
+
+  // Reset selected thumbnail when gallery source changes.
+  useEffect(() => { setSelectedImage(0); }, [variantImages.join('|')]);
+
   if (storeLoading || productLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -64,25 +77,14 @@ const StorefrontProduct = () => {
 
   const theme = resolveTheme(store.theme);
   const { colors, fonts, borderRadius } = theme;
-  const productImages = (product.images as string[]) || [];
   const { average, count } = getAverageRating(reviews);
   const isOutOfStock = product.inventory_count !== null && product.inventory_count !== undefined && product.inventory_count <= 0;
-  const variants = (Array.isArray(product.variants) ? product.variants : []) as unknown as VariantOption[];
-  const aiData = (product.ai_generated_data || {}) as Record<string, any>;
-  const productVideos: string[] = Array.isArray(aiData.product_videos) ? aiData.product_videos : [];
   const highlights = aiData.highlights as string[] | undefined;
   const metadata = Object.fromEntries(
     Object.entries(aiData).filter(([k]) => !['highlights', 'product_type', 'product_videos', 'product_hint'].includes(k)).map(([k, v]) => [k, String(v)])
   );
 
-  // Swap gallery to selected variant's media when available.
-  const variantImages = pickVariantImages(variants, selectedVariants);
-  const variantVideos = pickVariantVideos(variants, selectedVariants);
-  const images = variantImages.length > 0 ? variantImages : productImages;
-  const videos = variantVideos.length > 0 ? variantVideos : productVideos;
 
-  // Reset selected thumbnail when gallery source changes.
-  useEffect(() => { setSelectedImage(0); }, [variantImages.join('|')]);
 
   const discount = product.compare_at_price && product.compare_at_price > product.price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
