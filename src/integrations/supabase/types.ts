@@ -6080,6 +6080,14 @@ export type Database = {
         Args: { _new_plan: string; _store_id: string }
         Returns: Json
       }
+      transfer_store_to_client: {
+        Args: {
+          _client_user_id: string
+          _handover_id: string
+          _store_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
