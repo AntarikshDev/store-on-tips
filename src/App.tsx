@@ -266,10 +266,13 @@ const AppRoutes = () => {
             <Route path="/admin/themes/preview/:themeId" element={<AdminRoute><AdminThemeMasterPreview /></AdminRoute>} />
             <Route path="/admin/themes/preview-live/:themeId" element={<AdminThemeLivePreview />} />
 
-            {/* Partner program (public signup + partner-only dashboard) */}
+            {/* Partner program (license-based, admin-invited) */}
             <Route path="/partners" element={<PartnersSignup />} />
             <Route path="/partners/signup" element={<PartnersSignup />} />
             <Route path="/partners/dashboard" element={<PartnersDashboard />} />
+            <Route path="/partner/accept" element={<PartnerAccept />} />
+            <Route path="/partner" element={<PartnerDashboard />} />
+            <Route path="/partner/stores/new" element={<Navigate to="/onboarding?partner_build=1" replace />} />
             {/* Help Center */}
             <Route path="/help" element={<Help />} />
             <Route path="/help/:slug" element={<Help />} />
