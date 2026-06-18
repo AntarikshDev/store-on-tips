@@ -385,7 +385,7 @@ const Billing = () => {
                 ) : isUpgrade ? (
                   <Button onClick={() => startRazorpay(p)} disabled={!!pendingAction} className="w-full gap-2">
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
-                    Upgrade now
+                    {cycle === 'annual' && !isFree && annualPrice > 0 ? 'Pay yearly' : 'Upgrade now'}
                   </Button>
                 ) : (
                   <Button variant="outline" onClick={() => setDowngradeTarget(p)}
