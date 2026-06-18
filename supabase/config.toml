@@ -3,6 +3,8 @@ project_id = "qxeyndsvkfsmkilkzmuc"
 [functions]
   [functions.admin-cloudflare-action]
     verify_jwt = false
+  [functions.partner-accept]
+    verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.customer-auth]
