@@ -453,6 +453,30 @@ const AdminPartners = () => {
                   ) : (
                     <Button variant="outline" size="sm" disabled><Mail className="w-3.5 h-3.5 mr-1" /> Invite pending</Button>
                   )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="ml-auto text-destructive hover:text-destructive">
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete partner
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {selected.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This permanently removes the partner along with all their licenses, batches and pending invites. Partners with active client stores cannot be deleted.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => deletePartner.mutate(selected.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </>
