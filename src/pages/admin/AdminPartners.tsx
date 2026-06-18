@@ -566,6 +566,85 @@ const AdminPartners = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Promote {selected?.name}</DialogTitle>
+            <DialogDescription>
+              Set as a State Head or Regional Head. They will earn override commission on every sale by partners in their downline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tier</Label>
+              <Select value={promoteForm.tier} onValueChange={(v) => setPromoteForm({ ...promoteForm, tier: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="partner">Partner (revert)</SelectItem>
+                  <SelectItem value="state_head">State Head</SelectItem>
+                  <SelectItem value="regional_head">Regional Head</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Override commission %</Label>
+              <Input type="number" min={0} max={50} step={0.5}
+                value={promoteForm.override_pct}
+                onChange={(e) => setPromoteForm({ ...promoteForm, override_pct: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>State name</Label>
+                <Input value={promoteForm.state_name} onChange={(e) => setPromoteForm({ ...promoteForm, state_name: e.target.value })} placeholder="e.g. Maharashtra" />
+              </div>
+              <div>
+                <Label>Region name</Label>
+                <Input value={promoteForm.region_name} onChange={(e) => setPromoteForm({ ...promoteForm, region_name: e.target.value })} placeholder="e.g. North India" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPromoteOpen(false)}>Cancel</Button>
+            <Button onClick={() => promote.mutate()} disabled={promote.isPending} className="bg-orange-600 hover:bg-orange-700">
+              {promote.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign parent for {selected?.name}</DialogTitle>
+            <DialogDescription>
+              Attach this partner under a State Head or Regional Head. Their sales will accrue override commission to the upline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Parent (State / Regional Head)</Label>
+              <Select value={assignParentId || "__none__"} onValueChange={(v) => setAssignParentId(v === "__none__" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select a head" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None (top-level)</SelectItem>
+                  {heads.filter((h: any) => h.id !== selected?.id).map((h: any) => (
+                    <SelectItem key={h.id} value={h.id}>
+                      {h.name} — {String(h.tier).replace("_", " ")} ({h.override_commission_pct}%)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignOpen(false)}>Cancel</Button>
+            <Button onClick={() => assignParent.mutate()} disabled={assignParent.isPending} className="bg-orange-600 hover:bg-orange-700">
+              {assignParent.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
