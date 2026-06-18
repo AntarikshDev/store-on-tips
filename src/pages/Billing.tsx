@@ -198,7 +198,7 @@ const Billing = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Billing & Plan</h1>
         <p className="text-muted-foreground">
-          Monthly subscription. All prices exclude 18% GST. Upgrade anytime; downgrades apply at the end of your current billing cycle.
+          Pay monthly or save with an annual plan. All prices exclude 18% GST. Upgrade anytime; downgrades apply at the end of your current billing cycle.
         </p>
       </div>
 
