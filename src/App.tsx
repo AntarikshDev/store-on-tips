@@ -106,6 +106,8 @@ const PartnersSignup = lazy(() => import("@/pages/PartnersSignup"));
 const PartnersDashboard = lazy(() => import("@/pages/PartnersDashboard"));
 const PartnerAccept = lazy(() => import("@/pages/partner/PartnerAccept"));
 const PartnerDashboard = lazy(() => import("@/pages/partner/PartnerDashboard"));
+const NewClientStore = lazy(() => import("@/pages/partner/NewClientStore"));
+const StoreInviteAccept = lazy(() => import("@/pages/storefront/StoreInviteAccept"));
 const Help = lazy(() => import("@/pages/Help"));
 const Invoices = lazy(() => import("@/pages/Invoices"));
 const InvoicePrint = lazy(() => import("@/pages/InvoicePrint"));
