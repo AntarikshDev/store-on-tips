@@ -1,11 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Store, Ticket, Loader2, LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Store, Ticket, Loader2, LogOut, Send } from "lucide-react";
+import { toast } from "sonner";
 
 const PartnerDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -117,7 +123,7 @@ const PartnerDashboard = () => {
             ) : (
               <div className="divide-y">
                 {storesQ.data!.map((store: any) => (
-                  <div key={store.id} className="py-3 flex items-center justify-between">
+                  <div key={store.id} className="py-3 flex items-center justify-between gap-3 flex-wrap">
                     <div>
                       <div className="font-medium">{store.name || store.slug}</div>
                       <div className="text-xs text-muted-foreground">/{store.slug}</div>
@@ -127,6 +133,9 @@ const PartnerDashboard = () => {
                       <Button size="sm" variant="outline" asChild>
                         <Link to={`/dashboard?store=${store.id}`}>Manage</Link>
                       </Button>
+                      {!store.partner_handover_status && (
+                        <HandoverButton storeId={store.id} storeName={store.name || store.slug} />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -149,6 +158,76 @@ const PartnerDashboard = () => {
     </div>
   );
 };
+
+const HandoverButton = ({ storeId, storeName }: { storeId: string; storeName: string }) => {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("starter");
+  const [submitting, setSubmitting] = useState(false);
+
+  const send = async () => {
+    if (!email.includes("@")) { toast.error("Enter a valid client email"); return; }
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("partner-handover-invite", {
+        body: { store_id: storeId, client_email: email, plan },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed");
+      toast.success(`Invite sent to ${email}`);
+      qc.invalidateQueries({ queryKey: ["partner-stores"] });
+      setOpen(false);
+      setEmail("");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send invite");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+          <Send className="w-3.5 h-3.5 mr-1" /> Send to client
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Hand over "{storeName}"</DialogTitle>
+          <DialogDescription>
+            Your client will get an email to set a password and take ownership of the store.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Client email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client@example.com" />
+          </div>
+          <div>
+            <Label>Plan</Label>
+            <Select value={plan} onValueChange={setPlan}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="starter">Starter — ₹5,500 / year</SelectItem>
+                <SelectItem value="growth">Growth — ₹16,500 / year</SelectItem>
+                <SelectItem value="scale">Scale — ₹55,000 / year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={send} disabled={submitting} className="bg-orange-600 hover:bg-orange-700">
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send invite"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
 const StatCard = ({ label, value, icon, accent }: { label: string; value: number; icon?: React.ReactNode; accent?: boolean }) => (
   <Card className={accent ? "border-orange-200 bg-orange-50/50" : ""}>

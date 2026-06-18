@@ -106,6 +106,8 @@ const PartnersSignup = lazy(() => import("@/pages/PartnersSignup"));
 const PartnersDashboard = lazy(() => import("@/pages/PartnersDashboard"));
 const PartnerAccept = lazy(() => import("@/pages/partner/PartnerAccept"));
 const PartnerDashboard = lazy(() => import("@/pages/partner/PartnerDashboard"));
+const NewClientStore = lazy(() => import("@/pages/partner/NewClientStore"));
+const StoreInviteAccept = lazy(() => import("@/pages/storefront/StoreInviteAccept"));
 const Help = lazy(() => import("@/pages/Help"));
 const Invoices = lazy(() => import("@/pages/Invoices"));
 const InvoicePrint = lazy(() => import("@/pages/InvoicePrint"));
@@ -272,7 +274,8 @@ const AppRoutes = () => {
             <Route path="/partners/dashboard" element={<PartnersDashboard />} />
             <Route path="/partner/accept" element={<PartnerAccept />} />
             <Route path="/partner" element={<PartnerDashboard />} />
-            <Route path="/partner/stores/new" element={<Navigate to="/onboarding?partner_build=1" replace />} />
+            <Route path="/partner/stores/new" element={<NewClientStore />} />
+            <Route path="/store-invite/accept" element={<StoreInviteAccept />} />
             {/* Help Center */}
             <Route path="/help" element={<Help />} />
             <Route path="/help/:slug" element={<Help />} />
