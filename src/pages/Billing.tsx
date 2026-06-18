@@ -79,6 +79,54 @@ const Billing = () => {
     if (!store) return;
     setPendingAction(target.plan);
     try {
+      if (cycle === 'annual') {
+        const { data, error } = await supabase.functions.invoke('create-annual-plan-payment', {
+          body: { store_id: store.id, plan: target.plan },
+        });
+        if (error || !data?.razorpay_order_id) throw new Error(error?.message || data?.error || 'Failed');
+
+        if (!(window as any).Razorpay) {
+          const s = document.createElement('script');
+          s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          document.body.appendChild(s);
+          await new Promise((res) => { s.onload = res; });
+        }
+        const rzp = new window.Razorpay({
+          key: data.razorpay_key_id,
+          order_id: data.razorpay_order_id,
+          amount: data.amount,
+          currency: data.currency,
+          name: 'Pic to Cart',
+          description: `${target.display_name} — Annual plan (₹${data.amount_inr})`,
+          theme: { color: '#F97316' },
+          handler: async (resp: any) => {
+            try {
+              const verify = await supabase.functions.invoke('verify-annual-plan-payment', {
+                body: {
+                  store_id: store.id,
+                  plan: target.plan,
+                  razorpay_order_id: resp.razorpay_order_id,
+                  razorpay_payment_id: resp.razorpay_payment_id,
+                  razorpay_signature: resp.razorpay_signature,
+                },
+              });
+              if (verify.error || (verify.data as any)?.error) {
+                throw new Error(verify.error?.message || (verify.data as any)?.error || 'Verification failed');
+              }
+              toast.success('Annual plan activated! 🎉');
+              setTimeout(() => window.location.reload(), 1500);
+            } catch (e: any) {
+              toast.error(e.message || 'Verification failed');
+            } finally {
+              setPendingAction(null);
+            }
+          },
+          modal: { ondismiss: () => setPendingAction(null) },
+        });
+        rzp.open();
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
         body: { store_id: store.id, plan: target.plan },
       });
