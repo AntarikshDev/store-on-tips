@@ -2662,7 +2662,7 @@ export type Database = {
           type: string
           updated_at: string
           upi_id: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           commission_months?: number
@@ -2689,7 +2689,7 @@ export type Database = {
           type?: string
           updated_at?: string
           upi_id?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           commission_months?: number
@@ -2716,7 +2716,7 @@ export type Database = {
           type?: string
           updated_at?: string
           upi_id?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
