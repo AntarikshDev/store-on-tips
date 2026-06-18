@@ -293,6 +293,28 @@ const Billing = () => {
         </Card>
       )}
 
+      {/* Billing cycle toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 className="text-base font-semibold">Choose a plan</h3>
+        <div className="inline-flex items-center rounded-full border bg-muted/40 p-1 text-sm self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setCycle('monthly')}
+            className={`px-4 py-1.5 rounded-full font-medium transition ${cycle === 'monthly' ? 'bg-background shadow-sm' : 'text-muted-foreground'}`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setCycle('annual')}
+            className={`px-4 py-1.5 rounded-full font-medium transition flex items-center gap-1.5 ${cycle === 'annual' ? 'bg-background shadow-sm' : 'text-muted-foreground'}`}
+          >
+            Annual
+            <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Save ~17%</span>
+          </button>
+        </div>
+      </div>
+
       {/* Plan cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {plans.map((p) => {
@@ -302,7 +324,11 @@ const Billing = () => {
           const isDowngrade = p.sort_order < currentOrder;
           const busy = pendingAction === p.plan;
           const gstPct = p.gst_percent ?? 18;
-          const total = gstTotal(p.price_inr, gstPct);
+          const annualPrice = Number(p.annual_price_inr ?? 0);
+          const showAnnual = cycle === 'annual' && !isFree && annualPrice > 0;
+          const displayMonthly = showAnnual ? annualMonthly(annualPrice) : p.price_inr;
+          const total = gstTotal(displayMonthly, gstPct);
+          const savings = showAnnual ? annualSavingsPct(p.price_inr, annualPrice) : 0;
 
           return (
             <Card key={p.id} className={`flex flex-col ${isCurrent ? 'border-primary ring-2 ring-primary/20' : ''}`}>
@@ -312,12 +338,14 @@ const Billing = () => {
                   {isCurrent && <Badge>Current</Badge>}
                 </div>
                 <div className="mt-2">
-                  <span className="text-3xl font-bold">₹{p.price_inr}</span>
+                  <span className="text-3xl font-bold">₹{Math.round(displayMonthly).toLocaleString('en-IN')}</span>
                   <span className="text-sm text-muted-foreground">/mo</span>
                 </div>
                 {!isFree && (
                   <p className="text-xs text-muted-foreground">
-                    ₹{total.toFixed(2)} incl. {gstPct}% GST
+                    {showAnnual
+                      ? <>Billed ₹{annualPrice.toLocaleString('en-IN')} yearly · incl. {gstPct}% GST{savings > 0 && <> · <span className="text-emerald-600 font-semibold">Save {savings}%</span></>}</>
+                      : <>₹{total.toFixed(2)} incl. {gstPct}% GST</>}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
