@@ -2358,34 +2358,49 @@ export type Database = {
         Row: {
           base_amount: number
           commission_amount: number
+          commission_rate: number | null
+          commission_type: string
           created_at: string
           id: string
           partner_id: string
           payout_id: string | null
           period_month: string
           referral_id: string | null
+          source_kind: string | null
+          source_partner_id: string | null
+          source_ref: string | null
           status: string
         }
         Insert: {
           base_amount?: number
           commission_amount?: number
+          commission_rate?: number | null
+          commission_type?: string
           created_at?: string
           id?: string
           partner_id: string
           payout_id?: string | null
           period_month: string
           referral_id?: string | null
+          source_kind?: string | null
+          source_partner_id?: string | null
+          source_ref?: string | null
           status?: string
         }
         Update: {
           base_amount?: number
           commission_amount?: number
+          commission_rate?: number | null
+          commission_type?: string
           created_at?: string
           id?: string
           partner_id?: string
           payout_id?: string | null
           period_month?: string
           referral_id?: string | null
+          source_kind?: string | null
+          source_partner_id?: string | null
+          source_ref?: string | null
           status?: string
         }
         Relationships: [
@@ -2401,6 +2416,13 @@ export type Database = {
             columns: ["referral_id"]
             isOneToOne: false
             referencedRelation: "partner_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_source_partner_id_fkey"
+            columns: ["source_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]
@@ -2652,11 +2674,16 @@ export type Database = {
           license_price_per_unit: number | null
           name: string
           notes: string | null
+          override_commission_pct: number
           pan: string | null
+          parent_partner_id: string | null
           partner_type: Database["public"]["Enums"]["partner_type"] | null
           payout_email: string | null
           phone: string | null
           referral_code: string
+          region_name: string | null
+          state_name: string | null
+          tier: Database["public"]["Enums"]["partner_tier"]
           total_amount_paid: number
           total_licenses_purchased: number
           type: string
@@ -2679,11 +2706,16 @@ export type Database = {
           license_price_per_unit?: number | null
           name: string
           notes?: string | null
+          override_commission_pct?: number
           pan?: string | null
+          parent_partner_id?: string | null
           partner_type?: Database["public"]["Enums"]["partner_type"] | null
           payout_email?: string | null
           phone?: string | null
           referral_code: string
+          region_name?: string | null
+          state_name?: string | null
+          tier?: Database["public"]["Enums"]["partner_tier"]
           total_amount_paid?: number
           total_licenses_purchased?: number
           type?: string
@@ -2706,11 +2738,16 @@ export type Database = {
           license_price_per_unit?: number | null
           name?: string
           notes?: string | null
+          override_commission_pct?: number
           pan?: string | null
+          parent_partner_id?: string | null
           partner_type?: Database["public"]["Enums"]["partner_type"] | null
           payout_email?: string | null
           phone?: string | null
           referral_code?: string
+          region_name?: string | null
+          state_name?: string | null
+          tier?: Database["public"]["Enums"]["partner_tier"]
           total_amount_paid?: number
           total_licenses_purchased?: number
           type?: string
@@ -2718,7 +2755,15 @@ export type Database = {
           upi_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "partners_parent_partner_id_fkey"
+            columns: ["parent_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_events: {
         Row: {
@@ -5956,6 +6001,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accrue_hierarchy_commissions: {
+        Args: {
+          _base_amount: number
+          _partner_id: string
+          _source_kind: string
+          _source_ref: string
+        }
+        Returns: undefined
+      }
+      admin_assign_partner_parent: {
+        Args: { _parent_id: string; _partner_id: string }
+        Returns: undefined
+      }
+      admin_promote_partner: {
+        Args: {
+          _override_pct: number
+          _partner_id: string
+          _region_name?: string
+          _state_name?: string
+          _tier: string
+        }
+        Returns: undefined
+      }
       apply_coupon_to_recent_order: {
         Args: { _coupon_id: string; _order_id: string }
         Returns: undefined
@@ -6036,9 +6104,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      head_downline_summary: {
+        Args: { _head_partner_id: string }
+        Returns: {
+          downline_count: number
+          gmv: number
+          licenses_sold: number
+          override_lifetime: number
+          override_this_month: number
+        }[]
+      }
       increment_coupon_usage: {
         Args: { coupon_id: string }
         Returns: undefined
+      }
+      is_partner_in_downline: {
+        Args: { _head_user_id: string; _partner_id: string }
+        Returns: boolean
       }
       is_phone_cod_blocked: {
         Args: { _phone: string; _store_id: string }
@@ -6158,6 +6240,7 @@ export type Database = {
         | "returned"
       partner_invite_status: "pending" | "active" | "suspended"
       partner_license_status: "available" | "consumed" | "revoked"
+      partner_tier: "partner" | "state_head" | "regional_head"
       partner_type: "agency" | "freelancer" | "intern"
       payment_mode_t: "cash" | "upi" | "card" | "bank" | "credit" | "other"
       payment_status: "pending" | "paid" | "failed" | "refunded" | "cod"
@@ -6362,6 +6445,7 @@ export const Constants = {
       ],
       partner_invite_status: ["pending", "active", "suspended"],
       partner_license_status: ["available", "consumed", "revoked"],
+      partner_tier: ["partner", "state_head", "regional_head"],
       partner_type: ["agency", "freelancer", "intern"],
       payment_mode_t: ["cash", "upi", "card", "bank", "credit", "other"],
       payment_status: ["pending", "paid", "failed", "refunded", "cod"],
