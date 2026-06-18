@@ -15,6 +15,14 @@ import { toast } from 'sonner';
 import { Crown, Check, X, Loader2, Zap, Sparkles, AlertTriangle, Lock } from 'lucide-react';
 import { CommissionPanel } from '@/components/billing/CommissionPanel';
 
+type BillingCycle = 'monthly' | 'annual';
+const annualMonthly = (annual: number) => Math.round((annual / 12) * 100) / 100;
+const annualSavingsPct = (monthly: number, annual: number) => {
+  if (!monthly || !annual) return 0;
+  const full = monthly * 12;
+  return Math.max(0, Math.round(((full - annual) / full) * 100));
+};
+
 declare global { interface Window { Razorpay: any; } }
 
 const FEATURE_ROWS: { key: keyof PlanConfig; label: string }[] = [
@@ -63,6 +71,7 @@ const Billing = () => {
   const { products } = useProducts();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<PlanConfig | null>(null);
+  const [cycle, setCycle] = useState<BillingCycle>('monthly');
 
   const currentOrder = plans.find((p) => p.plan === plan)?.sort_order ?? 1;
 
