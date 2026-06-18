@@ -181,6 +181,44 @@ const AdminPartners = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const promote = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_promote_partner", {
+        _partner_id: selected.id,
+        _tier: promoteForm.tier,
+        _override_pct: promoteForm.override_pct,
+        _region_name: promoteForm.region_name || null,
+        _state_name: promoteForm.state_name || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Partner promoted");
+      setPromoteOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+      setSelected({ ...selected, tier: promoteForm.tier, override_commission_pct: promoteForm.override_pct });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const assignParent = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_assign_partner_parent", {
+        _partner_id: selected.id,
+        _parent_id: assignParentId || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parent updated");
+      setAssignOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const heads = (partnersQ.data ?? []).filter((p: any) => p.tier === "state_head" || p.tier === "regional_head");
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
