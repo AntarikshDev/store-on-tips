@@ -34,6 +34,10 @@ const AdminPartners = () => {
 
   const [addBatchOpen, setAddBatchOpen] = useState(false);
   const [batchForm, setBatchForm] = useState({ qty: 1, unit_price: 0, notes: "" });
+  const [promoteOpen, setPromoteOpen] = useState(false);
+  const [promoteForm, setPromoteForm] = useState({ tier: "state_head", override_pct: 5, region_name: "", state_name: "" });
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignParentId, setAssignParentId] = useState<string>("");
 
   const partnersQ = useQuery({
     queryKey: ["admin-partners"],
