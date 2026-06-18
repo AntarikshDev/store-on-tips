@@ -42,13 +42,12 @@ Deno.serve(async (req) => {
       await admin.functions.invoke("send-transactional-email", {
         body: {
           to: email,
-          template: "generic-notice",
+          template: "annual-renewal",
           data: {
-            subject: `Your Pic To Cart ${sub.plan} plan renews in ${daysLeft} day(s)`,
-            heading: "Renew your annual plan",
-            body: `Your store "${(sub as any).stores?.name || ""}" annual plan expires on ${new Date(sub.current_period_end as string).toDateString()} (${daysLeft} day(s) from now). Renew from your billing page to keep your store live.`,
-            cta_label: "Renew now",
-            cta_url: "https://pictocart.in/dashboard/billing",
+            storeName: (sub as any).stores?.name || "",
+            planName: sub.plan,
+            daysLeft,
+            endDate: new Date(sub.current_period_end as string).toDateString(),
           },
         },
       }).catch((e) => console.error("send error", e));
