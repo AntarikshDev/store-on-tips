@@ -34,6 +34,10 @@ const AdminPartners = () => {
 
   const [addBatchOpen, setAddBatchOpen] = useState(false);
   const [batchForm, setBatchForm] = useState({ qty: 1, unit_price: 0, notes: "" });
+  const [promoteOpen, setPromoteOpen] = useState(false);
+  const [promoteForm, setPromoteForm] = useState({ tier: "state_head", override_pct: 5, region_name: "", state_name: "" });
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignParentId, setAssignParentId] = useState<string>("");
 
   const partnersQ = useQuery({
     queryKey: ["admin-partners"],
@@ -177,6 +181,44 @@ const AdminPartners = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const promote = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_promote_partner", {
+        _partner_id: selected.id,
+        _tier: promoteForm.tier,
+        _override_pct: promoteForm.override_pct,
+        _region_name: promoteForm.region_name || null,
+        _state_name: promoteForm.state_name || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Partner promoted");
+      setPromoteOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+      setSelected({ ...selected, tier: promoteForm.tier, override_commission_pct: promoteForm.override_pct });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const assignParent = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_assign_partner_parent", {
+        _partner_id: selected.id,
+        _parent_id: assignParentId || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parent updated");
+      setAssignOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const heads = (partnersQ.data ?? []).filter((p: any) => p.tier === "state_head" || p.tier === "regional_head");
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
@@ -286,6 +328,7 @@ const AdminPartners = () => {
                 <thead className="text-left text-xs uppercase text-muted-foreground border-b">
                   <tr>
                     <th className="py-2">Partner</th>
+                    <th>Tier</th>
                     <th>Type</th>
                     <th>Status</th>
                     <th>Licenses</th>
@@ -299,6 +342,15 @@ const AdminPartners = () => {
                       <td className="py-3">
                         <div className="font-medium">{p.name || "—"}</div>
                         <div className="text-xs text-muted-foreground">{p.email}</div>
+                      </td>
+                      <td>
+                        {p.tier && p.tier !== "partner" ? (
+                          <Badge className={p.tier === "regional_head" ? "bg-purple-600" : "bg-blue-600"}>
+                            {String(p.tier).replace("_", " ")} • {p.override_commission_pct}%
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Partner</span>
+                        )}
                       </td>
                       <td className="capitalize">{p.partner_type}</td>
                       <td>
@@ -441,6 +493,37 @@ const AdminPartners = () => {
                   </div>
                 </div>
 
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Hierarchy</h3>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setPromoteForm({
+                          tier: selected.tier === "regional_head" ? "regional_head" : "state_head",
+                          override_pct: selected.override_commission_pct || 5,
+                          region_name: selected.region_name || "",
+                          state_name: selected.state_name || "",
+                        });
+                        setPromoteOpen(true);
+                      }}>Promote</Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setAssignParentId(selected.parent_partner_id || "");
+                        setAssignOpen(true);
+                      }}>Assign parent</Button>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground grid grid-cols-2 gap-1">
+                    <div>Tier: <span className="font-medium capitalize text-foreground">{String(selected.tier || "partner").replace("_", " ")}</span></div>
+                    <div>Override: <span className="font-medium text-foreground">{selected.override_commission_pct || 0}%</span></div>
+                    <div>Region: <span className="text-foreground">{selected.region_name || "—"}</span></div>
+                    <div>State: <span className="text-foreground">{selected.state_name || "—"}</span></div>
+                    <div className="col-span-2">Parent: <span className="text-foreground">
+                      {selected.parent_partner_id ? (partnersQ.data?.find((p: any) => p.id === selected.parent_partner_id)?.name || "—") : "None"}
+                    </span></div>
+                  </div>
+                </div>
+
+
                 <div className="flex gap-2 pt-4 border-t">
                   {selected.invite_status === "active" ? (
                     <Button variant="destructive" size="sm" onClick={() => updateStatus.mutate({ id: selected.id, status: "suspended" })}>
@@ -483,6 +566,85 @@ const AdminPartners = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Promote {selected?.name}</DialogTitle>
+            <DialogDescription>
+              Set as a State Head or Regional Head. They will earn override commission on every sale by partners in their downline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tier</Label>
+              <Select value={promoteForm.tier} onValueChange={(v) => setPromoteForm({ ...promoteForm, tier: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="partner">Partner (revert)</SelectItem>
+                  <SelectItem value="state_head">State Head</SelectItem>
+                  <SelectItem value="regional_head">Regional Head</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Override commission %</Label>
+              <Input type="number" min={0} max={50} step={0.5}
+                value={promoteForm.override_pct}
+                onChange={(e) => setPromoteForm({ ...promoteForm, override_pct: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>State name</Label>
+                <Input value={promoteForm.state_name} onChange={(e) => setPromoteForm({ ...promoteForm, state_name: e.target.value })} placeholder="e.g. Maharashtra" />
+              </div>
+              <div>
+                <Label>Region name</Label>
+                <Input value={promoteForm.region_name} onChange={(e) => setPromoteForm({ ...promoteForm, region_name: e.target.value })} placeholder="e.g. North India" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPromoteOpen(false)}>Cancel</Button>
+            <Button onClick={() => promote.mutate()} disabled={promote.isPending} className="bg-orange-600 hover:bg-orange-700">
+              {promote.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign parent for {selected?.name}</DialogTitle>
+            <DialogDescription>
+              Attach this partner under a State Head or Regional Head. Their sales will accrue override commission to the upline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Parent (State / Regional Head)</Label>
+              <Select value={assignParentId || "__none__"} onValueChange={(v) => setAssignParentId(v === "__none__" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select a head" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None (top-level)</SelectItem>
+                  {heads.filter((h: any) => h.id !== selected?.id).map((h: any) => (
+                    <SelectItem key={h.id} value={h.id}>
+                      {h.name} — {String(h.tier).replace("_", " ")} ({h.override_commission_pct}%)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignOpen(false)}>Cancel</Button>
+            <Button onClick={() => assignParent.mutate()} disabled={assignParent.isPending} className="bg-orange-600 hover:bg-orange-700">
+              {assignParent.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

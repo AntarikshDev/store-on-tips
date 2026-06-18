@@ -73,6 +73,31 @@ Deno.serve(async (req) => {
     });
     if (tErr) throw tErr;
 
+    // Accrue hierarchy override commissions (State / Regional head)
+    try {
+      const { data: hh } = await admin
+        .from("store_handovers")
+        .select("partner_id")
+        .eq("id", handover.id)
+        .maybeSingle();
+      const { data: priceRow } = await admin
+        .from("plan_configs")
+        .select("annual_price_inr")
+        .eq("plan", handover.plan)
+        .maybeSingle();
+      const base = Number(priceRow?.annual_price_inr || 0);
+      if (hh?.partner_id && base > 0) {
+        await admin.rpc("accrue_hierarchy_commissions", {
+          _partner_id: hh.partner_id,
+          _base_amount: base,
+          _source_kind: "handover_payment",
+          _source_ref: handover.id,
+        });
+      }
+    } catch (e) {
+      console.error("hierarchy accrual failed", e);
+    }
+
     const { data: store } = await admin.from("stores").select("slug").eq("id", handover.store_id).single();
 
     return new Response(JSON.stringify({

@@ -84,9 +84,16 @@ const PartnerDashboard = () => {
             <h1 className="text-xl font-bold">Partner Dashboard</h1>
           </div>
           <div className="flex items-center gap-3">
+            {(partner.tier === "state_head" || partner.tier === "regional_head") && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/partner/hierarchy">Hierarchy</Link>
+              </Button>
+            )}
             <div className="text-right text-sm">
               <div className="font-semibold">{partner.name}</div>
-              <div className="text-muted-foreground capitalize">{partner.partner_type}</div>
+              <div className="text-muted-foreground capitalize">
+                {partner.tier && partner.tier !== "partner" ? String(partner.tier).replace("_", " ") : partner.partner_type}
+              </div>
             </div>
             <Button variant="ghost" size="icon" onClick={() => signOut()}><LogOut className="w-4 h-4" /></Button>
           </div>
