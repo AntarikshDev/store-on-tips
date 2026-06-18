@@ -390,13 +390,32 @@ const AdminPartners = () => {
                     {batchesQ.data?.length === 0 ? (
                       <div className="p-4 text-center text-muted-foreground">No batches yet</div>
                     ) : batchesQ.data?.map((b: any) => (
-                      <div key={b.id} className="p-3 flex justify-between">
+                      <div key={b.id} className="p-3 flex justify-between items-center gap-3">
                         <div>
                           <div className="font-medium">{b.qty} licenses @ ₹{Number(b.unit_price_inr).toLocaleString("en-IN")}</div>
                           <div className="text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex items-center gap-3">
                           <div className="font-semibold flex items-center"><IndianRupee className="w-3 h-3" />{Number(b.total_inr).toLocaleString("en-IN")}</div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" title="Revoke remaining available licenses in this batch">
+                                <Ban className="w-3.5 h-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Revoke remaining licenses?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This marks all unused licenses in this batch as revoked. Already-consumed licenses (active client stores) are unaffected.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => revokeBatch.mutate(b.id)}>Revoke</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}
