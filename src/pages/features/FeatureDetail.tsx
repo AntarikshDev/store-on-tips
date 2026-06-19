@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { ArrowRight, Check, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,12 @@ import PicToCartLogo from '@/components/PicToCartLogo';
 const FeatureDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const feature = slug ? findFeature(slug) : undefined;
+
+  // Reset scroll to top whenever the slug changes so navigating between
+  // feature tiles always lands at the page top instead of preserving offset.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [slug]);
 
   if (!feature) return <Navigate to="/" replace />;
 
