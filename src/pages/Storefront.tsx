@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { generateDefaultSections } from '@/lib/defaultSections';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { X, ArrowUp } from 'lucide-react';
 import { useStorefront } from '@/hooks/useStorefront';
 import { useStorefrontBundle } from '@/hooks/useStorefrontBundle';
@@ -120,9 +120,17 @@ const Storefront = ({ page = 'home' }: { page?: string } = {}) => {
   const theme = resolveTheme(themeData);
   const { colors, fonts, borderRadius } = theme;
 
-  // Custom-page home override
-  if (page === 'home' && (store as any).home_page_kind === 'custom' && (store as any).home_page_id) {
-    return <CustomHomePage store={store} themeData={themeData} />;
+  // Home-page routing override — let sellers point "/" at any page (WordPress-style).
+  if (page === 'home') {
+    const kind = (store as any).home_page_kind as string | undefined;
+    if (kind === 'custom' && (store as any).home_page_id) {
+      return <CustomHomePage store={store} themeData={themeData} />;
+    }
+    if (kind === 'shop') page = 'shop';
+    else if (kind === 'collections') page = 'collections';
+    else if (kind === 'product' && (store as any).home_page_product_id) {
+      return <Navigate to={`/store/${slug}/product/${(store as any).home_page_product_id}`} replace />;
+    }
   }
 
   // If the resolved theme has a dedicated React theme component (bazaar, etc),
