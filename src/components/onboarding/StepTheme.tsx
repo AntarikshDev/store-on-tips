@@ -28,14 +28,14 @@ interface ThemeMaster {
 // Keeps the two taxonomies in sync without a DB join. Anything not listed
 // falls through unfiltered (e.g. "other").
 const CATEGORY_ALIASES: Record<string, string[]> = {
-  fashion: ['fashion', 'apparel', 'clothing'],
+  fashion: ['fashion', 'apparel', 'clothing', 'jewellery'],
   food: ['food', 'restaurant', 'cafe', 'bakery'],
-  grocery: ['grocery', 'food'],
+  grocery: ['grocery', 'food', 'agri'],
   electronics: ['electronics', 'gadgets', 'tech'],
   beauty: ['beauty', 'cosmetics', 'wellness'],
-  beauty_services: ['services', 'beauty', 'salon'],
-  healthcare: ['services', 'health', 'doctor', 'clinic'],
-  handmade: ['home-decor', 'crafts', 'handmade'],
+  beauty_services: ['services', 'beauty'],
+  healthcare: ['health', 'services'],
+  handmade: ['handicraft', 'home', 'gifts'],
   other: [],
 };
 
