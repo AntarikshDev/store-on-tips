@@ -11,6 +11,12 @@ const FeatureDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const feature = slug ? findFeature(slug) : undefined;
 
+  // Reset scroll to top whenever the slug changes so navigating between
+  // feature tiles always lands at the page top instead of preserving offset.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [slug]);
+
   if (!feature) return <Navigate to="/" replace />;
 
   const related = byPillar(feature.pillar).filter((f) => f.slug !== feature.slug).slice(0, 4);
