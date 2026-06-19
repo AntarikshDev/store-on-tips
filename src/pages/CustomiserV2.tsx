@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import PromoTickerEditor, { DEFAULT_PROMO_TICKER } from "@/components/store-design/PromoTickerEditor";
 import type { PromoTickerConfig } from "@/components/storefront/PromoTicker";
+import PagesTab from "@/components/store-design/PagesTab";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sparkles, FileText as FileTextIcon } from "lucide-react";
 
 const PAGES = [
   { id: "home", label: "Home" },
@@ -109,6 +112,7 @@ export default function CustomiserV2() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState<string | null>(null);
+  const [pagesDialogOpen, setPagesDialogOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -445,11 +449,31 @@ export default function CustomiserV2() {
                     <span>{p.label}</span>
                     {edited && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
                   </button>
-                );
+                 );
               })}
             </div>
           </ScrollArea>
           <Separator />
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Custom Pages</span>
+            <button
+              onClick={() => setPagesDialogOpen(true)}
+              className="text-[10px] inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20"
+              title="Create custom pages with AI"
+            >
+              <Sparkles className="h-3 w-3" /> AI
+            </button>
+          </div>
+          <div className="px-2 pb-2">
+            <button
+              onClick={() => setPagesDialogOpen(true)}
+              className="w-full text-left text-xs px-2.5 py-1.5 rounded-md hover:bg-muted flex items-center gap-1.5 text-muted-foreground"
+            >
+              <FileTextIcon className="h-3 w-3" /> Manage pages & homepage
+            </button>
+          </div>
+          <Separator />
+
           <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Sections</div>
           <ScrollArea className="flex-1">
             <div className="px-2 pb-3 space-y-0.5">
@@ -591,6 +615,15 @@ export default function CustomiserV2() {
           </ScrollArea>
         </aside>
       </div>
+
+      <Dialog open={pagesDialogOpen} onOpenChange={setPagesDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Custom Pages & AI Generator</DialogTitle>
+          </DialogHeader>
+          <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
