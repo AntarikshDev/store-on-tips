@@ -72,19 +72,50 @@ export default function CreatePageWizard({ storeId, open, onOpenChange }: { stor
   const handleGenerate = async () => {
     if (slugError) { toast.error(slugError); return; }
     setSubmitting(true);
+    let pageId: string | null = null;
+    let createdHere = false;
     try {
-      const page = await create.mutateAsync({ title, slug, description, brief, uploaded_images: images, style_hint: styleHint });
-      await generate.mutateAsync({ page_id: page.id });
+      // Reuse existing draft with same slug (e.g. previous failed attempt)
+      const { data: existing } = await (supabase as any)
+        .from("store_custom_pages")
+        .select("id, status, version")
+        .eq("store_id", storeId)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (existing && existing.status === "draft" && (existing.version ?? 1) <= 1) {
+        // Update the empty draft with latest brief/images then regenerate
+        await (supabase as any)
+          .from("store_custom_pages")
+          .update({ title, description, brief, uploaded_images: images, style_hint: styleHint })
+          .eq("id", existing.id);
+        pageId = existing.id;
+      } else if (existing) {
+        toast.error(`A page with slug "${slug}" already exists. Choose a different slug.`);
+        setSubmitting(false);
+        return;
+      } else {
+        const page = await create.mutateAsync({ title, slug, description, brief, uploaded_images: images, style_hint: styleHint });
+        pageId = page.id;
+        createdHere = true;
+      }
+
+      await generate.mutateAsync({ page_id: pageId! });
       toast.success("Page generated! Review and publish when ready.");
       reset();
       onOpenChange(false);
     } catch (e: any) {
       const msg = e?.message || "Generation failed";
       toast.error(msg);
+      // Clean up empty draft created in this attempt so user can retry with same slug
+      if (createdHere && pageId) {
+        await (supabase as any).from("store_custom_pages").delete().eq("id", pageId).eq("version", 1);
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
