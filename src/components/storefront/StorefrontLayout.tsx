@@ -15,6 +15,7 @@ import StorefrontAssistant from './StorefrontAssistant';
 import PremiumTrialTicker from './PremiumTrialTicker';
 import PromoTicker from './PromoTicker';
 import SiteOfferBanner from './SiteOfferBanner';
+import { usePublicNavCustomPages } from '@/hooks/useCustomPages';
 import { DEFAULT_FOOTER, type FooterConfig } from '@/components/store-design/FooterEditor';
 
 interface Props {
