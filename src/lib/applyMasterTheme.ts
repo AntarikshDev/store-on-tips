@@ -39,7 +39,7 @@ export async function applyMasterTheme(storeId: string, themeId: string, current
     seedSections[i] = { ...(s.props ?? {}) };
   });
 
-  const newSettings = {
+  const newSettings: any = {
     ...currentSettings,
     theme_overrides: {
       brand_name: store?.name ?? dna.name,
@@ -49,6 +49,14 @@ export async function applyMasterTheme(storeId: string, themeId: string, current
       sections:   seedSections,
     },
   };
+
+  // If the merchant switched away from a premium theme they had reserved
+  // on a free trial, clear the pending entry so the trial banner stops
+  // hanging around on the dashboard.
+  const pending = currentSettings?.pending_premium_theme;
+  if (pending && pending.theme_id !== themeId) {
+    delete newSettings.pending_premium_theme;
+  }
 
   const newTheme = {
     theme_id: themeId,
