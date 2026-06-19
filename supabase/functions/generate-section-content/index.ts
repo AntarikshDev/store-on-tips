@@ -10,22 +10,43 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
-    const { data: userData } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+    const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!userData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { mode, sectionType, storeName, category, currentTitle, currentSubtitle } = await req.json();
+    const { mode, sectionType, storeName, category, currentTitle, currentSubtitle, store_id } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Verify store ownership and charge credits
+    if (!store_id) {
+      return new Response(JSON.stringify({ error: "Missing store_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: store } = await admin.from("stores").select("id, user_id").eq("id", store_id).maybeSingle();
+    if (!store || store.user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const { data: balance, error: chargeErr } = await admin.rpc("consume_credits", {
+      _store_id: store_id, _action_key: "generate-section-content", _cache_hit: false,
+    });
+    if (chargeErr) {
+      return new Response(JSON.stringify({ error: chargeErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (balance === -1) {
+      return new Response(JSON.stringify({ error: "INSUFFICIENT_CREDITS", balance: 0 }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (mode === "image") {
-      const prompt = `Create a stunning, professional, high-quality marketing banner image for an Indian e-commerce store called "${storeName || 'a store'}" in the "${category || 'general'}" category. Section: ${sectionType}. ${currentTitle ? `Theme: ${currentTitle}.` : ''} ${currentSubtitle ? `Vibe: ${currentSubtitle}.` : ''} Wide aspect, vibrant, premium, no text overlay. Professional photography style.`;
+      const prompt = `Create a stunning, professional, high-quality marketing banner image for an Indian e-commerce store called "${storeName || "a store"}" in the "${category || "general"}" category. Section: ${sectionType}. ${currentTitle ? `Theme: ${currentTitle}.` : ""} ${currentSubtitle ? `Vibe: ${currentSubtitle}.` : ""} Wide aspect, vibrant, premium, no text overlay. Professional photography style.`;
 
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -45,11 +66,11 @@ serve(async (req) => {
       }
       const data = await r.json();
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url || data.choices?.[0]?.message?.content;
-      return new Response(JSON.stringify({ imageUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ imageUrl, _meta: { cache_hit: false, credits_charged: 5, credits_saved: 0, minutes_saved: 0, inr_saved: 0, new_balance: balance } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // mode === 'text': return { title, subtitle }
-    const prompt = `You're writing copy for a section on an Indian e-commerce homepage. Store: "${storeName || 'a store'}", category: ${category || 'general'}, section type: ${sectionType}. Generate a catchy, conversion-focused TITLE (max 6 words) and a complementary SUBTITLE (max 12 words). Tone: ${category === 'fashion' ? 'aspirational, elegant' : category === 'food' ? 'warm, fresh, appetizing' : 'modern, trustworthy'}. Return strictly JSON: {"title":"...","subtitle":"..."}.`;
+    // mode === 'text'
+    const prompt = `You're writing copy for a section on an Indian e-commerce homepage. Store: "${storeName || "a store"}", category: ${category || "general"}, section type: ${sectionType}. Generate a catchy, conversion-focused TITLE (max 6 words) and a complementary SUBTITLE (max 12 words). Tone: ${category === "fashion" ? "aspirational, elegant" : category === "food" ? "warm, fresh, appetizing" : "modern, trustworthy"}. Return strictly JSON: {"title":"...","subtitle":"..."}.`;
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -70,7 +91,7 @@ serve(async (req) => {
     const data = await r.json();
     const content = data.choices?.[0]?.message?.content || "{}";
     const parsed = JSON.parse(content);
-    return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ...parsed, _meta: { cache_hit: false, credits_charged: 5, credits_saved: 0, minutes_saved: 0, inr_saved: 0, new_balance: balance } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-section-content error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
