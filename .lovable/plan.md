@@ -1,79 +1,128 @@
-## Goals
 
-1. Stop the "dashboard flash → onboarding with a stuck tour tooltip" experience on first sign-in.
-2. Make theme categories a dynamic list managed by the admin (single source of truth, used by the generator, the master theme create/edit form, and the merchant onboarding filter).
-3. After choosing a category during onboarding, show themes for that category first.
-4. Make the "Your store is live at … View" ribbon appear immediately after the Go Live button, with no refresh.
+# Custom Pages + AI Page Generator
 
----
-
-## 1. Onboarding flash + hanging tour
-
-Root causes:
-- `Dashboard.tsx` redirects to `/onboarding` whenever `store` is missing. On the very first sign-in (no store row yet) the route `/dashboard` is rendered for a tick → `TourProvider` auto-starts the dashboard tour (anchors are already in the DOM) → the redirect fires next render, but the `driver.js` overlay is not destroyed on navigation, so the tooltip stays floating over `/onboarding`.
-- The `pic2cart:tour:<uid>:dashboard` localStorage key is never set until the user finishes / dismisses the tour, so it pops again on the next login.
-
-Fixes (all in `src/`):
-
-- `TourProvider.tsx`
-  - In the auto-start effect, **return a cleanup function that destroys any running driver and clears `runningRef`** so a route change immediately kills the tour.
-  - Gate auto-start with an "app is settled" check: skip starting if `document.querySelector('[data-onboarding-route]')` matches OR the URL is `/dashboard` but the user has not yet completed onboarding. We get this signal cheaply by reading the `stores.onboarding_step` from a lightweight context (see below).
-  - Add a small `useStore()` import inside `TourProvider` (it already sits under `StoreProvider` in `App.tsx`) and skip auto-start when `store && store.onboarding_step !== null && store.onboarding_step < 4`.
-
-- `Dashboard.tsx`
-  - Keep the existing `loading || !user` guard but also guard on `store === null` becoming known: render the spinner (don't render `HeroGreeting` etc.) while `!store && !loading && user` so the tour anchors are NOT in the DOM during the redirect tick. This prevents the tour from auto-starting even in race conditions.
-
-Result: returning users skip the tour (gate now keys off DB row, not just localStorage); brand new users never see the dashboard tour during the redirect to `/onboarding`.
+Two linked features inside **Storefront → Store Design**:
+1. **Home page selector** — pick which page renders at `/store/:slug`.
+2. **AI Page Builder** — merchants describe any page (Investors, Team, Press, FAQ, Lookbook, etc.), upload images, see a credit estimate, and the AI generates a beautiful on-brand page rendered at `/store/:slug/p/:pageSlug`.
 
 ---
 
-## 2. Dynamic theme categories (admin-managed)
+## 1. Data model
 
-Use `theme_category_briefs` as the single source of truth (already exists; the generator already reads from it). Add admin CRUD and switch all hardcoded category lists to read from it.
+New table `store_custom_pages`:
 
-### Migration
-Add columns if missing and helper view:
-- `theme_category_briefs`: ensure `display_name`, `vertical`, `subcategory`, `sort_order`, `is_active`, plus a new optional `icon` (text, lucide name) and `merchant_facing` (boolean, default true) so admin can hide internal-only briefs from the merchant onboarding picker.
-- No table creation needed (table exists); just `ALTER TABLE ADD COLUMN IF NOT EXISTS`.
+| column | type | notes |
+|---|---|---|
+| id | uuid pk | |
+| store_id | uuid → stores | |
+| slug | text | unique per store; reserved slugs (home, shop, product, cart, checkout, journal, about, contact, account, auth, blog, menu, book, collections) blocked |
+| title | text | shown in nav/SEO |
+| description | text | user-written brief used by AI |
+| status | text | `draft` / `published` |
+| sections | jsonb | AI-generated sections array (hero, richtext, gallery, stats, team, cta, faq, timeline…) — same shape the storefront renderer already uses |
+| seo | jsonb | meta title/desc/og |
+| uploaded_images | jsonb | array of storage URLs the merchant provided |
+| theme_snapshot | jsonb | colors/fonts captured at generation time (so regenerating later still feels on-brand) |
+| show_in_nav | boolean | adds to header menu |
+| nav_order | int | |
+| credits_spent | int | |
+| ai_model | text | |
+| version | int | bumped on each regen |
+| created_at / updated_at | timestamptz | |
 
-### Admin UI — `src/pages/admin/AdminThemes.tsx`
-- New tab **Categories** between *Master Projects* and *Generator*.
-- Implement `CategoriesTab` component: list/create/edit/delete rows in `theme_category_briefs`. Fields: vertical, subcategory, display name, icon (lucide name), sort order, active, merchant-facing toggle.
-- Replace the hardcoded `const CATEGORIES = [...]` and the `<Select>` in `ThemeMasterForm` with values fetched from `theme_category_briefs` (cached via React Query key `theme-categories`).
+New columns on `stores`:
+- `home_page_kind` text — `default` \| `custom`
+- `home_page_id` uuid → `store_custom_pages` (nullable)
 
-### Generator & edit form
-- `ThemeMasterPipeline.tsx` already reads `theme_category_briefs` — no change needed beyond reusing the same hook so it stays in sync.
-- The "Edit theme" dialog uses `ThemeMasterForm`, so it automatically picks up the new dynamic dropdown.
+Reuse existing `store-assets` bucket for uploaded images (folder `custom-pages/<store_id>/<page_id>/`).
+
+RLS: owners full CRUD on their store's rows; public SELECT only when `status='published'` AND parent store `is_published=true`. GRANTs to `authenticated` + `anon` (SELECT only) + `service_role`.
+
+AI cost entry in `ai_action_costs`:
+- `generate_custom_page` — base cost (e.g. 25 credits)
+- `regenerate_custom_page_section` — smaller (e.g. 8 credits)
+Estimate shown to user is read from this table, not hardcoded.
 
 ---
 
-## 3. Onboarding: filter themes by chosen category
+## 2. Store Design UI (in `StoreDesign.tsx` / `CustomiserV2.tsx`)
 
-`src/components/onboarding/StepTheme.tsx`:
-- Receive `data.category` (already on `OnboardingData`).
-- Build a slug→vertical map by reading `theme_category_briefs` so e.g. merchant onboarding `fashion` matches theme master `category = 'fashion'` (we'll alias known synonyms: `food` ↔ `food`, `beauty` ↔ `beauty`, `beauty_services`/`healthcare` ↔ `services`, `electronics` ↔ `electronics`, `handmade` ↔ `home-decor`/`crafts`, `grocery` ↔ `grocery`, `other` ↔ no filter).
-- Split themes into three buckets and render in order: **Recommended for {category}** (matches), **Trending** (is_default, not already shown), **Other themes**.
-- Auto-pick the first **recommended** theme instead of the first overall, so Continue isn't blocked but the default matches the chosen vertical.
+New tab **"Pages"** with two panels:
+
+**A. Home page**
+- Radio list: every available page (Default Home, Shop, About, plus each custom page).
+- Saving updates `stores.home_page_kind` + `home_page_id`.
+
+**B. Custom Pages**
+- List of existing custom pages with status chip, edit / preview / publish / delete actions, "Show in nav" toggle, drag to reorder.
+- **"+ Create page with AI"** button → opens a wizard:
+  1. **Basics**: Title, Slug (auto from title, validated against reserved list + uniqueness), short Description (what should this page communicate).
+  2. **Content brief**: longer textarea ("Tell the AI what to include — sections, tone, key facts, links").
+  3. **Images**: drag-drop up to 8 images (reused image uploader/cropper), each with optional caption. Stored in `store-assets`.
+  4. **Style hint** (optional): pick "Match theme" (default) or one of Editorial / Bold / Minimal / Story — passed as a prompt modifier but always seeded with the theme tokens.
+  5. **Review & generate**: shows credit estimate from `ai_action_costs` and current wallet balance; disables button + links to top-up if insufficient.
+- After generation: preview panel with section-level **Regenerate** / **Edit text** / **Replace image**, then **Publish**.
 
 ---
 
-## 4. Visit Site ribbon visible immediately after Go Live
+## 3. AI generation pipeline (edge function `generate-custom-page`)
 
-`src/pages/Onboarding.tsx`, `onFinish` in `StepGoLive`:
-- After the final `supabase.from('stores').update({ is_published: true, ... })`, also `setStore({ ...store, is_published: true, settings: currentSettings, onboarding_step: TOTAL_STEPS })` so the `StoreContext` cache is already correct before `navigate('/dashboard')`.
-- `Dashboard.tsx` already renders the "Your store is live at … View" ribbon when `store?.is_published && storeUrl` — once the context is fresh, it will show on first paint without any refetch wait.
-- As a belt-and-braces, also call `refetchStore()` after the navigate so the row reflects the freshly updated `homepage_sections`.
+Inputs: store_id, page_id (draft row), brief, uploaded image URLs, theme tokens snapshot.
+
+Steps:
+1. Validate auth + store ownership, slug uniqueness, reserved-slug guard.
+2. Atomically `consume_credits(store_id, 'generate_custom_page')`; return 402 if insufficient.
+3. Build a structured prompt for `google/gemini-2.5-pro` (long context, on-brand copy) requesting a **JSON sections array** restricted to a whitelisted section schema the storefront already understands. Inject theme palette/typography so copy length, tone, and section choice respect the brand.
+4. The AI assigns each uploaded image to the most relevant section; unassigned images become a gallery. No new images generated by default — merchant-uploaded only — with optional checkbox "let AI generate hero background" that triggers `imagegen` (separate credit line).
+5. Save sections + seo + theme_snapshot + credits_spent into the draft row.
+6. On regeneration, charge `regenerate_custom_page_section` per section regen.
 
 ---
 
-## Files touched
+## 4. Public rendering
 
-- `supabase/migrations/<ts>_theme_categories_admin.sql` — add columns to `theme_category_briefs`.
-- `src/pages/admin/AdminThemes.tsx` — new Categories tab, dynamic dropdown.
-- `src/components/admin/ThemeMasterPipeline.tsx` — use shared hook (minor).
-- `src/components/onboarding/StepTheme.tsx` — category-aware sections + smart default.
-- `src/components/onboarding/StepGoLive.tsx` / `src/pages/Onboarding.tsx` — update local store cache before navigate.
-- `src/tours/TourProvider.tsx` — cleanup on route change + onboarding gate.
-- `src/pages/Dashboard.tsx` — hide tour anchors while the onboarding redirect is in flight.
+- New route in `App.tsx`:
+  `<Route path="/store/:slug/p/:pageSlug" element={<StorefrontCustomPage />} />`
+- `StorefrontCustomPage` fetches the published row, renders sections via the existing storefront section renderer (the same one used by Home/About blocks) so styling auto-matches the theme.
+- Storefront header reads `show_in_nav` pages and lists them after built-in nav items, ordered by `nav_order`.
+- `Storefront` index route checks `home_page_kind`: if `custom`, render the custom page's sections instead of the default home composition. Default home remains untouched when `home_page_kind='default'`.
+- `SEOHead` populated from `seo` jsonb; canonical URL set; sitemap (if any) extended later.
 
-No database destructive changes; categories table is non-breaking additive.
+---
+
+## 5. Guardrails & polish
+
+- **Reserved slugs** enforced both client-side and via a CHECK-free trigger (slug rules are time-independent, so a CHECK is fine here).
+- **Quota**: soft cap (e.g. 20 custom pages per store) configurable via `plan_configs` later; not enforced in v1.
+- **Delete protection**: if a page is set as Home, deleting it first resets `home_page_kind='default'`.
+- **Versioning**: keep last 3 `sections` snapshots in a side table or jsonb history field so merchants can revert a bad regeneration without spending more credits.
+- **Analytics**: log page views via existing `analytics_events` with `event_type='custom_page_view'`.
+
+---
+
+## 6. Things you didn't ask for but should consider
+
+- **Password-protected pages** (investor decks often need this) — `password_hash` column, simple gate.
+- **Schema.org JSON-LD** auto-emitted per page kind (Team → `Organization`/`Person`, FAQ → `FAQPage`) so custom pages still rank.
+- **Duplicate page** action — copy a generated page as a starting point for a similar one without re-spending full credits.
+- **Mobile preview toggle** in the wizard before publishing.
+
+---
+
+## Files to add / edit
+
+**New**
+- `supabase/migrations/<ts>_custom_pages.sql` (table + grants + RLS + stores columns + ai_action_costs rows + reserved-slug trigger)
+- `supabase/functions/generate-custom-page/index.ts`
+- `src/pages/storefront/StorefrontCustomPage.tsx`
+- `src/components/storedesign/PagesTab.tsx`
+- `src/components/storedesign/CreatePageWizard.tsx`
+- `src/components/storedesign/CustomPagePreview.tsx`
+- `src/hooks/useCustomPages.ts`
+
+**Edited**
+- `src/App.tsx` (new route)
+- `src/pages/StoreDesign.tsx` / `CustomiserV2.tsx` (add "Pages" tab)
+- `src/pages/Storefront.tsx` (respect `home_page_kind`)
+- `src/components/storefront/StorefrontLayout.tsx` (nav reads custom pages)
+- `src/integrations/supabase/types.ts` (auto-regen after migration)
