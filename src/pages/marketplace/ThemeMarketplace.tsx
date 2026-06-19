@@ -186,7 +186,7 @@ const ThemeMarketplace = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-slate-500">
             <p className="font-semibold">No themes match those filters.</p>
-            <button onClick={() => { setSearch(''); setCat('All'); setPrice('All'); }} className="text-indigo-600 hover:underline text-sm mt-2">
+            <button onClick={() => { setCat('All'); setPrice('All'); }} className="text-indigo-600 hover:underline text-sm mt-2">
               Clear filters
             </button>
           </div>
@@ -199,22 +199,46 @@ const ThemeMarketplace = () => {
         )}
       </section>
 
-      {/* Bottom CTA */}
-      <section className="bg-white border-t border-slate-100 py-16">
+      {/* "Nothing fits?" CTA — invites users with niche businesses to sign up and build their own */}
+      <section className="bg-gradient-to-br from-indigo-50 via-white to-emerald-50 border-y border-slate-100 py-14">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-4">
+            <Wand2 className="h-3 w-3" /> Your business, your theme
+          </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-3">
-            Like one? Sign up and we'll auto-apply it.
+            None of these suit you?
           </h2>
-          <p className="text-slate-500 mb-6">
-            Click any theme above, then "Use This Theme" — onboarding pre-selects it and you go from sign-up to live store in 4 taps.
+          <p className="text-slate-600 mb-6 text-base sm:text-lg">
+            Sign up for free and we'll craft your <span className="font-semibold text-slate-900">first custom theme absolutely free</span> — tailored to your business, your colours, your vibe.
           </p>
           <Link to="/auth">
             <Button size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 text-base font-bold shadow-lg shadow-emerald-500/30">
+              Create my free theme <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <p className="text-xs text-slate-400 mt-4">
+            Want it exclusive to your store? Choose <span className="font-semibold">Private</span> on creation (paid). Choose <span className="font-semibold">Public</span> and it's free — we may showcase it for other sellers too.
+          </p>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="bg-white border-t border-slate-100 py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+            Like one above? Sign up and we'll auto-apply it.
+          </h2>
+          <p className="text-slate-500 mb-6">
+            Click any theme, then "Use This Theme" — onboarding pre-selects it and you go from sign-up to live store in 4 taps.
+          </p>
+          <Link to="/auth">
+            <Button size="lg" variant="outline" className="px-8">
               Start free <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
       </section>
+
     </div>
   );
 };
