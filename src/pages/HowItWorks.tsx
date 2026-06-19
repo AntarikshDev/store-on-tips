@@ -17,7 +17,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-white">
       <SEOHead
-        title="How Pic to Cart Works — Launch Your Store in 7 Steps"
+        title="How Pic to Cart Works — Launch Your Store in 5 Steps"
         description="See exactly how merchants go from sign-up to first sale on Pic to Cart. Step-by-step walkthrough, FAQs and a free 5-minute setup."
         url="https://pictocart.in/how-it-works"
         type="website"
