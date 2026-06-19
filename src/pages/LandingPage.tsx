@@ -544,7 +544,7 @@ const LandingPage = () => {
                 <p className="text-base text-slate-500">Pricing, payments, setup time — answered.</p>
               </div>
               <Accordion type="single" collapsible className="bg-white rounded-2xl border border-slate-200 px-2 sm:px-4 shadow-sm">
-                {merchantFAQs.slice(0, 6).map((f, i) => (
+                {merchantFAQs.map((f, i) => (
                   <AccordionItem key={i} value={`faq-${i}`} className="border-slate-100">
                     <AccordionTrigger
                       className="text-left text-base font-semibold text-slate-900 py-4 sm:py-5 hover:no-underline min-h-[52px]"
