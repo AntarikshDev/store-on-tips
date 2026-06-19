@@ -41,7 +41,7 @@ const PremiumThemePendingCard = () => {
     },
   });
 
-  if (!pending || dismissed || !themeMeta) return null;
+  if (!pending || stale || dismissed || !themeMeta) return null;
 
   const handlePay = async () => {
     const ok = await purchase('master', pending.theme_id);
