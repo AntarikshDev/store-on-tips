@@ -116,6 +116,7 @@ const emptyTheme: Partial<ThemeMaster> = {
 
 const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; onClose: () => void }) => {
   const [form, setForm] = useState<Partial<ThemeMaster>>(initial);
+  const { verticals } = useThemeVerticals();
   const qc = useQueryClient();
   const isEdit = !!initial.id;
 
