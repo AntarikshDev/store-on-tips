@@ -112,6 +112,7 @@ export default function CustomiserV2() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState<string | null>(null);
+  const [pagesDialogOpen, setPagesDialogOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
