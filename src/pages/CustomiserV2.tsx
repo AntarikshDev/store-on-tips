@@ -449,10 +449,29 @@ export default function CustomiserV2() {
                     {edited && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
                   </button>
                 );
-              })}
             </div>
           </ScrollArea>
           <Separator />
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Custom Pages</span>
+            <button
+              onClick={() => setPagesDialogOpen(true)}
+              className="text-[10px] inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20"
+              title="Create custom pages with AI"
+            >
+              <Sparkles className="h-3 w-3" /> AI
+            </button>
+          </div>
+          <div className="px-2 pb-2">
+            <button
+              onClick={() => setPagesDialogOpen(true)}
+              className="w-full text-left text-xs px-2.5 py-1.5 rounded-md hover:bg-muted flex items-center gap-1.5 text-muted-foreground"
+            >
+              <FileTextIcon className="h-3 w-3" /> Manage pages & homepage
+            </button>
+          </div>
+          <Separator />
+
           <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Sections</div>
           <ScrollArea className="flex-1">
             <div className="px-2 pb-3 space-y-0.5">
