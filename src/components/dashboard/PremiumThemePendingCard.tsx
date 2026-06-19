@@ -25,7 +25,10 @@ const PremiumThemePendingCard = () => {
   }, []);
 
   const pending = (store?.settings as any)?.pending_premium_theme as PendingPremiumTheme | undefined;
-  const trial = getPremiumTrialStatus(pending);
+  const activeThemeId = (store?.theme as any)?.theme_id || (store?.theme as any)?.name;
+  // Merchant switched theme — pending reservation is stale, don't show.
+  const stale = !!pending && !!activeThemeId && pending.theme_id !== activeThemeId;
+  const trial = getPremiumTrialStatus(stale ? undefined : pending);
 
   const { data: themeMeta } = useQuery({
     queryKey: ['theme-meta', pending?.theme_id],
