@@ -559,6 +559,7 @@ const AdminThemes = () => {
       <Tabs defaultValue="masters">
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="masters"><Layers className="mr-1 h-4 w-4" /> Master Projects</TabsTrigger>
+          <TabsTrigger value="categories"><Tag className="mr-1 h-4 w-4" /> Categories</TabsTrigger>
           <TabsTrigger value="generator"><Sparkles className="mr-1 h-4 w-4" /> Generator</TabsTrigger>
           <TabsTrigger value="deliveries"><Inbox className="mr-1 h-4 w-4" /> Deliveries</TabsTrigger>
           <TabsTrigger value="pipeline"><Calendar className="mr-1 h-4 w-4" /> Pipeline</TabsTrigger>
@@ -567,6 +568,7 @@ const AdminThemes = () => {
           <TabsTrigger value="images"><ImageIcon className="mr-1 h-4 w-4" /> Image Pool</TabsTrigger>
         </TabsList>
         <TabsContent value="masters" className="mt-4"><MasterProjectsTab /></TabsContent>
+        <TabsContent value="categories" className="mt-4"><ThemeCategoriesTab /></TabsContent>
         <TabsContent value="generator" className="mt-4"><ThemeMasterPipeline /></TabsContent>
         <TabsContent value="deliveries" className="mt-4"><ThemeDeliveriesInbox /></TabsContent>
         <TabsContent value="pipeline" className="mt-4"><ThemePipeline /></TabsContent>
