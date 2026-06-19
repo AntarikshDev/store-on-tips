@@ -14,7 +14,7 @@ const EverySolutionGrid = () => {
   const items = HIGHLIGHTS.map((s) => featureCatalog.find((f) => f.slug === s)!).filter(Boolean);
 
   return (
-    <section className="py-20 sm:py-28 bg-gradient-to-b from-white via-indigo-50/30 to-white">
+    <section id="features" className="py-20 sm:py-28 bg-gradient-to-b from-white via-indigo-50/30 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <span className="inline-block px-4 py-1 rounded-full bg-violet-50 text-violet-600 text-sm font-semibold mb-4">
