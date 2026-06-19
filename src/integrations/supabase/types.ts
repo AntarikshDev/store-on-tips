@@ -5136,6 +5136,7 @@ export type Database = {
           downtime_notified_at: string | null
           home_page_id: string | null
           home_page_kind: string
+          home_page_product_id: string | null
           id: string
           installed_theme_version: string | null
           is_partner_build: boolean
@@ -5165,6 +5166,7 @@ export type Database = {
           downtime_notified_at?: string | null
           home_page_id?: string | null
           home_page_kind?: string
+          home_page_product_id?: string | null
           id?: string
           installed_theme_version?: string | null
           is_partner_build?: boolean
@@ -5194,6 +5196,7 @@ export type Database = {
           downtime_notified_at?: string | null
           home_page_id?: string | null
           home_page_kind?: string
+          home_page_product_id?: string | null
           id?: string
           installed_theme_version?: string | null
           is_partner_build?: boolean
@@ -5220,6 +5223,13 @@ export type Database = {
             columns: ["home_page_id"]
             isOneToOne: false
             referencedRelation: "store_custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_home_page_product_id_fkey"
+            columns: ["home_page_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {
