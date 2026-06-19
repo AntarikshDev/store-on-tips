@@ -560,7 +560,7 @@ const LandingPage = () => {
               </Accordion>
               <div className="text-center mt-6">
                 <Link
-                  to="/how-it-works#faq"
+                  to="#faq"
                   onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-all-faqs' })}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
                 >
