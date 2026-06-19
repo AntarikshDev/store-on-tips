@@ -207,6 +207,10 @@ const Customise = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="pages" className="space-y-4">
+            <PagesTab store={store} onStoreUpdated={(patch) => store && setStore({ ...store, ...patch })} />
+          </TabsContent>
+
           <TabsContent value="header">
             <HeaderEditor config={headerConfig} onChange={setHeaderConfig} />
           </TabsContent>
