@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Camera, Sparkles, Rocket, Store, BarChart3, Search, CreditCard, Palette,
   ShoppingCart, Globe, Star, ChevronRight, ArrowRight, Check, Zap, Shield,
@@ -226,9 +226,22 @@ const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showcaseIdx, setShowcaseIdx] = useState(0);
   const howItWorksRef = useRef<HTMLElement>(null);
+  const location = useLocation();
 
   // Capture ?ref=CODE referral on first landing
   useEffect(() => { captureReferralFromUrl(); }, []);
+
+  // Scroll to hash target (e.g. /#features) when landing on home from a feature page
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    // Defer to next tick so the target section is mounted
+    const t = setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [location.hash]);
 
   // Track scroll depth on the 7-step section
   useEffect(() => {
