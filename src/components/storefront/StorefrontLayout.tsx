@@ -87,6 +87,10 @@ const StorefrontLayout = ({ children, store, products = [], footerConfig }: Prop
   });
   const searchProducts = products.length > 0 ? products : fetchedProducts;
 
+  const { data: navCustomPages = [] } = usePublicNavCustomPages(store.id);
+  const customNavLinks = navCustomPages.map((p) => ({ label: p.title, href: `/p/${p.slug}` }));
+  const baseNavLinks: any[] = Array.isArray(headerConfig?.nav_links) ? headerConfig.nav_links : [];
+  const mergedNavLinks = [...baseNavLinks, ...customNavLinks];
 
   const footer = footerConfig || (store.settings as any)?.footer || DEFAULT_FOOTER;
   const headerConfig = (store.settings as any)?.header || {};
