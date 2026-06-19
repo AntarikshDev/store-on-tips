@@ -19,7 +19,7 @@ import themeBeauty from '@/assets/theme-beauty.jpg';
 import themeHandcraft from '@/assets/theme-handcraft.jpg';
 import themeBooks from '@/assets/theme-books.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
-import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
+import { merchantJourney, merchantFAQs, topMerchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 import { captureReferralFromUrl } from '@/lib/referralCookie';
 import LiveStatsBar from '@/components/landing/LiveStatsBar';
@@ -544,7 +544,7 @@ const LandingPage = () => {
                 <p className="text-base text-slate-500">Pricing, payments, setup time — answered.</p>
               </div>
               <Accordion type="single" collapsible className="bg-white rounded-2xl border border-slate-200 px-2 sm:px-4 shadow-sm">
-                {merchantFAQs.map((f, i) => (
+                {topMerchantFAQs.map((f, i) => (
                   <AccordionItem key={i} value={`faq-${i}`} className="border-slate-100">
                     <AccordionTrigger
                       className="text-left text-base font-semibold text-slate-900 py-4 sm:py-5 hover:no-underline min-h-[52px]"
@@ -560,7 +560,7 @@ const LandingPage = () => {
               </Accordion>
               <div className="text-center mt-6">
                 <Link
-                  to="#faq"
+                  to="/how-it-works#faq"
                   onClick={() => trackMarketing({ event: 'cta_click', section: 'how-it-works', label: 'see-all-faqs' })}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
                 >

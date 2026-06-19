@@ -12,6 +12,15 @@ import { trackMarketing } from '@/lib/marketingAnalytics';
 const HowItWorks = () => {
   useEffect(() => {
     trackMarketing({ event: 'how_it_works_page_view', section: 'how-it-works-page' });
+    // Scroll to hash target (e.g. #faq) when arriving via cross-page link.
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const id = window.location.hash.slice(1);
+      // Defer until the section is mounted.
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   }, []);
 
   return (
