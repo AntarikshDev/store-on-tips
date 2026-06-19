@@ -35,8 +35,15 @@ Deno.serve(async (req) => {
 
     const { data: planRow } = await admin
       .from("plan_configs").select("annual_price_inr, display_name").eq("plan", plan).maybeSingle();
-    const amountInr = Number(planRow?.annual_price_inr || 0);
-    if (amountInr <= 0) throw new Error("Annual price not configured for this plan");
+    const listPrice = Number(planRow?.annual_price_inr || 0);
+    if (listPrice <= 0) throw new Error("Annual price not configured for this plan");
+
+    // Apply platform plan offer (server-side, authoritative)
+    const { data: offerPct } = await admin.rpc("get_active_plan_offer_pct", { _cycle: "annual" });
+    const pct = Number(offerPct || 0);
+    const amountInr = pct > 0
+      ? Math.round(listPrice * (1 - pct / 100) * 100) / 100
+      : listPrice;
 
     const rpRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
@@ -48,7 +55,7 @@ Deno.serve(async (req) => {
         amount: Math.round(amountInr * 100),
         currency: "INR",
         receipt: `annual_${store_id.slice(0, 18)}_${Date.now().toString().slice(-6)}`,
-        notes: { store_id, plan, billing_cycle: "annual", user_id: userId },
+        notes: { store_id, plan, billing_cycle: "annual", user_id: userId, offer_pct: pct, list_price: listPrice },
       }),
     });
     if (!rpRes.ok) {
