@@ -615,6 +615,15 @@ export default function CustomiserV2() {
           </ScrollArea>
         </aside>
       </div>
+
+      <Dialog open={pagesDialogOpen} onOpenChange={setPagesDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Custom Pages & AI Generator</DialogTitle>
+          </DialogHeader>
+          <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
