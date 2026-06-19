@@ -10,6 +10,7 @@ import { useProductReviews, getAverageRating } from '@/hooks/useReviews';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import StorefrontLayout, { resolveTheme } from '@/components/storefront/StorefrontLayout';
+import { CustomPageSections } from '@/components/storefront/CustomPageSections';
 import StorefrontFooter from '@/components/storefront/StorefrontFooter';
 import NewsletterSection from '@/components/storefront/NewsletterSection';
 import ProductShareButtons from '@/components/storefront/ProductShareButtons';
