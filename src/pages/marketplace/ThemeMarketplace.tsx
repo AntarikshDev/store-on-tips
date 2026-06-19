@@ -47,12 +47,15 @@ const ThemeMarketplace = () => {
 
   const filtered = useMemo(() => {
     let out = [...themes];
-    if (search) {
-      const s = search.toLowerCase();
-      out = out.filter((t) => t.name.toLowerCase().includes(s) || (t.description || '').toLowerCase().includes(s));
-    }
     if (cat !== 'All') {
-      out = out.filter((t) => (t.category || '').toLowerCase() === cat.toLowerCase());
+      const needle = cat.toLowerCase();
+      out = out.filter((t) => {
+        const c = (t.category || '').toLowerCase();
+        // match against the top-level slug (e.g. "fashion/mens-western" → "fashion")
+        // and any sub-segment so "luxury", "handloom", etc. work even without a parent slug.
+        const parts = c.split('/').map((p) => p.trim()).filter(Boolean);
+        return parts.some((p) => p === needle || p.startsWith(needle));
+      });
     }
     if (price === 'Free') out = out.filter((t) => !t.is_premium);
     if (price === 'Premium') out = out.filter((t) => t.is_premium);
@@ -71,7 +74,8 @@ const ThemeMarketplace = () => {
         out.sort((a, b) => Number(!!b.is_default) - Number(!!a.is_default));
     }
     return out;
-  }, [themes, search, cat, price, sort]);
+  }, [themes, cat, price, sort]);
+
 
   return (
     <div className="min-h-screen bg-slate-50">
