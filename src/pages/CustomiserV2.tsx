@@ -22,6 +22,7 @@ import {
 import PromoTickerEditor, { DEFAULT_PROMO_TICKER } from "@/components/store-design/PromoTickerEditor";
 import type { PromoTickerConfig } from "@/components/storefront/PromoTicker";
 import PagesTab from "@/components/store-design/PagesTab";
+import HomeSourcePicker from "@/components/store-design/HomeSourcePicker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sparkles, FileText as FileTextIcon } from "lucide-react";
 
@@ -619,9 +620,20 @@ export default function CustomiserV2() {
       <Dialog open={pagesDialogOpen} onOpenChange={setPagesDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Custom Pages & AI Generator</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Pages, Homepage & AI Generator</DialogTitle>
           </DialogHeader>
-          <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+          <div className="space-y-6">
+            <HomeSourcePicker
+              key={store?.id || "no-store"}
+              store={store}
+              onStoreUpdated={(patch: any) => {
+                if (store) setStore({ ...store, ...patch });
+                // Force the live-preview iframe to reflect the new home route immediately.
+                try { iframeRef.current?.contentWindow?.location.reload(); } catch {}
+              }}
+            />
+            <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1324,6 +1336,7 @@ function HeroInspector({ idx, section, sectionOv, onUpdate, onReset, onUploadIma
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(idx, f); }} />
                 </label>
               </Button>
+              <HeroAiImageButton idx={idx} merged={merged} onUpdate={onUpdate} />
               {merged.image && <Button size="sm" variant="outline" onClick={() => onUpdate(idx, "image", "")}><Trash2 className="mr-1 h-3.5 w-3.5" /> Remove</Button>}
             </div>
           </div>
@@ -1631,5 +1644,63 @@ function HeroButtonsPanel({ buttons, hasPrimary, hasSecondary, onChange }: { but
         <p className="text-[11px] text-muted-foreground">Add a CTA label above to style buttons.</p>
       )}
     </div>
+  );
+}
+
+// ---------- Hero AI Image Generation ----------
+function HeroAiImageButton({ idx, merged, onUpdate }: { idx: number; merged: any; onUpdate: (idx: number, key: string, value: any) => void }) {
+  const { store } = useStore();
+  const [open, setOpen] = useState(false);
+  const [prompt, setPrompt] = useState<string>(merged.title ? `${merged.title} hero banner` : "");
+  const [busy, setBusy] = useState(false);
+
+  const run = async () => {
+    if (!store?.id) { toast.error("Store still loading"); return; }
+    if (!prompt.trim()) { toast.error("Describe the hero image"); return; }
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-image", {
+        body: { store_id: store.id, prompt: `Wide cinematic e-commerce hero banner: ${prompt.trim()}`, productName: merged.title || "", category: (store as any)?.category || "", storeName: store.name },
+      });
+      if (error) throw error;
+      if ((data as any)?.error === "INSUFFICIENT_CREDITS") {
+        toast.error("Out of AI credits. Top up to keep generating.");
+        return;
+      }
+      const url = (data as any)?.imageUrl;
+      if (!url) throw new Error("No image returned");
+      onUpdate(idx, "image", url);
+      toast.success(`Hero image generated · ${10} credits used`);
+      setOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || "Generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} className="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 hover:from-violet-500/20 hover:to-fuchsia-500/20">
+        <Sparkles className="mr-1 h-3.5 w-3.5 text-violet-600" /> Generate with AI
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-violet-600" /> Generate hero image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Describe the hero image</Label>
+              <Textarea rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g. Golden hour shot of fresh croissants on rustic wood table, warm steam, bakery vibe" className="text-sm mt-1" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Uses 10 AI credits per image. Replaces the current hero image when ready.</p>
+            <Button onClick={run} disabled={busy} className="w-full">
+              {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate (10 credits)</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
