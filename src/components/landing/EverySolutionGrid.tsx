@@ -18,7 +18,7 @@ const EverySolutionGrid = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <span className="inline-block px-4 py-1 rounded-full bg-violet-50 text-violet-600 text-sm font-semibold mb-4">
-            Every Solution, One Platform
+            The Only Platform You Need
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 max-w-3xl mx-auto leading-tight">
             Now <em className="not-italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">what to sell</em> and <em className="not-italic text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">where to sell</em> — we have a solution for both.
