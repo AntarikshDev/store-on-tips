@@ -115,7 +115,7 @@ export const TourProvider = ({ children }: { children: ReactNode }) => {
 
   // Auto-start the tour for the current route once
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !completedLoaded) return;
     const def = findTourForPath(location.pathname);
     if (!def || completed.has(def.key) || runningRef.current === def.key) return;
     // Wait for the page to render its anchors
@@ -128,7 +128,7 @@ export const TourProvider = ({ children }: { children: ReactNode }) => {
     };
     const id = setTimeout(tick, 400);
     return () => clearTimeout(id);
-  }, [location.pathname, user?.id, completed, startTour]);
+  }, [location.pathname, user?.id, completed, completedLoaded, startTour]);
 
   const resetTour = useCallback(async (key: string) => {
     if (!user?.id) return;
