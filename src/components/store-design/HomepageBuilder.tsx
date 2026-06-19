@@ -45,18 +45,32 @@ const AIGenerateButton = ({ onGenerate, label = 'AI', loading }: { onGenerate: (
 const useAIGen = () => {
   const { store } = useStore();
   const generate = useCallback(async (mode: 'image' | 'text', sectionType: string, current: { title?: string; subtitle?: string } = {}) => {
+    if (!store?.id) throw new Error('No store selected');
     const { data, error } = await supabase.functions.invoke('generate-section-content', {
       body: {
         mode,
         sectionType,
+        store_id: store.id,
         storeName: store?.name,
         category: store?.category,
         currentTitle: current.title,
         currentSubtitle: current.subtitle,
       },
     });
-    if (error) throw new Error(error.message);
-    if ((data as any).error) throw new Error((data as any).error);
+    // Parse 402 / structured errors out of error.context
+    let parsedErr: any = null;
+    if (error && (error as any).context) {
+      try {
+        const ctx = (error as any).context;
+        parsedErr = typeof ctx.json === 'function' ? await ctx.json() : await ctx.clone?.().json();
+      } catch { /* ignore */ }
+    }
+    const msg = parsedErr?.error || (data as any)?.error || error?.message;
+    if (msg === 'INSUFFICIENT_CREDITS') {
+      toast.error('Out of AI credits — top up your wallet to keep generating.');
+      throw new Error('INSUFFICIENT_CREDITS');
+    }
+    if (msg) throw new Error(msg);
     return data as any;
   }, [store]);
   return generate;
