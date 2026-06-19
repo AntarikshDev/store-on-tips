@@ -118,7 +118,7 @@ const FeatureDetail = () => {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
                 More in <span className="text-indigo-600">{feature.pillar}</span>
               </h2>
-              <Link to="/" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+              <Link to="/#features" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
                 All features →
               </Link>
             </div>
