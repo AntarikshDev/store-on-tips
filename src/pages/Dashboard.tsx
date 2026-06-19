@@ -72,7 +72,12 @@ const Dashboard = () => {
   const completedCount = checklist.filter((c) => c.done).length;
   const completionPct = checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0;
 
-  if (loading) {
+  // Show spinner while loading OR while we know a redirect to /onboarding is
+  // about to fire (store missing for a non-customer). This keeps tour anchors
+  // out of the DOM so the dashboard tour can never auto-start mid-redirect.
+  const isCustomer = user?.user_metadata?.is_customer === true;
+  const willRedirectToOnboarding = !!user && !loading && !store && !isCustomer;
+  if (loading || willRedirectToOnboarding) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

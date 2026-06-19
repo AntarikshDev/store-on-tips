@@ -12,14 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles, Rocket, TrendingDown, Calendar, Inbox } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, Pencil, Layers, IndianRupee, ImageIcon, Sparkles, Rocket, TrendingDown, Calendar, Inbox, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import ThemeCostGraph from '@/components/admin/ThemeCostGraph';
 import ThemePipeline from '@/components/admin/ThemePipeline';
 import ThemeDeliveriesInbox from '@/components/admin/ThemeDeliveriesInbox';
 import ThemeMasterPipeline from '@/components/admin/ThemeMasterPipeline';
-
-const CATEGORIES = ['fashion', 'food', 'electronics', 'beauty', 'health', 'sports', 'home-decor', 'general'];
+import ThemeCategoriesTab from '@/components/admin/ThemeCategoriesTab';
+import { useThemeVerticals } from '@/hooks/useThemeCategories';
 
 interface ThemeMaster {
   id: string;
@@ -116,6 +116,7 @@ const emptyTheme: Partial<ThemeMaster> = {
 
 const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; onClose: () => void }) => {
   const [form, setForm] = useState<Partial<ThemeMaster>>(initial);
+  const { verticals } = useThemeVerticals();
   const qc = useQueryClient();
   const isEdit = !!initial.id;
 
@@ -177,7 +178,7 @@ const ThemeMasterForm = ({ initial, onClose }: { initial: Partial<ThemeMaster>; 
           <Select value={form.category || 'general'} onValueChange={(v) => setForm({ ...form, category: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+              {verticals.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -558,6 +559,7 @@ const AdminThemes = () => {
       <Tabs defaultValue="masters">
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="masters"><Layers className="mr-1 h-4 w-4" /> Master Projects</TabsTrigger>
+          <TabsTrigger value="categories"><Tag className="mr-1 h-4 w-4" /> Categories</TabsTrigger>
           <TabsTrigger value="generator"><Sparkles className="mr-1 h-4 w-4" /> Generator</TabsTrigger>
           <TabsTrigger value="deliveries"><Inbox className="mr-1 h-4 w-4" /> Deliveries</TabsTrigger>
           <TabsTrigger value="pipeline"><Calendar className="mr-1 h-4 w-4" /> Pipeline</TabsTrigger>
@@ -566,6 +568,7 @@ const AdminThemes = () => {
           <TabsTrigger value="images"><ImageIcon className="mr-1 h-4 w-4" /> Image Pool</TabsTrigger>
         </TabsList>
         <TabsContent value="masters" className="mt-4"><MasterProjectsTab /></TabsContent>
+        <TabsContent value="categories" className="mt-4"><ThemeCategoriesTab /></TabsContent>
         <TabsContent value="generator" className="mt-4"><ThemeMasterPipeline /></TabsContent>
         <TabsContent value="deliveries" className="mt-4"><ThemeDeliveriesInbox /></TabsContent>
         <TabsContent value="pipeline" className="mt-4"><ThemePipeline /></TabsContent>

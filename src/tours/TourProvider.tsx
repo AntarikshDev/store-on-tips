@@ -4,6 +4,7 @@ import { driver, type Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStore } from '@/hooks/useStore';
 import { findTourForPath, TOURS } from './registry';
 import type { TourDefinition } from './types';
 
@@ -20,6 +21,7 @@ const lsKey = (uid: string, key: string) => `pic2cart:tour:${uid}:${key}`;
 
 export const TourProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { store, loading: storeLoading } = useStore();
   const location = useLocation();
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [completedLoaded, setCompletedLoaded] = useState(false);
@@ -115,20 +117,37 @@ export const TourProvider = ({ children }: { children: ReactNode }) => {
 
   // Auto-start the tour for the current route once
   useEffect(() => {
-    if (!user?.id || !completedLoaded) return;
+    if (!user?.id || !completedLoaded || storeLoading) return;
+    // Don't start any tour while onboarding is incomplete — otherwise a brief
+    // /dashboard render before the redirect to /onboarding spawns a tooltip
+    // that hangs over the onboarding screen.
+    const onboardingDone = !store || (store.onboarding_step !== null && store.onboarding_step >= 4);
+    if (!onboardingDone) return;
     const def = findTourForPath(location.pathname);
     if (!def || completed.has(def.key) || runningRef.current === def.key) return;
     // Wait for the page to render its anchors
     let attempts = 0;
+    let cancelled = false;
     const tick = () => {
+      if (cancelled) return;
       attempts++;
       const ready = def.steps.some((s) => document.querySelector(s.element));
       if (ready) { startTour(def.key); return; }
       if (attempts < 25) setTimeout(tick, 200);
     };
     const id = setTimeout(tick, 400);
-    return () => clearTimeout(id);
-  }, [location.pathname, user?.id, completed, completedLoaded, startTour]);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+      // Kill any tour overlay left behind by a route change so a tooltip
+      // can never linger over the next page.
+      if (driverRef.current) {
+        try { driverRef.current.destroy(); } catch { /* noop */ }
+        driverRef.current = null;
+        runningRef.current = null;
+      }
+    };
+  }, [location.pathname, user?.id, completed, completedLoaded, startTour, store, storeLoading]);
 
   const resetTour = useCallback(async (key: string) => {
     if (!user?.id) return;
