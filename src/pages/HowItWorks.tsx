@@ -51,7 +51,7 @@ const HowItWorks = () => {
           </span>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
             From sign-up to first sale —{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">in 7 steps</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">in 5 steps</span>
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             A walkthrough of every screen you'll touch as a merchant on Pic to Cart. No surprises, no setup calls, no developers.
