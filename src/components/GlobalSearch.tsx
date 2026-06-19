@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import {
   CommandDialog,
   CommandEmpty,
@@ -85,6 +86,7 @@ const ENTRIES: Entry[] = [
 const GlobalSearch = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin, loading: roleLoading } = useAdminRole();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,13 +99,18 @@ const GlobalSearch = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const filteredEntries = useMemo(() => {
+    if (roleLoading) return [];
+    return ENTRIES.filter((e) => e.path !== '/admin' || isAdmin);
+  }, [isAdmin, roleLoading]);
+
   const grouped = useMemo(() => {
     const map: Record<string, Entry[]> = {};
-    for (const e of ENTRIES) {
+    for (const e of filteredEntries) {
       (map[e.group] ||= []).push(e);
     }
     return map;
-  }, []);
+  }, [filteredEntries]);
 
   const go = (path: string) => {
     setOpen(false);
