@@ -13,8 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { LayoutDashboard, PanelTop, PanelBottom, ToggleLeft, Lock, ExternalLink, Sparkles, Crown, Megaphone } from 'lucide-react';
+import { LayoutDashboard, PanelTop, PanelBottom, ToggleLeft, Lock, ExternalLink, Sparkles, Crown, Megaphone, FileText } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import PagesTab from '@/components/store-design/PagesTab';
 import { useQuery } from '@tanstack/react-query';
 import { usePremiumThemePurchase } from '@/hooks/usePremiumThemePurchase';
 import { applyMasterTheme } from '@/lib/applyMasterTheme';
@@ -174,6 +175,7 @@ const Customise = () => {
           <TabsList className="flex flex-wrap h-auto gap-1">
             {isMasterTheme && <TabsTrigger value="theme"><Sparkles className="mr-1 h-3.5 w-3.5" /> Theme Sections</TabsTrigger>}
             <TabsTrigger value="homepage"><LayoutDashboard className="mr-1 h-3.5 w-3.5" /> Homepage</TabsTrigger>
+            <TabsTrigger value="pages"><FileText className="mr-1 h-3.5 w-3.5" /> Pages</TabsTrigger>
             <TabsTrigger value="header"><PanelTop className="mr-1 h-3.5 w-3.5" /> Header</TabsTrigger>
             <TabsTrigger value="footer"><PanelBottom className="mr-1 h-3.5 w-3.5" /> Footer</TabsTrigger>
             <TabsTrigger value="ticker"><Megaphone className="mr-1 h-3.5 w-3.5" /> Promo Ticker</TabsTrigger>

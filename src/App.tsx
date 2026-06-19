@@ -132,6 +132,7 @@ const Appointments = lazy(() => import("@/pages/Appointments"));
 const FamilyPlans = lazy(() => import("@/pages/FamilyPlans"));
 const ProviderPayouts = lazy(() => import("@/pages/ProviderPayouts"));
 const StorefrontBooking = lazy(() => import("@/pages/storefront/StorefrontBooking"));
+const StorefrontCustomPage = lazy(() => import("@/pages/StorefrontCustomPage"));
 const FeatureDetail = lazy(() => import("@/pages/features/FeatureDetail"));
 const ThemeMarketplacePublic = lazy(() => import("@/pages/marketplace/ThemeMarketplace"));
 const ThemeMarketplaceDetail = lazy(() => import("@/pages/marketplace/ThemeDetail"));
@@ -323,6 +324,7 @@ const AppRoutes = () => {
             <Route path="/store/:slug/reset-password" element={<CustomerResetPassword />} />
             <Route path="/store/:slug/account" element={<CustomerRoute><CustomerAccount /></CustomerRoute>} />
             <Route path="/store/:slug/account/wishlist" element={<CustomerRoute><CustomerWishlist /></CustomerRoute>} />
+            <Route path="/store/:slug/p/:pageSlug" element={<StorefrontCustomPage />} />
             <Route path="/store/:slug/:policyType" element={<StorefrontPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

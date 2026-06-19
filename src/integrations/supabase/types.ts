@@ -4512,6 +4512,83 @@ export type Database = {
         }
         Relationships: []
       }
+      store_custom_pages: {
+        Row: {
+          ai_model: string | null
+          brief: string | null
+          created_at: string
+          credits_spent: number
+          description: string | null
+          history: Json
+          id: string
+          nav_order: number
+          sections: Json
+          seo: Json
+          show_in_nav: boolean
+          slug: string
+          status: string
+          store_id: string
+          style_hint: string | null
+          theme_snapshot: Json
+          title: string
+          updated_at: string
+          uploaded_images: Json
+          version: number
+        }
+        Insert: {
+          ai_model?: string | null
+          brief?: string | null
+          created_at?: string
+          credits_spent?: number
+          description?: string | null
+          history?: Json
+          id?: string
+          nav_order?: number
+          sections?: Json
+          seo?: Json
+          show_in_nav?: boolean
+          slug: string
+          status?: string
+          store_id: string
+          style_hint?: string | null
+          theme_snapshot?: Json
+          title: string
+          updated_at?: string
+          uploaded_images?: Json
+          version?: number
+        }
+        Update: {
+          ai_model?: string | null
+          brief?: string | null
+          created_at?: string
+          credits_spent?: number
+          description?: string | null
+          history?: Json
+          id?: string
+          nav_order?: number
+          sections?: Json
+          seo?: Json
+          show_in_nav?: boolean
+          slug?: string
+          status?: string
+          store_id?: string
+          style_hint?: string | null
+          theme_snapshot?: Json
+          title?: string
+          updated_at?: string
+          uploaded_images?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_custom_pages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_email_domains: {
         Row: {
           created_at: string
@@ -5057,6 +5134,8 @@ export type Database = {
           custom_domain: string | null
           description: string | null
           downtime_notified_at: string | null
+          home_page_id: string | null
+          home_page_kind: string
           id: string
           installed_theme_version: string | null
           is_partner_build: boolean
@@ -5084,6 +5163,8 @@ export type Database = {
           custom_domain?: string | null
           description?: string | null
           downtime_notified_at?: string | null
+          home_page_id?: string | null
+          home_page_kind?: string
           id?: string
           installed_theme_version?: string | null
           is_partner_build?: boolean
@@ -5111,6 +5192,8 @@ export type Database = {
           custom_domain?: string | null
           description?: string | null
           downtime_notified_at?: string | null
+          home_page_id?: string | null
+          home_page_kind?: string
           id?: string
           installed_theme_version?: string | null
           is_partner_build?: boolean
@@ -5132,6 +5215,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stores_home_page_id_fkey"
+            columns: ["home_page_id"]
+            isOneToOne: false
+            referencedRelation: "store_custom_pages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stores_owned_by_partner_id_fkey"
             columns: ["owned_by_partner_id"]
