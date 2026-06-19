@@ -19,7 +19,7 @@ import themeBeauty from '@/assets/theme-beauty.jpg';
 import themeHandcraft from '@/assets/theme-handcraft.jpg';
 import themeBooks from '@/assets/theme-books.jpg';
 import SEOHead from '@/components/storefront/SEOHead';
-import { merchantJourney, merchantFAQs } from '@/lib/merchantJourney';
+import { merchantJourney, merchantFAQs, topMerchantFAQs } from '@/lib/merchantJourney';
 import { trackMarketing, observeScrollDepth } from '@/lib/marketingAnalytics';
 import { captureReferralFromUrl } from '@/lib/referralCookie';
 import LiveStatsBar from '@/components/landing/LiveStatsBar';
