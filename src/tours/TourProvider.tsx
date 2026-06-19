@@ -21,6 +21,7 @@ const lsKey = (uid: string, key: string) => `pic2cart:tour:${uid}:${key}`;
 
 export const TourProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { store, loading: storeLoading } = useStore();
   const location = useLocation();
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [completedLoaded, setCompletedLoaded] = useState(false);
