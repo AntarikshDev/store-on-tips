@@ -619,9 +619,20 @@ export default function CustomiserV2() {
       <Dialog open={pagesDialogOpen} onOpenChange={setPagesDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Custom Pages & AI Generator</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Pages, Homepage & AI Generator</DialogTitle>
           </DialogHeader>
-          <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+          <div className="space-y-6">
+            <HomeSourcePicker
+              key={store?.id || "no-store"}
+              store={store}
+              onStoreUpdated={(patch: any) => {
+                if (store) setStore({ ...store, ...patch });
+                // Force the live-preview iframe to reflect the new home route immediately.
+                try { iframeRef.current?.contentWindow?.location.reload(); } catch {}
+              }}
+            />
+            <PagesTab store={store} onStoreUpdated={(patch: any) => store && setStore({ ...store, ...patch })} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
