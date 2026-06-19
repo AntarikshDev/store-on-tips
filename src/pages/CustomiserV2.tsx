@@ -1646,3 +1646,61 @@ function HeroButtonsPanel({ buttons, hasPrimary, hasSecondary, onChange }: { but
     </div>
   );
 }
+
+// ---------- Hero AI Image Generation ----------
+function HeroAiImageButton({ idx, merged, onUpdate }: { idx: number; merged: any; onUpdate: (idx: number, key: string, value: any) => void }) {
+  const { store } = useStore();
+  const [open, setOpen] = useState(false);
+  const [prompt, setPrompt] = useState<string>(merged.title ? `${merged.title} hero banner` : "");
+  const [busy, setBusy] = useState(false);
+
+  const run = async () => {
+    if (!store?.id) { toast.error("Store still loading"); return; }
+    if (!prompt.trim()) { toast.error("Describe the hero image"); return; }
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-image", {
+        body: { store_id: store.id, prompt: `Wide cinematic e-commerce hero banner: ${prompt.trim()}`, productName: merged.title || "", category: (store as any)?.category || "", storeName: store.name },
+      });
+      if (error) throw error;
+      if ((data as any)?.error === "INSUFFICIENT_CREDITS") {
+        toast.error("Out of AI credits. Top up to keep generating.");
+        return;
+      }
+      const url = (data as any)?.imageUrl;
+      if (!url) throw new Error("No image returned");
+      onUpdate(idx, "image", url);
+      toast.success(`Hero image generated · ${10} credits used`);
+      setOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || "Generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} className="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 hover:from-violet-500/20 hover:to-fuchsia-500/20">
+        <Sparkles className="mr-1 h-3.5 w-3.5 text-violet-600" /> Generate with AI
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-violet-600" /> Generate hero image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Describe the hero image</Label>
+              <Textarea rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g. Golden hour shot of fresh croissants on rustic wood table, warm steam, bakery vibe" className="text-sm mt-1" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Uses 10 AI credits per image. Replaces the current hero image when ready.</p>
+            <Button onClick={run} disabled={busy} className="w-full">
+              {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate (10 credits)</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
