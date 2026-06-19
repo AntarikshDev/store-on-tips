@@ -25,8 +25,7 @@ const BUILTIN_OPTIONS: { id: Kind; label: string; description: string; icon: any
 export default function PagesTab({ store, onStoreUpdated }: { store: any; onStoreUpdated?: (patch: any) => void }) {
   const storeId = store?.id;
   const { list, update, remove, generate } = useCustomPages(storeId);
-  const { products: productsQuery } = useProducts();
-  const products = productsQuery.data || [];
+  const { products } = useProducts();
   const pages = list.data || [];
   const [wizardOpen, setWizardOpen] = useState(false);
   const [homeKind, setHomeKind] = useState<Kind>((store?.home_page_kind as Kind) || "default");
