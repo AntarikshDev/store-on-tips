@@ -4,6 +4,7 @@ import { driver, type Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStore } from '@/hooks/useStore';
 import { findTourForPath, TOURS } from './registry';
 import type { TourDefinition } from './types';
 
