@@ -39,12 +39,8 @@ const PartnerHierarchy = () => {
     enabled: !!partner?.id && !!isHead,
     queryKey: ["head-downline", partner?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("partners")
-        .select("id, name, email, tier, partner_type, invite_status, total_licenses_purchased, total_amount_paid, state_name, region_name")
-        .eq("parent_partner_id", partner!.id)
-        .order("created_at", { ascending: false });
-      return data ?? [];
+      const { data } = await supabase.rpc("head_downline_partners", { _head_partner_id: partner!.id });
+      return (data ?? []) as any[];
     },
   });
 
