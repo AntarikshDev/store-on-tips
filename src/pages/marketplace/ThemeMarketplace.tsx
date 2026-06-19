@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Crown, Sparkles, Search, Eye, ArrowRight, Flame, Filter, Star } from 'lucide-react';
+import { Crown, Sparkles, Eye, ArrowRight, Flame, Filter, Star, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import SEOHead from '@/components/storefront/SEOHead';
 import PicToCartLogo from '@/components/PicToCartLogo';
+import FeaturesMegaMenu from '@/components/landing/FeaturesMegaMenu';
+
 
 interface ThemeMaster {
   id: string;
