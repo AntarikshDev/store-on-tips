@@ -5335,9 +5335,11 @@ export type Database = {
           created_at: string
           display_name: string
           hero_archetypes: string | null
+          icon: string | null
           id: string
           image_style: string | null
           is_active: boolean
+          merchant_facing: boolean
           palette_hints: string | null
           prompt_addendum: string
           section_priority: string[]
@@ -5351,9 +5353,11 @@ export type Database = {
           created_at?: string
           display_name: string
           hero_archetypes?: string | null
+          icon?: string | null
           id?: string
           image_style?: string | null
           is_active?: boolean
+          merchant_facing?: boolean
           palette_hints?: string | null
           prompt_addendum?: string
           section_priority?: string[]
@@ -5367,9 +5371,11 @@ export type Database = {
           created_at?: string
           display_name?: string
           hero_archetypes?: string | null
+          icon?: string | null
           id?: string
           image_style?: string | null
           is_active?: boolean
+          merchant_facing?: boolean
           palette_hints?: string | null
           prompt_addendum?: string
           section_priority?: string[]
