@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import {
   CommandDialog,
   CommandEmpty,
