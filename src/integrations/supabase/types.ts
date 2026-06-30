@@ -6343,6 +6343,17 @@ export type Database = {
           total: number
         }[]
       }
+      get_public_credit_settings: {
+        Args: never
+        Returns: {
+          critical_balance_threshold: number
+          custom_max_inr: number
+          custom_min_inr: number
+          custom_recharge_rate: number
+          low_balance_threshold: number
+          welcome_grant_credits: number
+        }[]
+      }
       get_storefront_cod_rules: {
         Args: { _store_id: string }
         Returns: {
