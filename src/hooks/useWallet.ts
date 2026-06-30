@@ -89,7 +89,7 @@ export const usePacks = () => useQuery({
 export const useCreditSettings = () => useQuery({
   queryKey: ['credit-settings'],
   queryFn: async () => {
-    const { data } = await supabase.from('platform_credit_settings').select('*').eq('id', 1).maybeSingle();
-    return data;
+    const { data } = await (supabase as any).rpc('get_public_credit_settings');
+    return Array.isArray(data) ? data[0] : data;
   },
 });
